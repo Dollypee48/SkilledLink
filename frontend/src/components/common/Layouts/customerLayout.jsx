@@ -21,11 +21,11 @@ const CustomerLayout = ({ children }) => {
   const navItems = [
     { name: "Dashboard", path: "/customer-dashboard", icon: LayoutDashboard },
     { name: "Messages", path: "/customer/messages", icon: MessageSquare },
-    { name: "Find Artisans", path: "/browseArtisans", icon: Search },
-    { name: "My Bookings", path: "/my-booking", icon: CalendarCheck },
-    { name: "Review/Ratings", path: "/Review-Ratings", icon: Star },
+    { name: "Find Artisans", path: "/artisans", icon: Search },
+    { name: "My Bookings", path: "/customer-bookings", icon: CalendarCheck },
+    { name: "Review/Ratings", path: "/customer-reviews", icon: Star },
     { name: "Profile/Setting", path: "/customer-profile", icon: User },
-    { name: "Report issue", path: "/reportIssue", icon: AlertTriangle },
+    { name: "Report issue", path: "/customer-report", icon: AlertTriangle },
   ];
 
   const onLogout = () => {  // ✅ optional renaming for clarity

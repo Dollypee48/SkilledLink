@@ -1,31 +1,33 @@
-// pages/customer/CustomerDashboard.jsx
+// frontend/src/pages/customer/CustomerDashboard.jsx
 import React, { useEffect, useState, useContext } from "react";
 import CustomerLayout from "../../components/common/layouts/CustomerLayout";
 import { CalendarCheck, Wallet, Heart, Star } from "lucide-react";
-import { useBooking } from "../../context/BookingContext";
+import { useBooking } from "../../context/BookingContext"; // Assuming useBooking provides customer's bookings
 import useAuth from "../../hooks/useAuth";
 import { ArtisanContext } from "../../context/ArtisanContext";
 
 export default function CustomerDashboard() {
-  const { bookings, loading: bookingsLoading, error: bookingsError, getBookings } = useBooking();
+  // Destructure 'bookings' as 'myBookings' to avoid conflict and use the correct data for customers
+  const { artisanBookings, loading: bookingsLoading, error: bookingsError, getBookings } = useBooking();
 
-  // ✅ use ArtisanContext directly
+  // Use ArtisanContext directly for suggestions
   const { suggestions, loadSuggestions } = useContext(ArtisanContext);
 
-  const { user, accessToken } = useAuth(); // ✅ include accessToken
+  const { user, accessToken } = useAuth();
   const [hasFetched, setHasFetched] = useState(false);
   const [artisansLoading, setArtisansLoading] = useState(false);
   const [artisansError, setArtisansError] = useState(null);
 
   useEffect(() => {
     if (!hasFetched && user && accessToken) {
-      // Fetch bookings
-      getBookings().catch((err) => console.error("Failed to fetch bookings:", err));
+      // Fetch bookings for the customer
+      // Ensure getBookings is called and error handled
+      getBookings().catch((err) => console.error("Failed to fetch customer bookings:", err));
 
       // Fetch suggested artisans
       setArtisansLoading(true);
-      loadSuggestions(accessToken)
-        .catch((err) => {
+      // Ensure loadSuggestions is called and error handled
+      loadSuggestions().catch((err) => { // loadSuggestions in ArtisanContext no longer takes token as arg
           console.error("Failed to fetch suggested artisans:", err);
           setArtisansError("Could not load artisans.");
         })
@@ -33,16 +35,17 @@ export default function CustomerDashboard() {
 
       setHasFetched(true);
     }
-  }, [getBookings, loadSuggestions, hasFetched, user, accessToken]);
+  }, [getBookings, loadSuggestions, hasFetched, user, accessToken]); // Keep dependencies updated
 
+  // Safely access myBookings (which will be an array, or empty array initially)
   const upcomingBooking =
-    bookings.find((b) => b.status === "Pending") || {
+    artisanBookings?.find((b) => b.status === "Pending") || {
       service: "Light fixture installation",
       date: "April 3, 2025 at 2:00 PM",
     };
 
   const totalSpent =
-    bookings.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0).toFixed(2) || "0.00";
+    artisanBookings?.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0).toFixed(2) || "0.00";
 
   const loading = bookingsLoading || artisansLoading;
   const error = bookingsError || artisansError;
@@ -93,7 +96,7 @@ export default function CustomerDashboard() {
               <p className="text-gray-600">Loading bookings...</p>
             ) : error ? (
               <p className="text-red-600">{error}</p>
-            ) : bookings.length === 0 ? (
+            ) : artisanBookings?.length === 0 ? ( // Use artisanBookings here
               <p className="text-gray-600">
                 No bookings found. It looks like you haven't made any bookings yet!
               </p>
@@ -108,10 +111,10 @@ export default function CustomerDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map((booking) => (
+                  {artisanBookings?.map((booking) => ( // Use artisanBookings here
                     <tr key={booking._id} className="border-b hover:bg-gray-50 transition">
                       <td className="p-2">{new Date(booking.date).toLocaleDateString() || "N/A"}</td>
-                      <td className="p-2">{booking.artisanId?.name || "N/A"}</td>
+                      <td className="p-2">{booking.artisan?.name || "N/A"}</td>
                       <td className="p-2">{booking.service || "N/A"}</td>
                       <td className="p-2">
                         {booking.status === "Completed" && (
@@ -145,11 +148,11 @@ export default function CustomerDashboard() {
               <p className="text-gray-600">Loading artisans...</p>
             ) : error ? (
               <p className="text-red-600">{error}</p>
-            ) : suggestions.length === 0 ? (
+            ) : suggestions?.length === 0 ? (
               <p className="text-gray-600">No artisans found. Please try again later!</p>
             ) : (
               <div className="space-y-3">
-                {suggestions.map((artisan) => (
+                {suggestions?.map((artisan) => (
                   <div
                     key={artisan._id}
                     className="flex items-center justify-between border rounded-lg p-3 hover:shadow-md transition"

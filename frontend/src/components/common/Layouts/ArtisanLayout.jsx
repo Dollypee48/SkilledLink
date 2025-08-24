@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 const ArtisanLayout = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, handleLogout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -33,11 +33,6 @@ const ArtisanLayout = ({ children }) => {
   ];
 
   const [isOnline, setIsOnline] = useState(true); // default status Online
-
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
 
   const toggleStatus = () => {
     setIsOnline((prev) => !prev);

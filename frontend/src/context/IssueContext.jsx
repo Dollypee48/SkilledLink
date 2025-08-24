@@ -1,7 +1,6 @@
-// frontend/src/context/IssueContext.jsx
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { issueService } from "../services/issueService"; // Assuming issueService is created
-import useAuth from "../hooks/useAuth"; // Assuming useAuth exists
+import { issueService } from "../services/issueService";
+import useAuth from "../hooks/useAuth";
 
 export const IssueContext = createContext();
 
@@ -36,7 +35,7 @@ export const IssueProvider = ({ children }) => {
       const newIssue = await handleRequest((token) =>
         issueService.submitIssue(issueData, token)
       );
-      setIssues((prev) => [...prev, newIssue.issue]); // Assuming backend returns { message, issue }
+      setIssues((prev = []) => [...prev, newIssue.data]);
       return newIssue.issue;
     },
     [handleRequest]
@@ -45,7 +44,7 @@ export const IssueProvider = ({ children }) => {
   const fetchMyIssues = useCallback(
     async () => {
       const data = await handleRequest((token) => issueService.getMyIssues(token));
-      setIssues(data);
+      setIssues(Array.isArray(data.data) ? data.data : []);
       return data;
     },
     [handleRequest]

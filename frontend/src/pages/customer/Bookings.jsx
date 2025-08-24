@@ -6,7 +6,7 @@ import { useBooking } from "../../context/BookingContext"; // use custom hook
 const Bookings = () => {
   const [sortBy, setSortBy] = useState("date");
 
-  const { bookings, loading, error, getBookings, viewBooking } = useBooking();
+  const { artisanBookings, loading, error, getBookings, viewBooking } = useBooking();
 
   // Fetch bookings on mount
   useEffect(() => {
@@ -20,7 +20,7 @@ const Bookings = () => {
     fetchBookings();
   }, [getBookings]);
 
-  const sortedBookings = [...bookings].sort((a, b) => {
+  const sortedBookings = [...artisanBookings].sort((a, b) => {
     if (sortBy === "date") return new Date(a.date) - new Date(b.date);
     if (sortBy === "status") return a.status.localeCompare(b.status);
     return 0;

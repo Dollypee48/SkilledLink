@@ -1,7 +1,9 @@
 import React, { Component } from "react";
 import { AuthProvider } from "./context/AuthContext";
+import { BrowserRouter as Router } from "react-router-dom";
 import { BookingProvider } from "./context/BookingContext";
 import { ReportProvider } from "./context/ReportContext";
+import { IssueProvider } from "./context/IssueContext";
 import { ReviewProvider } from "./context/ReviewContext";
 import { ArtisanProvider } from "./context/ArtisanContext"; // Ensure this matches the file
 import Routes from "./routes";
@@ -28,25 +30,27 @@ class ErrorBoundary extends Component {
 
 const App = () => {
   return (
-    <>
+    <Router>
       <ErrorBoundary>
         <AuthProvider>
           {/* <ChatProvider> */}
             <BookingProvider>
               <ReportProvider>
-                <ReviewProvider>
-                  <ArtisanProvider>
-                    <div className="min-h-screen bg-gray-50">
-                      <Routes />
-                    </div>
-                  </ArtisanProvider>
-                </ReviewProvider>
+                <IssueProvider>
+                  <ReviewProvider>
+                    <ArtisanProvider>
+                      <div className="min-h-screen bg-gray-50">
+                        <Routes />
+                      </div>
+                    </ArtisanProvider>
+                  </ReviewProvider>
+                </IssueProvider>
               </ReportProvider>
             </BookingProvider>
           {/* </ChatProvider> */}
         </AuthProvider>
       </ErrorBoundary>
-    </>
+    </Router>
   );
 };
 
