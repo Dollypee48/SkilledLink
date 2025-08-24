@@ -29,7 +29,7 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
-      await handleLogin({ email, password, role }); // ✅ send role
+      await handleLogin({ email, password, role }); // Send role again
       // no manual navigate here — useEffect handles redirect
     } catch (err) {
       console.error("Login error:", err);

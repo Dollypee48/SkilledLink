@@ -1,7 +1,6 @@
-// ArtisanContext.jsx
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import * as artisanService from "../services/artisanService";
-import useAuth from "../hooks/useAuth";
+import useAuth from "../hooks/useAuth"; // Reverted import path
 
 export const ArtisanContext = createContext();
 
@@ -14,32 +13,39 @@ export const ArtisanProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => { // Removed 'token' parameter here
     try {
+      setLoading(true);
       setError(null);
+      // Use the token from useAuth directly
       const data = await artisanService.getProfile(token);
       setProfile(data);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load profile");
-      throw err; // Re-throw to be caught by the useEffect's catch
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [token]); // Dependency on token
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
+      setLoading(true);
       setError(null);
       const data = await artisanService.getArtisanBookings(token);
       setBookings(data);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load bookings");
-      throw err; // Re-throw to be caught by the useEffect's catch
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [token]);
 
-  const changeSubscription = async (subscription) => {
+  const changeSubscription = useCallback(async (subscription) => {
     try {
-      setLoading(true); // Keep loading for individual actions
+      setLoading(true);
       setError(null);
       const data = await artisanService.updateSubscription(token, subscription);
       setProfile((prev) => ({ ...prev, artisanProfile: data.artisan }));
@@ -50,11 +56,11 @@ export const ArtisanProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
-  const searchArtisans = async (filters = {}) => {
+  const searchArtisans = useCallback(async (filters = {}) => {
     try {
-      setLoading(true); // Keep loading for individual actions
+      setLoading(true);
       setError(null);
       const data = await artisanService.getArtisans(filters);
       setArtisans(data);
@@ -65,11 +71,11 @@ export const ArtisanProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // No token dependency here as getArtisans might be public
 
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => { // Removed 'token' parameter here
     try {
-      setLoading(true); // Keep loading for individual actions
+      setLoading(true);
       setError(null);
       const data = await artisanService.suggestByLocation(token);
       setSuggestions(data.suggestions);
@@ -80,12 +86,12 @@ export const ArtisanProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     const initializeArtisanData = async () => {
-      if (user && token) {
-        setLoading(true); // Start loading for all initial fetches
+      if (user?.role === 'artisan' && token) { // Only fetch if user is artisan and token exists
+        setLoading(true);
         setError(null);
         try {
           await Promise.all([
@@ -93,15 +99,19 @@ export const ArtisanProvider = ({ children }) => {
             fetchBookings()
           ]);
         } catch (err) {
-          // Errors are already set by individual functions, but this catches any unhandled
           console.error("Error initializing artisan data:", err);
+          // Error state is already set by individual loadProfile/fetchBookings
         } finally {
-          setLoading(false); // Stop loading after all fetches complete
+          setLoading(false);
         }
+      } else if (user && !token) {
+        // Handle case where user is logged in but no token (e.g., expired and not refreshed)
+        setError("Authentication required.");
+        setLoading(false);
       }
     };
     initializeArtisanData();
-  }, [user, token]); // Reload profile and bookings when user or token changes
+  }, [user, token, loadProfile, fetchBookings]); // Dependencies include memoized functions
 
   return (
     <ArtisanContext.Provider

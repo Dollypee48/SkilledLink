@@ -1,14 +1,8 @@
 import React, { Component } from "react";
-import { AuthProvider } from "./context/AuthContext";
-import { BrowserRouter as Router } from "react-router-dom";
-import { BookingProvider } from "./context/BookingContext";
-import { ReportProvider } from "./context/ReportContext";
-import { IssueProvider } from "./context/IssueContext";
-import { ReviewProvider } from "./context/ReviewContext";
-import { ArtisanProvider } from "./context/ArtisanContext"; // Ensure this matches the file
-import Routes from "./routes";
+import RoutesComponent from "./routes";  // ✅ fixed import
+import KYCReminderModal from "./components/KYCReminderModal"; // Import the KYC Reminder Modal
 
-// Error Boundary to catch rendering errors
+// Error Boundary
 class ErrorBoundary extends Component {
   state = { hasError: false };
 
@@ -30,27 +24,12 @@ class ErrorBoundary extends Component {
 
 const App = () => {
   return (
-    <Router>
-      <ErrorBoundary>
-        <AuthProvider>
-          {/* <ChatProvider> */}
-            <BookingProvider>
-              <ReportProvider>
-                <IssueProvider>
-                  <ReviewProvider>
-                    <ArtisanProvider>
-                      <div className="min-h-screen bg-gray-50">
-                        <Routes />
-                      </div>
-                    </ArtisanProvider>
-                  </ReviewProvider>
-                </IssueProvider>
-              </ReportProvider>
-            </BookingProvider>
-          {/* </ChatProvider> */}
-        </AuthProvider>
-      </ErrorBoundary>
-    </Router>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gray-50">
+        <RoutesComponent />  {/* ✅ use renamed component */}
+      </div>
+      <KYCReminderModal /> {/* Render the KYC Reminder Modal globally */}
+    </ErrorBoundary>
   );
 };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import useAuth from "../../../hooks/useAuth";
+import { useAuth } from "../../../context/AuthContext"; // Corrected import path
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -20,7 +20,7 @@ const CustomerLayout = ({ children }) => {
 
   const navItems = [
     { name: "Dashboard", path: "/customer-dashboard", icon: LayoutDashboard },
-    { name: "Messages", path: "/customer/messages", icon: MessageSquare },
+    { name: "Messages", path: "/customer-messages", icon: MessageSquare },
     { name: "Find Artisans", path: "/artisans", icon: Search },
     { name: "My Bookings", path: "/customer-bookings", icon: CalendarCheck },
     { name: "Review/Ratings", path: "/customer-reviews", icon: Star },

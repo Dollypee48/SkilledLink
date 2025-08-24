@@ -1,10 +1,11 @@
 // frontend/src/pages/customer/CustomerDashboard.jsx
 import React, { useEffect, useState, useContext } from "react";
 import CustomerLayout from "../../components/common/layouts/CustomerLayout";
-import { CalendarCheck, Wallet, Heart, Star } from "lucide-react";
+import { CalendarCheck, Wallet, Heart, Star } from "lucide-react"; // Removed KYC related icons
 import { useBooking } from "../../context/BookingContext"; // Assuming useBooking provides customer's bookings
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthContext";
 import { ArtisanContext } from "../../context/ArtisanContext";
+// import KYCForm from '../../components/KYCForm'; // Removed KYCForm import
 
 export default function CustomerDashboard() {
   // Destructure 'bookings' as 'myBookings' to avoid conflict and use the correct data for customers
@@ -50,9 +51,50 @@ export default function CustomerDashboard() {
   const loading = bookingsLoading || artisansLoading;
   const error = bookingsError || artisansError;
 
+  const getKYCStatusDisplay = () => {
+    if (!user) return null;
+
+    let statusText = "";
+    let statusColor = "";
+    let statusIcon = null;
+
+    switch (user.kycStatus) {
+      case 'pending':
+        statusText = 'Your KYC is under review.';
+        statusColor = 'bg-yellow-100 text-yellow-800';
+        statusIcon = <Clock className="w-5 h-5 mr-2" />;
+        break;
+      case 'approved':
+        statusText = 'Your KYC has been approved!';
+        statusColor = 'bg-green-100 text-green-800';
+        statusIcon = <ShieldCheck className="w-5 h-5 mr-2" />;
+        break;
+      case 'rejected':
+        statusText = 'Your KYC submission was rejected. Please re-submit.';
+        statusColor = 'bg-red-100 text-red-800';
+        statusIcon = <XCircle className="w-5 h-5 mr-2" />;
+        break;
+      default:
+        statusText = 'KYC verification is required.';
+        statusColor = 'bg-blue-100 text-blue-800';
+        statusIcon = <AlertTriangle className="w-5 h-5 mr-2" />;
+    }
+
+    return (
+      <div className={`p-3 rounded-md mb-4 flex items-center ${statusColor}`}>
+        {statusIcon}
+        <p className="text-sm font-medium">{statusText}</p>
+      </div>
+    );
+  };
+
   return (
     <CustomerLayout>
       <div className="p-6">
+        {/* Removed KYC Status Indicator */}
+
+        {/* Removed Conditionally render KYCForm if not approved */}
+
         {/* Top stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <div className="bg-white shadow hover:shadow-lg transition rounded-xl p-5 flex items-center gap-4">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import useAuth from "../../../hooks/useAuth";
+import { useAuth } from "../../../context/AuthContext"; // Corrected import path
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -39,6 +39,12 @@ const ArtisanLayout = ({ children }) => {
     // Later you can sync this with backend
   };
 
+  const onLogout = () => {  // ✅ optional renaming for clarity
+    handleLogout();         // ✅ call the correct function
+    navigate("/");
+  };
+
+
   return (
     <div className="flex min-h-screen bg-[#f5d4aa]">
       {/* Sidebar */}
@@ -68,7 +74,7 @@ const ArtisanLayout = ({ children }) => {
         </div>
 
         <button
-          onClick={handleLogout}
+          onClick={onLogout}
           className="flex items-center gap-3 p-4 hover:text-white transition-colors"
         >
           <LogOut className="w-5 h-5" />

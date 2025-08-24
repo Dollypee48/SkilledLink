@@ -1,10 +1,11 @@
 // pages/ArtisanDashboard.jsx
 import React, { useEffect } from 'react';
 import { ArtisanContext } from '../../context/ArtisanContext';
-import  useAuth  from '../../hooks/useAuth';
+import { useAuth } from '../../context/AuthContext';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
-import { Wallet, CalendarCheck, Star } from 'lucide-react';
+import { Wallet, CalendarCheck, Star } from 'lucide-react'; // Removed KYC related icons
 import { useNavigate } from 'react-router-dom';
+// import KYCForm from '../../components/KYCForm'; // Removed KYCForm import
 
 const ArtisanDashboard = () => {
   const { user } = useAuth();
@@ -28,9 +29,50 @@ const ArtisanDashboard = () => {
   const pendingBookings = bookings?.filter((booking) => booking.status === 'Pending').length || 0;
   const completedBookings = bookings?.filter((booking) => booking.status === 'Completed').length || 0;
 
+  const getKYCStatusDisplay = () => {
+    if (!user) return null;
+
+    let statusText = "";
+    let statusColor = "";
+    let statusIcon = null;
+
+    switch (user.kycStatus) {
+      case 'pending':
+        statusText = 'Your KYC is under review.';
+        statusColor = 'bg-yellow-100 text-yellow-800';
+        statusIcon = <Clock className="w-5 h-5 mr-2" />;
+        break;
+      case 'approved':
+        statusText = 'Your KYC has been approved!';
+        statusColor = 'bg-green-100 text-green-800';
+        statusIcon = <ShieldCheck className="w-5 h-5 mr-2" />;
+        break;
+      case 'rejected':
+        statusText = 'Your KYC submission was rejected. Please re-submit.';
+        statusColor = 'bg-red-100 text-red-800';
+        statusIcon = <XCircle className="w-5 h-5 mr-2" />;
+        break;
+      default:
+        statusText = 'KYC verification is required.';
+        statusColor = 'bg-blue-100 text-blue-800';
+        statusIcon = <AlertTriangle className="w-5 h-5 mr-2" />;
+    }
+
+    return (
+      <div className={`p-3 rounded-md mb-4 flex items-center ${statusColor}`}>
+        {statusIcon}
+        <p className="text-sm font-medium">{statusText}</p>
+      </div>
+    );
+  };
+
   return (
     <ArtisanLayout>
       <div className="p-6">
+        {/* Removed KYC Status Indicator */}
+
+        {/* Removed Conditionally render KYCForm */}
+
         {/* Header */}
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Artisan Dashboard</h1>
 

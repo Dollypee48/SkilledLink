@@ -3,7 +3,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Hooks
-import useAuth from './hooks/useAuth';
+import { useAuth } from './context/AuthContext'; // Corrected import path
 
 // Public/Customer Pages
 import Home from './pages/Home';
@@ -16,7 +16,7 @@ import CustomerBookings from './pages/customer/Bookings';
 import CustomerProfile from './pages/customer/Profile';
 import CustomerReport from './pages/customer/ReportIssue';
 import CustomerReviews from './pages/customer/ReviewsAndRatings'; 
-// import CustomerMessages from './pages/customer/Messages'; // Removed to debug
+import CustomerMessages from './pages/customer/Messages'; // Uncommented
 
 
 // Artisan Pages
@@ -36,6 +36,8 @@ import ManageUsers from './pages/admin/ManageUsers';
 import ManageBookings from './pages/admin/ManageBookings';
 import ManageReviews from './pages/admin/ManageReviews';
 import ManageReports from './pages/admin/ManageReports';
+import KYCVerification from './pages/admin/KYCVerification'; // New: Import KYCVerification
+import KYCPage from './pages/KYCPage'; // Import the new KYCPage
 
 // Protected Route Component
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -54,7 +56,7 @@ const RoutesComponent = () => {
       <Route path="/customer-profile" element={<CustomerProfile />} />
       <Route path="/customer-reviews" element={<CustomerReviews />} />
       <Route path="/customer-report" element={<CustomerReport />} />
-      {/* <Route path="/customer-messages" element={<CustomerMessages />} /> */} // Removed to debug
+      <Route path="/customer-messages" element={<CustomerMessages />} /> // Uncommented
 
 
       {/* Artisan Routes (Protected) */}
@@ -169,6 +171,24 @@ const RoutesComponent = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <ManageReports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/kyc-verification"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <KYCVerification />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* New KYC Page Route */}
+      <Route
+        path="/kyc"
+        element={
+          <ProtectedRoute>
+            <KYCPage />
           </ProtectedRoute>
         }
       />

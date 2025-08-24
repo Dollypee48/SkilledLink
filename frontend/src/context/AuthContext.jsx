@@ -1,5 +1,5 @@
 // AuthContext.jsx
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect, useCallback, useContext } from "react";
 import * as authService from "../services/authService";
 
 export const AuthContext = createContext();
@@ -13,6 +13,14 @@ export const AuthProvider = ({ children }) => {
     const savedToken = localStorage.getItem("accessToken");
     return savedToken || null;
   });
+
+  const isAuthenticated = !!user && !!accessToken;
+  const role = user ? user.role : null;
+
+  const updateUser = useCallback((newUserData) => {
+    setUser(newUserData);
+    localStorage.setItem("user", JSON.stringify(newUserData));
+  }, []);
 
   // Save user + token in localStorage
   const handleLogin = useCallback(async (credentials) => {
@@ -72,8 +80,10 @@ export const AuthProvider = ({ children }) => {
   }, [handleLogout]);
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, handleLogin, handleRegister, handleLogout }}>
+    <AuthContext.Provider value={{ user, accessToken, isAuthenticated, role, handleLogin, handleRegister, handleLogout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);
