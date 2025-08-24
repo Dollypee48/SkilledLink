@@ -1,12 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react"; // Added useContext and useEffect
 import { AlertTriangle } from "lucide-react";
 import ArtisanLayout from "../../components/common/layouts/ArtisanLayout";
+import { IssueContext } from "../../context/IssueContext"; // Import IssueContext
+import useAuth from "../../hooks/useAuth"; // Import useAuth for user role
 
 const ArtisanReport = () => {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState(null);
-  const [error, setError] = useState("");
+  const [formError, setFormError] = useState(""); // Renamed to formError to avoid conflict with context error
+
+  const {
+    issues,
+    loading,
+    error: contextError, // Renamed context error for clarity
+    submitIssue,
+    fetchMyIssues,
+  } = useContext(IssueContext);
+  const { user } = useAuth(); // To check user role for fetching issues
+
+
+  useEffect(() => {
+    // Fetch issues when component mounts or user/context changes
+    if (user?.role === "artisan" && fetchMyIssues) {
+      fetchMyIssues();
+    }
+  }, [user, fetchMyIssues]);
+
 
   // Handle file upload
   const handleFileChange = (e) => {
@@ -16,40 +36,45 @@ const ArtisanReport = () => {
       (selectedFile.type === "image/jpeg" || selectedFile.type === "image/png")
     ) {
       setFile(selectedFile);
-      setError("");
+      setFormError("");
     } else {
-      setError("Please upload a JPEG or PNG image.");
+      setFormError("Please upload a JPEG or PNG image.");
       setFile(null);
     }
   };
 
-  // Handle issue submission (mock function, replace with API call)
-  const handleSubmitIssue = (e) => {
+  // Handle issue submission
+  const handleSubmitIssue = async (e) => {
     e.preventDefault();
     if (!category) {
-      setError("Please select a category.");
+      setFormError("Please select a category.");
       return;
     }
     if (!description.trim()) {
-      setError("Please provide a description.");
+      setFormError("Please provide a description.");
       return;
     }
     if (!file) {
-      setError("Please upload a file as evidence.");
+      setFormError("Please upload a file as evidence.");
       return;
     }
 
-    setError("");
+    setFormError("");
     const formData = new FormData();
     formData.append("category", category);
     formData.append("description", description);
-    formData.append("file", file);
+    formData.append("file", file); // 'file' is the field name expected by multer on the backend
 
-    alert(`Issue reported: ${category} - ${description}`); // Replace with API call
-
-    setCategory("");
-    setDescription("");
-    setFile(null);
+    try {
+      await submitIssue(formData);
+      alert("Issue reported successfully!"); // Provide feedback to user
+      setCategory("");
+      setDescription("");
+      setFile(null);
+    } catch (err) {
+      // Error is already handled by context, but can add specific form error if needed
+      setFormError(contextError || "Failed to submit issue.");
+    }
   };
 
   return (
@@ -118,25 +143,65 @@ const ArtisanReport = () => {
             </div>
 
             {/* Error Message */}
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {(formError || contextError) && <p className="text-red-500 text-sm">{formError || contextError}</p>}
 
             {/* Submit Button */}
             <button
               type="submit"
               className="w-full py-2 rounded-md bg-[#FDE1F7] hover:bg-[#fcd5f5] text-[#6b2d11] font-semibold shadow-md transition"
+              disabled={loading} // Disable while loading
             >
-              Submit Report
+              {loading ? "Submitting..." : "Submit Report"}
             </button>
           </form>
         </div>
 
-        {/* Reported Issues Section (mock for now) */}
+        {/* Reported Issues Section */}
         <div className="bg-white rounded-2xl shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">Reported Issues</h2>
-          <p className="text-gray-600">
-            No issues reported yet. Your reports will appear here once
-            submitted.
-          </p>
+          {loading && <p className="text-gray-600">Loading issues...</p>}
+          {contextError && !loading && ( // Display context error if no issues and not loading
+            <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{contextError}</div>
+          )}
+          {!loading && !contextError && issues?.length === 0 ? (
+            <p className="text-gray-500">No issues reported yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {issues?.map((issue) => (
+                <div key={issue._id} className="border-b border-gray-100 pb-4 last:border-b-0">
+                  <p className="text-sm font-medium text-gray-900">
+                    Category: {issue.category}
+                  </p>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Description: {issue.description}
+                  </p>
+                  {issue.imageUrl && (
+                    <img
+                      src={`http://localhost:5000${issue.imageUrl}`} // Adjust base URL as needed
+                      alt="Evidence"
+                      className="mt-2 max-w-xs h-auto rounded-md"
+                    />
+                  )}
+                  <p className={`text-xs mt-1 font-semibold ${
+                      issue.status === 'Resolved' ? 'text-green-600' :
+                      issue.status === 'Under Review' ? 'text-yellow-600' :
+                      'text-red-600'
+                  }`}>
+                    Status: {issue.status}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Reported on: {new Date(issue.createdAt).toLocaleDateString()}
+                  </p>
+                  {issue.resolvedBy && issue.resolutionDetails && (
+                    <div className="mt-2 text-sm text-gray-700">
+                      <p className="font-medium">Resolution:</p>
+                      <p>{issue.resolutionDetails}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </ArtisanLayout>

@@ -1,5 +1,5 @@
 // AuthContext.jsx
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import * as authService from "../services/authService";
 
 export const AuthContext = createContext();
@@ -9,10 +9,13 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem("user");
     return savedUser ? JSON.parse(savedUser) : null;
   });
-  const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
+  const [accessToken, setAccessToken] = useState(() => {
+    const savedToken = localStorage.getItem("accessToken");
+    return savedToken || null;
+  });
 
   // Save user + token in localStorage
-  const handleLogin = async (credentials) => {
+  const handleLogin = useCallback(async (credentials) => {
     const data = await authService.login(credentials);
     setUser(data.user);
     setAccessToken(data.accessToken);
@@ -20,9 +23,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("refreshToken", data.refreshToken);
     return data;
-  };
+  }, []);
 
-  const handleRegister = async (userData) => {
+  const handleRegister = useCallback(async (userData) => {
     const data = await authService.register(userData);
     setUser(data.user);
     setAccessToken(data.accessToken);
@@ -30,15 +33,15 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("refreshToken", data.refreshToken);
     return data;
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     setUser(null);
     setAccessToken(null);
     localStorage.removeItem("user"); // ✅ Clear user
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-  };
+  }, []);
 
   // Try to refresh token when app loads
   useEffect(() => {
@@ -49,6 +52,11 @@ export const AuthProvider = ({ children }) => {
           const data = await authService.refreshToken(token);
           setAccessToken(data.accessToken);
           localStorage.setItem("accessToken", data.accessToken);
+
+          // Store new refresh token if provided
+          if (data.refreshToken) {
+            localStorage.setItem("refreshToken", data.refreshToken);
+          }
 
           // ✅ If backend returns updated user with role, save again
           if (data.user) {
@@ -61,7 +69,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
     refresh();
-  }, []);
+  }, [handleLogout]);
 
   return (
     <AuthContext.Provider value={{ user, accessToken, handleLogin, handleRegister, handleLogout }}>

@@ -4,10 +4,11 @@ import { ArtisanContext } from '../../context/ArtisanContext';
 import  useAuth  from '../../hooks/useAuth';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
 import { Wallet, CalendarCheck, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const ArtisanDashboard = () => {
   const { user } = useAuth();
-  const { currentArtisan, fetchCurrentProfile, fetchBookings, bookings, loading, error } = useArtisan();
+  const { profile: currentArtisan, loadProfile: fetchCurrentProfile, fetchBookings, bookings, loading, error } = React.useContext(ArtisanContext);
   const navigate = useNavigate();
 
   // Fetch artisan profile and bookings on mount

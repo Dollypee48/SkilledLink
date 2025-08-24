@@ -2,7 +2,7 @@
 import React from 'react';
 import AdminLayout from '../../components/common/Layouts/AdminLayout'; // Assuming AdminLayout exists
 
-const ManageUsers = () => {
+const ManageReviews = () => {
   return (
     <AdminLayout>
       <div className="p-6">
@@ -17,4 +17,4 @@ const ManageUsers = () => {
   );
 };
 
-export default ManageUsers;
+export default ManageReviews;

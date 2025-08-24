@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { BookingProvider } from "./context/BookingContext";
 import { ReportProvider } from "./context/ReportContext";
@@ -29,7 +28,7 @@ class ErrorBoundary extends Component {
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <>
       <ErrorBoundary>
         <AuthProvider>
           {/* <ChatProvider> */}
@@ -47,7 +46,7 @@ const App = () => {
           {/* </ChatProvider> */}
         </AuthProvider>
       </ErrorBoundary>
-    </BrowserRouter>
+    </>
   );
 };
 

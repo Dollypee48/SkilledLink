@@ -145,8 +145,11 @@ exports.refreshToken = async (req, res) => {
     const user = await User.findOne({ _id: payload.id, refreshToken });
     if (!user) return res.status(401).json({ message: "Invalid or expired refresh token" });
 
-    const { accessToken } = generateTokens(user); // issue new access token only
-    res.json({ accessToken });
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user); // issue new access and refresh tokens
+    user.refreshToken = newRefreshToken; // Update refresh token in DB
+    await user.save();
+
+    res.json({ accessToken, refreshToken: newRefreshToken }); // Send back new refresh token
   } catch (err) {
     console.error("Refresh error:", err.message);
     res.status(401).json({ message: "Invalid or expired refresh token" });

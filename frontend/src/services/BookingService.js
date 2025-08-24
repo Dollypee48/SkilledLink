@@ -31,6 +31,20 @@ export const BookingService = {
     }
   },
 
+  // Get all bookings for the logged-in artisan
+  getArtisanBookings: async (token) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const res = await axios.get(`${API_URL}/artisan`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.data;
+    } catch (err) {
+      console.error("getArtisanBookings error:", err.message);
+      throw new Error(err.response?.data?.message || "Failed to fetch artisan bookings");
+    }
+  },
+
   // Get single booking by ID
   getBookingById: async (id, token) => {
     if (!token) throw new Error("Authentication token is required");

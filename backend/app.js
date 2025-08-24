@@ -8,7 +8,8 @@ const bookingsRoutes = require('./routes/bookingsRoutes');
 // const paymentsRoutes = require('./routes/paymentsRoutes');
 // const messagesRoutes = require('./routes/messagesRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
-const reportRoutes = require('./routes/reportRoutes');
+const issueRoutes = require('./routes/issueRoutes'); // Import new issue routes
+// const reportRoutes = require('./routes/reportRoutes'); // Comment out old report routes
 const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
@@ -17,6 +18,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from the 'uploads' directory
 app.use('/uploads', express.static('uploads'));
 
 // Routes
@@ -27,8 +29,9 @@ app.use('/api/bookings', bookingsRoutes);
 // app.use('/api/payments', paymentsRoutes);
 // app.use('/api/messages', messagesRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/issues', issueRoutes); // Use new issue routes
+// app.use('/api/reports', reportRoutes); // Comment out old report routes
 app.use('/api/admin', adminRoutes);
-app.use('/api/reports', reportRoutes);
 
 // Error Handler
 app.use(errorHandler);

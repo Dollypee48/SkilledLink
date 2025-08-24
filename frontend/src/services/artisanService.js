@@ -34,3 +34,11 @@ export const suggestByLocation = async (token) => {
   });
   return res.data;
 };
+
+// Get bookings for the current artisan
+export const getArtisanBookings = async (token) => {
+  const res = await axios.get(`${API_URL}/me/bookings`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};

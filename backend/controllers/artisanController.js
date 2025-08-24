@@ -1,5 +1,9 @@
 const User = require("../models/User");
 const ArtisanProfile = require("../models/ArtisanProfile");
+const jwt = require("jsonwebtoken");
+const Booking = require("../models/Booking"); // Import the Booking model
+
+const ROLES = ["customer", "artisan", "admin"];
 
 // Get current artisan profile
 exports.getCurrentArtisanProfile = async (req, res) => {
@@ -111,5 +115,17 @@ exports.suggestArtisansByLocation = async (req, res) => {
   } catch (err) {
     console.error("Suggestion error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get bookings for current artisan
+exports.getArtisanBookings = async (req, res) => {
+  try {
+    const artisanId = req.user.id; // User ID from authenticated token
+    const bookings = await Booking.find({ artisan: artisanId }).populate("customer", "name email"); // Assuming 'artisan' field in Booking model
+    res.json(bookings);
+  } catch (err) {
+    console.error("Get artisan bookings error:", err.message);
+    res.status(500).json({ message: "Server error while fetching bookings" });
   }
 };
