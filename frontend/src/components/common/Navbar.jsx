@@ -55,10 +55,10 @@ const Header = () => {
           {!isAuthenticated ? (
             <>
               <Link to="/login" className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
-                Login
+                Sign in
               </Link>
               <Link to="/register" className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
-                Register
+                Get Started
               </Link>
             </>
           ) : (
