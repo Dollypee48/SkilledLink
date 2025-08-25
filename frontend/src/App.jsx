@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import RoutesComponent from "./routes";  // ✅ fixed import
 import KYCReminderModal from "./components/KYCReminderModal"; // Import the KYC Reminder Modal
+import Navbar from './components/common/Navbar';
 
 // Error Boundary
 class ErrorBoundary extends Component {
@@ -26,6 +27,7 @@ const App = () => {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
+        <Navbar />
         <RoutesComponent />  {/* ✅ use renamed component */}
       </div>
       <KYCReminderModal /> {/* Render the KYC Reminder Modal globally */}

@@ -21,7 +21,7 @@ const ManageReports = () => {
       try {
         setLoading(true);
         const data = await adminService.getAllReports(accessToken);
-        setReports(data);
+        setReports(data.data); // Access the 'data' property of the response
       } catch (err) {
         setError(err.message || "Failed to fetch reports");
       } finally {

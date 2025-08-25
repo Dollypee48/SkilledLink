@@ -1,13 +1,25 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Navbar from "../components/common/Navbar";   // ✅ adjust path based on your folder
 import Footer from "../components/common/Footer";   // ✅ adjust path based on your folder
+import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
 
 const Home = () => {
+  const navigate = useNavigate();
+  const [service, setService] = useState("");
+  const [location, setLocation] = useState("");
+
+  const handleSearch = () => {
+    const queryParams = new URLSearchParams();
+    if (service) queryParams.append('service', service);
+    if (location) queryParams.append('location', location);
+    navigate(`/find-artisans?${queryParams.toString()}`);
+  };
+
   return (
     <div className="bg-gray-50">
       {/* Navbar */}
-      <Navbar />
+      {/* <Navbar /> */}
 
       {/* Hero Section */}
       <section
@@ -26,18 +38,31 @@ const Home = () => {
             Connect with skilled professionals for your home and personal needs
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <select className="px-4 py-3 rounded-md text-black w-full sm:w-[200px]">
-              <option>Select a service</option>
+            <select
+              className="px-4 py-3 rounded-md text-black w-full sm:w-[200px]"
+              value={service}
+              onChange={(e) => setService(e.target.value)}
+            >
+              <option value="">Select a service</option>
               <option>Plumbing</option>
               <option>Electrical</option>
               <option>Cleaning</option>
+              <option>Carpentry</option>
+              <option>Painting</option>
+              <option>Tailoring</option>
+              <option>Mechanic</option>
             </select>
             <input
               type="text"
               placeholder="Your Location"
               className="px-4 py-3 rounded-md text-black w-full sm:w-[200px]"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
             />
-            <button className="bg-orange-400 px-6 py-3 rounded-md text-white font-semibold hover:bg-orange-500 transition w-full sm:w-auto">
+            <button
+              className="bg-orange-400 px-6 py-3 rounded-md text-white font-semibold hover:bg-orange-500 transition w-full sm:w-auto"
+              onClick={handleSearch}
+            >
               Search
             </button>
           </div>

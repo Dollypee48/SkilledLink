@@ -11,6 +11,8 @@ const ReportIssue = () => {
   const [file, setFile] = useState(null);
   const [localError, setLocalError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [title, setTitle] = useState(""); // New state for title
+  const [priority, setPriority] = useState("medium"); // New state for priority, with a default
 
   useEffect(() => {
     fetchReports(); // Fetch existing reports on mount
@@ -31,6 +33,7 @@ const ReportIssue = () => {
   // Handle issue submission
   const handleSubmitIssue = async (e) => {
     e.preventDefault();
+    if (!title) return setLocalError("Please provide a title.");
     if (!category) return setLocalError("Please select a category.");
     if (!description.trim()) return setLocalError("Please provide a description.");
     if (!file) return setLocalError("Please upload a file as evidence.");
@@ -38,10 +41,19 @@ const ReportIssue = () => {
     setLocalError("");
     setSuccessMessage("");
 
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("category", category);
+    formData.append("description", description);
+    formData.append("priority", priority);
+    formData.append("file", file);
+
     try {
-      await submitReport({ category, description, file });
+      await submitReport(formData);
+      setTitle("");
       setCategory("");
       setDescription("");
+      setPriority("medium");
       setFile(null);
       setSuccessMessage("Report submitted successfully!");
     } catch {
@@ -71,6 +83,18 @@ const ReportIssue = () => {
         <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Submit a Report</h2>
           <form onSubmit={handleSubmitIssue} className="space-y-4 text-left">
+            {/* Title */}
+            <div>
+              <label className="text-sm font-medium text-[#6b2d11]">Title</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Summarize the issue..."
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                required
+              />
+            </div>
             {/* Category */}
             <div>
               <label className="text-sm font-medium text-[#6b2d11]">Category</label>
@@ -78,12 +102,30 @@ const ReportIssue = () => {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                required
               >
                 <option value="">Select a category</option>
-                <option value="Service Quality">Service Quality</option>
-                <option value="Payment Issue">Payment Issue</option>
-                <option value="Scheduling Conflict">Scheduling Conflict</option>
-                <option value="Other">Other</option>
+                <option value="technical">Technical</option>
+                <option value="billing">Billing</option>
+                <option value="account">Account</option>
+                <option value="general">General</option>
+                <option value="bug">Bug</option>
+                <option value="feature-request">Feature Request</option>
+              </select>
+            </div>
+
+            {/* Priority */}
+            <div>
+              <label className="text-sm font-medium text-[#6b2d11]">Priority</label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                required
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
             </div>
 
@@ -95,6 +137,7 @@ const ReportIssue = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe the issue in detail..."
                 className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11] h-28 resize-none"
+                required
               />
             </div>
 

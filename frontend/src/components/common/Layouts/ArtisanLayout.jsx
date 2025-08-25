@@ -13,6 +13,7 @@ import {
   Bell,
   FileText,
   Power,
+  Home, // New: Added for home icon
 } from "lucide-react";
 
 const ArtisanLayout = ({ children }) => {
@@ -22,6 +23,7 @@ const ArtisanLayout = ({ children }) => {
 
   // Artisan navigation items
   const navItems = [
+    { name: "Home", path: "/", icon: Home }, // New: Home button
     { name: "Dashboard", path: "/artisan-dashboard", icon: LayoutDashboard },
     { name: "My Jobs", path: "/myJobs", icon: Briefcase },
     { name: "Job Requests", path: "/jobRequest", icon: CalendarCheck },

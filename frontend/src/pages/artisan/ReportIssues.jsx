@@ -1,34 +1,34 @@
-import React, { useState, useContext, useEffect } from "react"; // Added useContext and useEffect
+import React, { useState, useContext, useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 import ArtisanLayout from "../../components/common/layouts/ArtisanLayout";
-import { IssueContext } from "../../context/IssueContext"; // Import IssueContext
-import useAuth from "../../hooks/useAuth"; // Import useAuth for user role
+import { IssueContext } from "../../context/IssueContext";
+import useAuth from "../../hooks/useAuth";
 
 const ArtisanReport = () => {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState(null);
-  const [formError, setFormError] = useState(""); // Renamed to formError to avoid conflict with context error
+  const [formError, setFormError] = useState("");
+  const [title, setTitle] = useState(""); // New state for title
+  const [priority, setPriority] = useState("medium"); // New state for priority, with a default
 
   const {
     issues,
     loading,
-    error: contextError, // Renamed context error for clarity
+    error: contextError,
     submitIssue,
     fetchMyIssues,
   } = useContext(IssueContext);
-  const { user } = useAuth(); // To check user role for fetching issues
+  const { user } = useAuth();
 
 
   useEffect(() => {
-    // Fetch issues when component mounts or user/context changes
     if (user?.role === "artisan" && fetchMyIssues) {
       fetchMyIssues();
     }
   }, [user, fetchMyIssues]);
 
 
-  // Handle file upload
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (
@@ -43,9 +43,12 @@ const ArtisanReport = () => {
     }
   };
 
-  // Handle issue submission
   const handleSubmitIssue = async (e) => {
     e.preventDefault();
+    if (!title) {
+      setFormError("Please provide a title.");
+      return;
+    }
     if (!category) {
       setFormError("Please select a category.");
       return;
@@ -63,16 +66,19 @@ const ArtisanReport = () => {
     const formData = new FormData();
     formData.append("category", category);
     formData.append("description", description);
-    formData.append("file", file); // 'file' is the field name expected by multer on the backend
+    formData.append("file", file);
+    formData.append("title", title);
+    formData.append("priority", priority);
 
     try {
       await submitIssue(formData);
-      alert("Issue reported successfully!"); // Provide feedback to user
+      alert("Issue reported successfully!");
+      setTitle("");
       setCategory("");
       setDescription("");
+      setPriority("medium");
       setFile(null);
     } catch (err) {
-      // Error is already handled by context, but can add specific form error if needed
       setFormError(contextError || "Failed to submit issue.");
     }
   };
@@ -89,11 +95,22 @@ const ArtisanReport = () => {
           quickly.
         </p>
 
-        {/* Report Issue Form */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Submit a Report</h2>
           <form onSubmit={handleSubmitIssue} className="space-y-4 text-left">
-            {/* Category */}
+            <div>
+              <label className="text-sm font-medium text-[#6b2d11]">
+                Title
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Summarize the issue..."
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                required
+              />
+            </div>
             <div>
               <label className="text-sm font-medium text-[#6b2d11]">
                 Category
@@ -102,16 +119,32 @@ const ArtisanReport = () => {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                required
               >
                 <option value="">Select a category</option>
-                <option value="Service Quality">Service Quality</option>
-                <option value="Payment Issue">Payment Issue</option>
-                <option value="Scheduling Conflict">Scheduling Conflict</option>
-                <option value="Other">Other</option>
+                <option value="technical">Technical</option>
+                <option value="billing">Billing</option>
+                <option value="account">Account</option>
+                <option value="general">General</option>
+                <option value="bug">Bug</option>
+                <option value="feature-request">Feature Request</option>
               </select>
             </div>
-
-            {/* Description */}
+            <div>
+              <label className="text-sm font-medium text-[#6b2d11]">
+                Priority
+              </label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                required
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
             <div>
               <label className="text-sm font-medium text-[#6b2d11]">
                 Description
@@ -121,10 +154,10 @@ const ArtisanReport = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe the issue in detail..."
                 className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11] h-28 resize-none"
+                required
               />
             </div>
 
-            {/* File Upload */}
             <div>
               <label className="text-sm font-medium text-[#6b2d11]">
                 Upload Evidence (JPEG/PNG)
@@ -142,25 +175,22 @@ const ArtisanReport = () => {
               )}
             </div>
 
-            {/* Error Message */}
             {(formError || contextError) && <p className="text-red-500 text-sm">{formError || contextError}</p>}
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full py-2 rounded-md bg-[#FDE1F7] hover:bg-[#fcd5f5] text-[#6b2d11] font-semibold shadow-md transition"
-              disabled={loading} // Disable while loading
+              disabled={loading}
             >
               {loading ? "Submitting..." : "Submit Report"}
             </button>
           </form>
         </div>
 
-        {/* Reported Issues Section */}
         <div className="bg-white rounded-2xl shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">Reported Issues</h2>
           {loading && <p className="text-gray-600">Loading issues...</p>}
-          {contextError && !loading && ( // Display context error if no issues and not loading
+          {contextError && !loading && (
             <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{contextError}</div>
           )}
           {!loading && !contextError && issues?.length === 0 ? (
@@ -177,7 +207,7 @@ const ArtisanReport = () => {
                   </p>
                   {issue.imageUrl && (
                     <img
-                      src={`http://localhost:5000${issue.imageUrl}`} // Adjust base URL as needed
+                      src={`http://localhost:5000${issue.imageUrl}`}
                       alt="Evidence"
                       className="mt-2 max-w-xs h-auto rounded-md"
                     />

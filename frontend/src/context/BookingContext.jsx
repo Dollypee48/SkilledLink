@@ -7,6 +7,7 @@ export const BookingContext = createContext();
 export const BookingProvider = ({ children }) => {
   const { accessToken } = useAuth(); // use accessToken from AuthContext
   const [bookings, setBookings] = useState([]); // This will now hold ALL bookings fetched for the artisan
+  const [customerBookings, setCustomerBookings] = useState([]); // New state for customer bookings
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -35,16 +36,18 @@ export const BookingProvider = ({ children }) => {
       const newBooking = await handleRequest((token) =>
         BookingService.createBooking(bookingData, token)
       );
-      setBookings((prev) => [...prev, newBooking]);
+      // Add new booking to customerBookings if the current user is a customer
+      // (Assuming the created booking is for the current customer)
+      setCustomerBookings((prev) => [...prev, newBooking]); 
       return newBooking;
     },
     [handleRequest]
   );
 
-  const getBookings = useCallback( // Memoize getBookings
+  const getBookings = useCallback( // Memoize getBookings (for customers)
     async () => {
       const data = await handleRequest((token) => BookingService.getMyBookings(token));
-      setBookings(data);
+      setCustomerBookings(data); // Set customer-specific bookings
       return data;
     },
     [handleRequest]
@@ -55,7 +58,7 @@ export const BookingProvider = ({ children }) => {
       const data = await handleRequest((token) =>
         BookingService.getArtisanBookings(token)
       );
-      setBookings(data);
+      setBookings(data); // This now explicitly sets artisan bookings
       return data;
     },
     [handleRequest]
@@ -71,7 +74,8 @@ export const BookingProvider = ({ children }) => {
       const updated = await handleRequest((token) =>
         BookingService.updateBookingStatus(id, status, token)
       );
-      setBookings((prev) => prev.map((b) => (b._id === id ? updated : b)));
+      setBookings((prev) => prev.map((b) => (b._id === id ? updated : b))); // Update artisan bookings
+      setCustomerBookings((prev) => prev.map((b) => (b._id === id ? updated : b))); // Update customer bookings
       return updated;
     },
     [handleRequest]
@@ -80,7 +84,8 @@ export const BookingProvider = ({ children }) => {
   const deleteBooking = useCallback( // Memoize deleteBooking
     async (id) => {
       await handleRequest((token) => BookingService.deleteBooking(id, token));
-      setBookings((prev) => prev.filter((b) => b._id !== id));
+      setBookings((prev) => prev.filter((b) => b._id !== id)); // Filter artisan bookings
+      setCustomerBookings((prev) => prev.filter((b) => b._id !== id)); // Filter customer bookings
     },
     [handleRequest]
   );
@@ -89,6 +94,7 @@ export const BookingProvider = ({ children }) => {
     <BookingContext.Provider
       value={{
         artisanBookings: bookings, // Renamed 'bookings' to 'artisanBookings' for clarity in context
+        customerBookings, // Exposed new customer bookings state
         loading,
         error,
         createBooking,

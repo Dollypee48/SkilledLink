@@ -1,13 +1,45 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext'; // Corrected import path
+// import { useArtisan } from '../../context/ArtisanContext';
+import { User, Power, LogOut } from 'lucide-react';
 
 const Header = () => {
+  const { user, isAuthenticated, handleLogout } = useAuth(); // Get user from AuthContext
+  // const { isOnline } = useArtisan(); // Get isOnline status from ArtisanContext
+  const location = useLocation();
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // const hiddenPaths = ['/services', '/about', '/how-it-works'];
+
+  // if (hiddenPaths.includes(location.pathname)) {
+  //   return null; // Don't render Navbar on these pages
+  // }
+
+  const getDashboardPath = () => {
+    if (user?.role === 'customer') {
+      return '/customer-dashboard';
+    } else if (user?.role === 'artisan') {
+      return '/artisan-dashboard';
+    } else if (user?.role === 'admin') {
+      return '/admin-dashboard'; 
+    }
+    return '/'; 
+  };
+
+  const onLogout = () => {
+    handleLogout();
+    navigate('/');
+  };
+
   return (
     <header className="bg-[#5B2104] text-white py-4 shadow">
       <div className="container mx-auto px-6 flex justify-between items-center">
         
         <div className="text-2xl font-semibold">
-          Skilled<span className="text-[#FEE4C3]">Link</span>
+          <Link to="/" className="hover:text-[#FEE4C3] transition">
+            Skilled<span className="text-[#FEE4C3]">Link</span>
+          </Link>
         </div>
 
         
@@ -19,13 +51,39 @@ const Header = () => {
         </nav>
 
         
-        <div className="space-x-3">
-          <Link to="/login" className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
-            Login
-          </Link>
-          <Link to="/register" className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
-            Register
-          </Link>
+        <div className="space-x-3 flex items-center">
+          {!isAuthenticated ? (
+            <>
+              <Link to="/login" className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
+                Login
+              </Link>
+              <Link to="/register" className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
+                Register
+              </Link>
+            </>
+          ) : (
+            <div className="flex items-center space-x-4">
+              {/* {user?.role === 'artisan' && (
+                <div
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                    isOnline
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  <Power className="w-4 h-4" />
+                  {isOnline ? "Online" : "Offline"}
+                </div>
+              )} */}
+              <span className="text-white font-medium hidden sm:block">Hi, {user.name}</span>
+              <Link to={getDashboardPath()} className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
+                Dashboard
+              </Link>
+              <button onClick={onLogout} className="flex items-center gap-2 bg-[#FEE4C3] text-[#5B2104] px-4 py-2 rounded-md text-sm font-medium hover:opacity-90">
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

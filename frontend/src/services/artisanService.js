@@ -27,6 +27,12 @@ export const getArtisans = async (params = {}) => {
   return res.data;
 };
 
+// Get a single artisan by ID
+export const getArtisanById = async (id) => {
+  const res = await axios.get(`${API_URL}/${id}`);
+  return res.data;
+};
+
 // Suggest artisans by location
 export const suggestByLocation = async (token) => {
   const res = await axios.get(`${API_URL}/suggest-by-location`, {

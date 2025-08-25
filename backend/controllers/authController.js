@@ -25,7 +25,7 @@ const generateTokens = (user) => {
 // REGISTER
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role, nationality, state, address, occupation } = req.body;
+    const { name, email, password, phone, role, nationality, state, address, occupation, skills } = req.body;
 
     // Basic validation
     if (!name || !email || !password || !phone || !nationality || !state || !address) {
@@ -59,7 +59,7 @@ exports.register = async (req, res) => {
 
     // If artisan, create profile
     if (role === "artisan") {
-      const profile = await ArtisanProfile.create({ userId: user._id });
+      const profile = await ArtisanProfile.create({ userId: user._id, skills });
       user.artisanProfile = profile._id;
       await user.save();
     }
@@ -97,12 +97,14 @@ exports.login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
-    if (!ROLES.includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-    const user = await User.findOne({ email, role });
-    if (!user) return res.status(401).json({ message: "Invalid email or role" });
+    // If a role is provided and the user is not an admin, check if it matches the user's role in the database
+    if (role && user.role !== "admin" && user.role !== role) {
+      return res.status(403).json({ message: `Access denied. You are registered as a ${user.role}.` });
+    }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: "Invalid password" });
@@ -149,7 +151,23 @@ exports.refreshToken = async (req, res) => {
     user.refreshToken = newRefreshToken; // Update refresh token in DB
     await user.save();
 
-    res.json({ accessToken, refreshToken: newRefreshToken }); // Send back new refresh token
+    res.json({
+      accessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        nationality: user.nationality,
+        state: user.state,
+        address: user.address,
+        occupation: user.occupation,
+        kycVerified: user.kycVerified,
+        ...(user.role === 'artisan' && user.artisanProfile && { artisanProfile: user.artisanProfile }), // Include artisanProfile if artisan
+      },
+    }); // Send back new refresh token and user object
   } catch (err) {
     console.error("Refresh error:", err.message);
     res.status(401).json({ message: "Invalid or expired refresh token" });

@@ -2,25 +2,29 @@ import React, { useState, useEffect } from "react";
 import { CalendarCheck } from "lucide-react";
 import CustomerLayout from "../../components/common/layouts/CustomerLayout";
 import { useBooking } from "../../context/BookingContext"; // use custom hook
+import { useAuth } from "../../context/AuthContext";
 
 const Bookings = () => {
   const [sortBy, setSortBy] = useState("date");
+  const { accessToken } = useAuth(); // Get accessToken from AuthContext
 
-  const { artisanBookings, loading, error, getBookings, viewBooking } = useBooking();
+  const { customerBookings, loading, error, getBookings, viewBooking } = useBooking();
 
   // Fetch bookings on mount
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        await getBookings();
+        if (accessToken) { // Only fetch if accessToken is available
+          await getBookings(); // This now fetches customer bookings
+        }
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
       }
     };
     fetchBookings();
-  }, [getBookings]);
+  }, [getBookings, accessToken]); // Add accessToken to dependencies
 
-  const sortedBookings = [...artisanBookings].sort((a, b) => {
+  const sortedBookings = [...customerBookings].sort((a, b) => {
     if (sortBy === "date") return new Date(a.date) - new Date(b.date);
     if (sortBy === "status") return a.status.localeCompare(b.status);
     return 0;
@@ -102,7 +106,7 @@ const Bookings = () => {
                       className="border-b hover:bg-gray-50 transition-colors"
                     >
                       <td className="p-3 text-sm text-gray-600">
-                        {booking.artisanId?.name || "N/A"}
+                        {booking.artisan?.name || "N/A"}
                       </td>
                       <td className="p-3 text-sm text-gray-600">{booking.service}</td>
                       <td className="p-3 text-sm text-gray-600">

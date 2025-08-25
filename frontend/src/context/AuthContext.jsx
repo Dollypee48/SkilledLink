@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     const data = await authService.login(credentials);
     setUser(data.user);
     setAccessToken(data.accessToken);
-    localStorage.setItem("user", JSON.stringify(data.user)); // ✅ Save user with role
+    localStorage.setItem("user", JSON.stringify(data.user)); // Save user with role and artisanProfile
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("refreshToken", data.refreshToken);
     return data;
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
     const data = await authService.register(userData);
     setUser(data.user);
     setAccessToken(data.accessToken);
-    localStorage.setItem("user", JSON.stringify(data.user)); // ✅ Save user with role
+    localStorage.setItem("user", JSON.stringify(data.user)); // Save user with role and artisanProfile
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("refreshToken", data.refreshToken);
     return data;

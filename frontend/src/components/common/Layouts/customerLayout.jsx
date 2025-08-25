@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   LogOut,
   Bell,
+  Home, // New: Added for home icon
 } from "lucide-react";
 
 const CustomerLayout = ({ children }) => {
@@ -19,6 +20,7 @@ const CustomerLayout = ({ children }) => {
   const navigate = useNavigate();
 
   const navItems = [
+    { name: "Home", path: "/", icon: Home }, // New: Home button
     { name: "Dashboard", path: "/customer-dashboard", icon: LayoutDashboard },
     { name: "Messages", path: "/customer-messages", icon: MessageSquare },
     { name: "Find Artisans", path: "/artisans", icon: Search },

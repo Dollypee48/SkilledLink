@@ -6,6 +6,8 @@ const artisanProfileSchema = new mongoose.Schema(
     skills: { type: [String], default: [] },
     service: { type: String, default: "" },
     location: { type: String, default: "" },
+    bio: { type: String, default: "" }, // New field: short biography
+    experience: { type: String, default: "" }, // New field: years of experience or a description
     rating: { type: Number, min: 0, max: 5, default: 0 },
     availability: { type: Boolean, default: true },
     subscription: { type: String, enum: ["free", "premium"], default: "free" },

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect, useCallback, useContext } from "react";
 import * as artisanService from "../services/artisanService";
 import useAuth from "../hooks/useAuth"; // Reverted import path
 
@@ -12,6 +12,7 @@ export const ArtisanProvider = ({ children }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isOnline, setIsOnline] = useState(true); // New: Manage artisan's online status
 
   const loadProfile = useCallback(async () => { // Removed 'token' parameter here
     try {
@@ -127,9 +128,18 @@ export const ArtisanProvider = ({ children }) => {
         searchArtisans,
         loadSuggestions,
         fetchBookings,
+        isOnline, // Expose online status
+        toggleOnlineStatus: () => setIsOnline((prev) => !prev), // Expose toggle function
       }}
     >
       {children}
     </ArtisanContext.Provider>
   );
+};
+
+// Custom hook
+export const useArtisan = () => {
+  const context = useContext(ArtisanContext);
+  if (!context) throw new Error("useArtisan must be used within an ArtisanProvider");
+  return context;
 };

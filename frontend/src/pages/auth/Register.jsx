@@ -13,6 +13,7 @@ const Register = () => {
     nationality: 'Nigeria',
     state: '',
     address: '',
+    skills: '', // Added for artisans
   });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,10 +30,10 @@ const Register = () => {
   ];
 
   const handleChange = (e) => {
-    const { name, value } = e.target; // Removed files handling since no file uploads
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === 'skills' ? value.split(',').map(skill => skill.trim()) : value,
     }));
   };
 
@@ -213,6 +214,19 @@ const Register = () => {
                 required
               />
             </div>
+            {formData.role === 'artisan' && (
+              <div>
+                <label className="text-sm font-medium text-[#5A1F00]">Skills (comma-separated)</label>
+                <input
+                  type="text"
+                  name="skills"
+                  value={formData.skills}
+                  onChange={handleChange}
+                  className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00]"
+                  placeholder="e.g., Plumbing, Electrical, Carpentry"
+                />
+              </div>
+            )}
           </div>
 
           {/* Error Display and Submit Button */}

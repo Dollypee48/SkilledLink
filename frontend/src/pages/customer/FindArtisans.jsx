@@ -4,12 +4,16 @@ import { Search } from "lucide-react";
 import CustomerLayout from "../../components/common/layouts/CustomerLayout";
 import { ArtisanContext } from "../../context/ArtisanContext";
 import { useContext } from "react";
+import { useLocation } from 'react-router-dom';
 
 const FindArtisans = () => {
   const { artisans, searchArtisans } = useContext(ArtisanContext); // ✅ use context directly
-  const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("");
-  const [service, setService] = useState("");
+  const locationHook = useLocation();
+  const query = new URLSearchParams(locationHook.search);
+
+  const [searchTerm, setSearchTerm] = useState(query.get('search') || "");
+  const [location, setLocation] = useState(query.get('location') || "");
+  const [service, setService] = useState(query.get('service') || "");
 
   // Services list
   const services = ["Plumbing", "Electrical", "Painting", "Cleaning", "Carpentry"];
@@ -74,10 +78,39 @@ const FindArtisans = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {artisans.map((artisan) => (
                 <div key={artisan._id} className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
-                  <h3 className="text-lg font-medium text-[#6b2d11]">{artisan.name}</h3>
-                  <p className="text-sm text-gray-600">Service: {artisan.service}</p>
-                  <p className="text-sm text-gray-600">Location: {artisan.location}</p>
-                  <div className="flex items-center gap-1 text-yellow-500">
+                  <div className="flex items-center mb-4">
+                    <img
+                      src={artisan.profileImageUrl || "https://via.placeholder.com/150"} // Placeholder if no image
+                      alt={artisan.name}
+                      className="w-16 h-16 rounded-full object-cover mr-4"
+                    />
+                    <div>
+                      <h3 className="text-lg font-medium text-[#6b2d11]">{artisan.name}</h3>
+                      <p className="text-sm text-gray-600">Service: {artisan.service}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">Location: {artisan.location}</p>
+                  <div className="mb-2">
+                    <strong className="text-sm text-gray-600">Skills:</strong>
+                    {artisan.skills && artisan.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {artisan.skills.map((skill, index) => (
+                          <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="ml-1 text-gray-500 text-sm">No skills listed.</span>
+                    )}
+                  </div>
+                  {artisan.bio && (
+                    <p className="text-sm text-gray-600 mb-2"><strong>Bio:</strong> {artisan.bio}</p>
+                  )}
+                  {artisan.experience && (
+                    <p className="text-sm text-gray-600 mb-2"><strong>Experience:</strong> {artisan.experience}</p>
+                  )}
+                  <div className="flex items-center gap-1 text-yellow-500 mb-2">
                     {Array(5)
                       .fill()
                       .map((_, i) => (

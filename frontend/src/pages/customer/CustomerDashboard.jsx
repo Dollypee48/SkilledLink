@@ -6,10 +6,11 @@ import { useBooking } from "../../context/BookingContext"; // Assuming useBookin
 import { useAuth } from "../../context/AuthContext";
 import { ArtisanContext } from "../../context/ArtisanContext";
 // import KYCForm from '../../components/KYCForm'; // Removed KYCForm import
+import { AlertTriangle, Clock, XCircle, ShieldCheck } from 'lucide-react'; // Import necessary icons for KYC Status
 
 export default function CustomerDashboard() {
   // Destructure 'bookings' as 'myBookings' to avoid conflict and use the correct data for customers
-  const { artisanBookings, loading: bookingsLoading, error: bookingsError, getBookings } = useBooking();
+  const { customerBookings, loading: bookingsLoading, error: bookingsError, getBookings } = useBooking();
 
   // Use ArtisanContext directly for suggestions
   const { suggestions, loadSuggestions } = useContext(ArtisanContext);
@@ -40,13 +41,13 @@ export default function CustomerDashboard() {
 
   // Safely access myBookings (which will be an array, or empty array initially)
   const upcomingBooking =
-    artisanBookings?.find((b) => b.status === "Pending") || {
+    customerBookings?.find((b) => b.status === "Pending") || {
       service: "Light fixture installation",
       date: "April 3, 2025 at 2:00 PM",
     };
 
   const totalSpent =
-    artisanBookings?.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0).toFixed(2) || "0.00";
+    customerBookings?.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0).toFixed(2) || "0.00";
 
   const loading = bookingsLoading || artisansLoading;
   const error = bookingsError || artisansError;
@@ -138,7 +139,7 @@ export default function CustomerDashboard() {
               <p className="text-gray-600">Loading bookings...</p>
             ) : error ? (
               <p className="text-red-600">{error}</p>
-            ) : artisanBookings?.length === 0 ? ( // Use artisanBookings here
+            ) : customerBookings?.length === 0 ? ( // Use customerBookings here
               <p className="text-gray-600">
                 No bookings found. It looks like you haven't made any bookings yet!
               </p>
@@ -153,7 +154,7 @@ export default function CustomerDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {artisanBookings?.map((booking) => ( // Use artisanBookings here
+                  {customerBookings?.map((booking) => ( // Use customerBookings here
                     <tr key={booking._id} className="border-b hover:bg-gray-50 transition">
                       <td className="p-2">{new Date(booking.date).toLocaleDateString() || "N/A"}</td>
                       <td className="p-2">{booking.artisan?.name || "N/A"}</td>

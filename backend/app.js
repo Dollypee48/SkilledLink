@@ -9,8 +9,9 @@ const bookingsRoutes = require('./routes/bookingsRoutes');
 // const messagesRoutes = require('./routes/messagesRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const issueRoutes = require('./routes/issueRoutes'); // Import new issue routes
-// const reportRoutes = require('./routes/reportRoutes'); // Comment out old report routes
+const reportRoutes = require('./routes/reportRoutes'); // Uncommented new report routes
 const adminRoutes = require('./routes/adminRoutes');
+const kycRoutes = require('./routes/kycRoutes'); // New: Import KYC routes
 
 const app = express();
 
@@ -30,8 +31,9 @@ app.use('/api/bookings', bookingsRoutes);
 // app.use('/api/messages', messagesRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/issues', issueRoutes); // Use new issue routes
-// app.use('/api/reports', reportRoutes); // Comment out old report routes
+app.use('/api/reports', reportRoutes); // Uncommented new report routes
 app.use('/api/admin', adminRoutes);
+app.use('/api/kyc', kycRoutes); // New: Use KYC routes
 
 // Error Handler
 app.use(errorHandler);

@@ -17,7 +17,9 @@ import CustomerProfile from './pages/customer/Profile';
 import CustomerReport from './pages/customer/ReportIssue';
 import CustomerReviews from './pages/customer/ReviewsAndRatings'; 
 import CustomerMessages from './pages/customer/Messages'; // Uncommented
-
+import Services from './pages/Services'; // New: Import Services page
+import HowItWorks from './pages/HowItWorks'; // New: Import HowItWorks page
+import AboutUs from './pages/AboutUs'; // New: Import AboutUs page
 
 // Artisan Pages
 import ArtisanDashboard from './pages/artisan/ArtisanDashboard';
@@ -49,8 +51,12 @@ const RoutesComponent = () => {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/artisans" element={<FindArtisans />} />
+      <Route path="/find-artisans" element={<FindArtisans />} />
+      <Route path="/artisans" element={<FindArtisans />} /> {/* New: Add /artisans route for compatibility */}
       <Route path="/artisan/:id" element={<ArtisanDetail />} />
+      <Route path="/services" element={<Services />} /> {/* New: Services page */}
+      <Route path="/how-it-works" element={<HowItWorks />} /> {/* New: How It Works page */}
+      <Route path="/about" element={<AboutUs />} /> {/* New: About Us page */}
       <Route path="/customer-dashboard" element={<CustomerDashboard />} />
       <Route path="/customer-bookings" element={<CustomerBookings />} />
       <Route path="/customer-profile" element={<CustomerProfile />} />

@@ -12,6 +12,7 @@ import {
   LogOut,
   Bell,
   FileCheck, // New: Added for KYC Verification
+  Home, // New: Added for home icon
 } from "lucide-react";
 
 const AdminLayout = ({ children }) => {
@@ -20,6 +21,7 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
 
   const navItems = [
+    { name: "Home", path: "/", icon: Home }, // New: Home button
     { name: "Dashboard", path: "/admin-dashboard", icon: LayoutDashboard },
     { name: "Manage Users", path: "/manage-users", icon: Users },
     { name: "Manage Artisans", path: "/manage-artisans", icon: Users }, // Added
@@ -33,7 +35,7 @@ const AdminLayout = ({ children }) => {
 
   const onLogout = () => {
     handleLogout();
-    navigate("/login");
+    navigate("/");
   };
 
   return (

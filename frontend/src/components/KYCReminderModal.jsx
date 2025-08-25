@@ -25,8 +25,9 @@ const KYCReminderModal = () => {
   }, []);
 
   useEffect(() => {
-    if (user && user.kycStatus !== 'approved') {
-      setIsOpen(true); // Open immediately if not approved
+    const allowedRoles = ["customer", "artisan"];
+    if (user && allowedRoles.includes(user.role) && user.kycStatus !== 'approved') {
+      setIsOpen(true); // Open immediately if not approved and is an allowed role
       startTimer(); // Start timer for subsequent pop-ups
     } else {
       setIsOpen(false);
@@ -34,7 +35,7 @@ const KYCReminderModal = () => {
     }
 
     return () => stopTimer();
-  }, [user?.kycStatus, startTimer, stopTimer]);
+  }, [user?.kycStatus, user?.role, startTimer, stopTimer]);
 
   const handleClose = () => {
     setIsOpen(false);
