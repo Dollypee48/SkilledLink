@@ -33,7 +33,7 @@ const AboutUs = () => {
         <div className="mt-12 text-center">
           <h2 className="text-3xl font-bold text-[#151E3D] mb-4">Ready to Experience SkilledLink?</h2>
           <p className="text-lg text-gray-700 mb-6">Join our platform today and connect with the best in the business.</p>
-          <a href="/register" className="inline-block bg-[#F59E0B] text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-[#D97706] transition duration-300">
+          <a href="/register" className="inline-block bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 py-3 rounded-md text-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 shadow-lg hover:shadow-xl">
             Get Started
           </a>
         </div>

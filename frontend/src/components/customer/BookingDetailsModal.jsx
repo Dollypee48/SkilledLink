@@ -37,7 +37,7 @@ const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full relative border border-gray-200">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 rounded"
         >
           <XCircle className="w-6 h-6" />
         </button>
@@ -62,14 +62,14 @@ const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
           {booking.artisan && ( // Only show chat button if artisan exists
             <button
               onClick={handleChatWithArtisan}
-              className="px-4 py-2 rounded-md bg-[#151E3D] hover:bg-[#1E2A4A] text-white font-semibold transition-colors"
+              className="px-4 py-2 rounded-md bg-[#151E3D] hover:bg-[#1E2A4A] text-white font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2"
             >
               Chat with {booking.artisan.name}
             </button>
           )}
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold transition-colors"
+            className="px-4 py-2 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
             Close
           </button>

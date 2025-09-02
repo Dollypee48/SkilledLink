@@ -240,17 +240,17 @@ const FindArtisans = () => {
                   <div className="space-y-4">
                     <button
                       onClick={() => handleViewProfile(artisan)}
-                      className="w-full py-2.5 px-4 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium transition-colors duration-200 flex items-center justify-center border border-gray-200 hover:border-gray-300"
+                      className="w-full py-2.5 px-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-all duration-300 flex items-center justify-center border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       View Profile
                     </button>
                     
                     <button
-                      className={`w-full py-2.5 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center ${
+                      className={`w-full py-2.5 px-4 rounded-lg font-medium transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                         artisan?.availability
-                          ? 'bg-[#151E3D] hover:bg-[#1E2A4A] text-white'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          ? 'bg-[#151E3D] hover:bg-[#1E2A4A] text-white focus:ring-[#151E3D]'
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed focus:ring-gray-300'
                       }`}
                       onClick={() => handleBookNow(artisan)}
                       disabled={!artisan?.availability}
@@ -299,7 +299,7 @@ const FindArtisans = () => {
                 </div>
                 <button
                   onClick={closeProfileModal}
-                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                  className="p-1.5 hover:bg-gray-100 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
                 >
                   <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -675,10 +675,10 @@ const FindArtisans = () => {
                     handleBookNow(selectedArtisanProfile);
                   }}
                   disabled={!selectedArtisanProfile.availability}
-                  className={`flex-1 py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                  className={`flex-1 py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                     selectedArtisanProfile.availability
-                      ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-[#151E3D] hover:bg-[#1E2A4A] text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-[#151E3D]'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed focus:ring-gray-300'
                   }`}
                 >
                   {selectedArtisanProfile.availability ? (
@@ -700,7 +700,7 @@ const FindArtisans = () => {
                 
                 <button
                   onClick={closeProfileModal}
-                  className="px-8 py-4 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold text-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                  className="px-8 py-4 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold text-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
                 >
                   Close Profile
                 </button>

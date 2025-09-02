@@ -34,10 +34,10 @@ const HowItWorks = () => {
           <h2 className="text-3xl font-bold text-[#151E3D] mb-4">Join Our Community</h2>
           <p className="text-lg text-gray-700 mb-6">Become an artisan and offer your skills, or find the perfect professional for your next project.</p>
           <div className="flex justify-center gap-4">
-            <a href="/register" className="inline-block bg-[#F59E0B] text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-[#D97706] transition duration-300">
+            <a href="/register" className="inline-block bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 py-3 rounded-md text-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 shadow-lg hover:shadow-xl">
               Become an Artisan
             </a>
-            <a href="/" className="inline-block border border-[#F59E0B] text-[#151E3D] px-8 py-3 rounded-md text-lg font-medium hover:bg-[#F59E0B] hover:text-white transition duration-300">
+            <a href="/" className="inline-block border-2 border-[#151E3D] text-[#151E3D] px-8 py-3 rounded-md text-lg font-medium hover:bg-[#151E3D] hover:text-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2">
               Find a Service
             </a>
           </div>

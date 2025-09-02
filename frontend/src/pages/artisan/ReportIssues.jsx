@@ -179,7 +179,7 @@ const ArtisanReport = () => {
 
             <button
               type="submit"
-              className="w-full py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition"
+              className="w-full py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2"
               disabled={loading}
             >
               {loading ? "Submitting..." : "Submit Report"}

@@ -166,8 +166,8 @@ const ManageUsers = () => {
                 </label>
               </div>
               <div className="flex justify-end gap-4">
-                <button onClick={() => setShowEditModal(false)} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Cancel</button>
-                <button onClick={handleSaveEdit} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Save Changes</button>
+                <button onClick={() => setShowEditModal(false)} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-300">Cancel</button>
+                <button onClick={handleSaveEdit} className="bg-[#151E3D] hover:bg-[#1E2A4A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2 transition-all duration-300">Save Changes</button>
               </div>
             </div>
           </div>

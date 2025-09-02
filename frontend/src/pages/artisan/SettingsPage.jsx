@@ -195,20 +195,20 @@ const ArtisanSettingsPage = () => {
             <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2 ${
                   activeTab === 'profile'
                     ? 'bg-white text-[#151E3D] shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
                 Profile Settings
               </button>
               <button
                 onClick={() => setActiveTab('password')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2 ${
                   activeTab === 'password'
                     ? 'bg-white text-[#151E3D] shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
                 Change Password
@@ -239,7 +239,7 @@ const ArtisanSettingsPage = () => {
                         <User className="w-16 h-16 text-gray-500" />
                       </div>
                     )}
-                    <label htmlFor="profile-image-upload" className="absolute bottom-0 right-0 bg-[#151E3D] text-white rounded-full p-2 cursor-pointer hover:bg-[#1E2A4A] transition-colors">
+                    <label htmlFor="profile-image-upload" className="absolute bottom-0 right-0 bg-[#151E3D] hover:bg-[#1E2A4A] text-white rounded-full p-2 cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2">
                       <Camera className="h-5 w-5" />
                       <input 
                         id="profile-image-upload" 
@@ -254,7 +254,7 @@ const ArtisanSettingsPage = () => {
                     <button
                       type="button"
                       onClick={() => { setProfileImage(null); setProfileImagePreview(''); }}
-                      className="text-red-500 hover:text-red-700 text-sm mt-2"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 text-sm mt-2 px-3 py-1 rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                     >
                       Remove Image
                     </button>
@@ -416,7 +416,7 @@ const ArtisanSettingsPage = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-[#151E3D] hover:bg-[#1E2A4A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#151E3D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-[#151E3D] hover:bg-[#1E2A4A] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#151E3D] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Saving Changes...' : 'Save Profile Changes'}
                   </button>
@@ -527,7 +527,7 @@ const ArtisanSettingsPage = () => {
                   <button
                     type="submit"
                     disabled={passwordLoading}
-                    className="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-[#151E3D] hover:bg-[#1E2A4A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#151E3D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-[#151E3D] hover:bg-[#1E2A4A] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#151E3D] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {passwordLoading ? 'Changing Password...' : 'Change Password'}
                   </button>

@@ -162,7 +162,7 @@ const ReportIssue = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition"
+              className="w-full py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2"
             >
               {loading ? "Submitting..." : "Submit Report"}
             </button>
@@ -200,7 +200,7 @@ const ReportIssue = () => {
                   </div>
                   <button
                     onClick={() => handleDeleteReport(report._id)}
-                    className="mt-2 sm:mt-0 sm:ml-4 py-1 px-3 rounded-md bg-red-100 text-red-600 hover:bg-red-200 flex items-center gap-1"
+                    className="mt-2 sm:mt-0 sm:ml-4 py-1 px-3 rounded-md bg-red-100 text-red-600 hover:bg-red-200 flex items-center gap-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                   >
                     <Trash2 className="w-4 h-4" /> Delete
                   </button>
