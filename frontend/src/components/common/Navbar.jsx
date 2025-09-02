@@ -53,14 +53,9 @@ const Header = () => {
         
         <div className="space-x-3 flex items-center">
           {!isAuthenticated ? (
-            <>
-              <Link to="/login" className="bg-[#F59E0B] text-white px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
-                Sign in
-              </Link>
-              <Link to="/register" className="bg-[#10B981] text-white px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
-                Get Started
-              </Link>
-            </>
+            <Link to="/login" className="text-white hover:text-[#F59E0B] transition-colors duration-300">
+              Sign in/Get Started
+            </Link>
           ) : (
             <div className="flex items-center space-x-4">
               {/* {user?.role === 'artisan' && (

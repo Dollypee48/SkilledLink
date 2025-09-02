@@ -7,8 +7,8 @@ import { useAuth } from './context/AuthContext'; // Corrected import path
 
 // Public/Customer Pages
 import Home from './pages/Home';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import FindArtisans from './pages/customer/FindArtisans';
 import ArtisanDetail from './pages/customer/ArtisanDetail';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
