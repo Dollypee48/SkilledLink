@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
-import ArtisanLayout from "../../components/common/layouts/ArtisanLayout";
+import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
 import { IssueContext } from "../../context/IssueContext";
 import useAuth from "../../hooks/useAuth";
 
@@ -85,7 +85,7 @@ const ArtisanReport = () => {
 
   return (
     <ArtisanLayout>
-      <div className="p-6 text-[#6b2d11]">
+      <div className="p-6 text-[#151E3D]">
         <div className="flex items-center gap-2 mb-6">
           <AlertTriangle className="w-8 h-8 text-red-500" />
           <h1 className="text-3xl font-bold">Report Issue</h1>
@@ -99,7 +99,7 @@ const ArtisanReport = () => {
           <h2 className="text-xl font-semibold mb-4">Submit a Report</h2>
           <form onSubmit={handleSubmitIssue} className="space-y-4 text-left">
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">
+              <label className="text-sm font-medium text-[#151E3D]">
                 Title
               </label>
               <input
@@ -107,18 +107,18 @@ const ArtisanReport = () => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Summarize the issue..."
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">
+              <label className="text-sm font-medium text-[#151E3D]">
                 Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               >
                 <option value="">Select a category</option>
@@ -131,13 +131,13 @@ const ArtisanReport = () => {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">
+              <label className="text-sm font-medium text-[#151E3D]">
                 Priority
               </label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               >
                 <option value="low">Low</option>
@@ -146,27 +146,27 @@ const ArtisanReport = () => {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">
+              <label className="text-sm font-medium text-[#151E3D]">
                 Description
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe the issue in detail..."
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11] h-28 resize-none"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D] h-28 resize-none"
                 required
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">
+              <label className="text-sm font-medium text-[#151E3D]">
                 Upload Evidence (JPEG/PNG)
               </label>
               <input
                 type="file"
                 accept="image/jpeg,image/png"
                 onChange={handleFileChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
               />
               {file && (
                 <p className="text-sm text-gray-600 mt-1">
@@ -179,7 +179,7 @@ const ArtisanReport = () => {
 
             <button
               type="submit"
-              className="w-full py-2 rounded-md bg-[#FDE1F7] hover:bg-[#fcd5f5] text-[#6b2d11] font-semibold shadow-md transition"
+              className="w-full py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition"
               disabled={loading}
             >
               {loading ? "Submitting..." : "Submit Report"}

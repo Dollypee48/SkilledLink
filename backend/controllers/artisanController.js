@@ -16,6 +16,28 @@ exports.getCurrentArtisanProfile = async (req, res) => {
       return res.status(404).json({ message: "Artisan profile not found" });
     }
 
+    // Calculate actual rating from reviews
+    let calculatedRating = 0;
+    let reviewCount = 0;
+    
+    try {
+      const Review = require("../models/Review");
+      const reviews = await Review.find({ artisanId: user._id });
+      if (reviews.length > 0) {
+        const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+        calculatedRating = totalRating / reviews.length;
+        reviewCount = reviews.length;
+      }
+    } catch (error) {
+      console.error('Error calculating rating for artisan:', user._id, error);
+    }
+
+    // Update the artisanProfile with calculated rating
+    if (user.artisanProfile) {
+      user.artisanProfile.rating = calculatedRating;
+      user.artisanProfile.reviewCount = reviewCount;
+    }
+
     res.json(user);
   } catch (err) {
     console.error("Profile error:", err);
@@ -93,39 +115,71 @@ exports.getArtisans = async (req, res) => {
     if (location) query.location = { $regex: location, $options: "i" };
     if (service) query.service = { $regex: service, $options: "i" };
 
-    console.log("Artisan search query:", query); // Log the query for debugging
-
-    const artisansBeforePopulate = await ArtisanProfile.find(query);
-    console.log("Artisans found before populate:", artisansBeforePopulate);
-
     const artisans = await ArtisanProfile.find(query)
-      .populate("userId", "name role profileImageUrl") // Include profileImageUrl
+      .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus") // Include all necessary user fields
       .select("-__v");
 
-    console.log("Artisans found after populate:", artisans);
+    // Import Review model to calculate ratings
+    const Review = require("../models/Review");
 
-    const result = artisans.map((ap) => {
-      console.log("Processing artisan profile (ap):", ap);
+    const result = await Promise.all(artisans.map(async (ap) => {
       if (!ap.userId) {
         console.warn("Skipping artisan profile due to null userId:", ap._id);
         return null; // Skip if userId is null (user might have been deleted)
       }
+      
+      // Calculate actual rating from reviews
+      let calculatedRating = 0;
+      let reviewCount = 0;
+      
+      try {
+        const reviews = await Review.find({ artisanId: ap.userId._id });
+        if (reviews.length > 0) {
+          const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+          calculatedRating = totalRating / reviews.length;
+          reviewCount = reviews.length;
+        }
+      } catch (error) {
+        console.error('Error calculating rating for artisan:', ap.userId._id, error);
+      }
+      
       return {
         _id: ap.userId._id,
         name: ap.userId.name,
+        email: ap.userId.email || "",
+        phone: ap.userId.phone || "",
         role: "Artisan",
         skills: ap.skills.length ? ap.skills : ["Unknown"],
         service: ap.service || "Unknown",
         location: ap.location || "Unknown",
-        rating: ap.rating || 0,
+        rating: calculatedRating,
+        reviewCount: reviewCount,
         bio: ap.bio || "", // Include bio
         experience: ap.experience || "", // Include experience
         availability: ap.availability, // Include availability in the response
         profileImageUrl: ap.userId.profileImageUrl || "", // Include profile image URL
+        state: ap.userId.state || "", // Include user's state
+        address: ap.userId.address || "", // Include user's address
+        nationality: ap.userId.nationality || "", // Include nationality
+        kycVerified: ap.userId.kycVerified || false, // Include KYC verification status
+        kycStatus: ap.userId.kycStatus || "pending", // Include KYC status
+        // Include artisanProfile data for nested access
+        artisanProfile: {
+          skills: ap.skills.length ? ap.skills : ["Unknown"],
+          service: ap.service || "Unknown",
+          bio: ap.bio || "",
+          experience: ap.experience || "",
+          rating: calculatedRating,
+          reviewCount: reviewCount,
+          availability: ap.availability
+        }
       };
-    }).filter(Boolean); // Filter out null entries
+    }));
+    
+    // Filter out null entries
+    const filteredResult = result.filter(Boolean);
 
-    res.json(result);
+    res.json(filteredResult);
   } catch (err) {
     console.error("Get artisans error:", err);
     res.status(500).json({ message: "Server error" });
@@ -136,26 +190,60 @@ exports.getArtisans = async (req, res) => {
 exports.getArtisanById = async (req, res) => {
   try {
     const artisanProfile = await ArtisanProfile.findById(req.params.id)
-      .populate("userId", "name email profileImageUrl") // Populate user details
+      .populate("userId", "name email phone profileImageUrl state address nationality kycVerified kycStatus") // Include all necessary user fields
       .select("-__v");
 
     if (!artisanProfile) {
       return res.status(404).json({ message: "Artisan not found" });
     }
 
+    // Calculate actual rating from reviews
+    let calculatedRating = 0;
+    let reviewCount = 0;
+    
+    try {
+      const Review = require("../models/Review");
+      const reviews = await Review.find({ artisanId: artisanProfile.userId._id });
+      if (reviews.length > 0) {
+        const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+        calculatedRating = totalRating / reviews.length;
+        reviewCount = reviews.length;
+      }
+    } catch (error) {
+      console.error('Error calculating rating for artisan:', artisanProfile.userId._id, error);
+    }
+
     // Restructure the response to be consistent with getArtisans
     const result = {
       _id: artisanProfile.userId._id,
       name: artisanProfile.userId.name,
+      email: artisanProfile.userId.email || "",
+      phone: artisanProfile.userId.phone || "",
       role: "Artisan",
       skills: artisanProfile.skills.length ? artisanProfile.skills : ["Unknown"],
       service: artisanProfile.service || "Unknown",
       location: artisanProfile.location || "Unknown",
-      rating: artisanProfile.rating || 0,
+      rating: calculatedRating,
+      reviewCount: reviewCount,
       bio: artisanProfile.bio || "",
       experience: artisanProfile.experience || "",
       availability: artisanProfile.availability,
       profileImageUrl: artisanProfile.userId.profileImageUrl || "",
+      state: artisanProfile.userId.state || "", // Include user's state
+      address: artisanProfile.userId.address || "", // Include user's address
+      nationality: artisanProfile.userId.nationality || "", // Include nationality
+      kycVerified: artisanProfile.userId.kycVerified || false, // Include KYC verification status
+      kycStatus: artisanProfile.userId.kycStatus || "pending", // Include KYC status
+      // Include artisanProfile data for nested access
+      artisanProfile: {
+        skills: artisanProfile.skills.length ? artisanProfile.skills : ["Unknown"],
+        service: artisanProfile.service || "Unknown",
+        bio: artisanProfile.bio || "",
+        experience: artisanProfile.experience || "",
+        rating: calculatedRating,
+        reviewCount: reviewCount,
+        availability: artisanProfile.availability
+      }
     };
 
     res.json(result);
@@ -176,26 +264,70 @@ exports.suggestArtisansByLocation = async (req, res) => {
     const artisans = await ArtisanProfile.find({
       location: { $regex: user.state, $options: "i" },
     })
-      .populate("userId", "name role profileImageUrl") // Include profileImageUrl
+      .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus") // Include all necessary user fields
       .limit(5);
 
-    const suggestions = artisans.map((ap) => {
+    // Import Review model to calculate ratings
+    const Review = require("../models/Review");
+
+    const suggestions = await Promise.all(artisans.map(async (ap) => {
       if (!ap.userId) {
         console.warn("Skipping suggested artisan profile due to null userId:", ap._id);
         return null;
       }
+
+      // Calculate actual rating from reviews
+      let calculatedRating = 0;
+      let reviewCount = 0;
+      
+      try {
+        const reviews = await Review.find({ artisanId: ap.userId._id });
+        if (reviews.length > 0) {
+          const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+          calculatedRating = totalRating / reviews.length;
+          reviewCount = reviews.length;
+        }
+      } catch (error) {
+        console.error('Error calculating rating for suggested artisan:', ap.userId._id, error);
+      }
+
       return {
         _id: ap.userId._id,
         name: ap.userId.name,
+        email: ap.userId.email || "",
+        phone: ap.userId.phone || "",
         role: "Artisan",
         skills: ap.skills.length ? ap.skills : ["Unknown"],
         service: ap.service || "Unknown",
         location: ap.location || "Unknown",
-        rating: ap.rating || 0,
+        rating: calculatedRating,
+        reviewCount: reviewCount,
+        bio: ap.bio || "",
+        experience: ap.experience || "",
+        availability: ap.availability,
+        profileImageUrl: ap.userId.profileImageUrl || "",
+        state: ap.userId.state || "", // Include user's state
+        address: ap.userId.address || "", // Include user's address
+        nationality: ap.userId.nationality || "", // Include nationality
+        kycVerified: ap.userId.kycVerified || false, // Include KYC verification status
+        kycStatus: ap.userId.kycStatus || "pending", // Include KYC status
+        // Include artisanProfile data for nested access
+        artisanProfile: {
+          skills: ap.skills.length ? ap.skills : ["Unknown"],
+          service: ap.service || "Unknown",
+          bio: ap.bio || "",
+          experience: ap.experience || "",
+          rating: calculatedRating,
+          reviewCount: reviewCount,
+          availability: ap.availability
+        }
       };
-    }).filter(Boolean);
+    }));
+    
+    // Filter out null entries
+    const filteredSuggestions = suggestions.filter(Boolean);
 
-    res.json({ message: "Suggested artisans", suggestions });
+    res.json({ message: "Suggested artisans", suggestions: filteredSuggestions });
   } catch (err) {
     console.error("Suggestion error:", err);
     res.status(500).json({ message: "Server error" });

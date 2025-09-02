@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import { ReviewService } from "../services/reviewService";
 import useAuth from "../hooks/useAuth";
 
@@ -11,7 +11,7 @@ export const ReviewProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   // Helper for API requests
-  const handleRequest = async (callback) => {
+  const handleRequest = useCallback(async (callback) => {
     setLoading(true);
     setError(null);
     try {
@@ -24,34 +24,45 @@ export const ReviewProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken]);
 
   // Create a review
-  const createReview = async (reviewData) => {
+  const createReview = useCallback(async (reviewData) => {
+    console.log('ReviewContext: Creating review with data:', reviewData);
     const newReview = await handleRequest((token) =>
       ReviewService.createReview(reviewData, token)
     );
+    console.log('ReviewContext: Review created successfully:', newReview);
     setReviews((prev) => [...prev, newReview]);
     return newReview;
-  };
+  }, [handleRequest]);
 
   // Fetch current user's reviews
-  const getMyReviews = async () => {
+  const getMyReviews = useCallback(async () => {
     const data = await handleRequest((token) =>
       ReviewService.getMyReviews(token)
     );
     setReviews(data);
     return data;
-  };
+  }, [handleRequest]);
+
+  // Fetch reviews for an artisan (for artisan users)
+  const getArtisanReviews = useCallback(async () => {
+    const data = await handleRequest((token) =>
+      ReviewService.getArtisanReviews(token)
+    );
+    setReviews(data);
+    return data;
+  }, [handleRequest]);
 
   // Update a review
-  const updateReview = async (id, reviewData) => {
+  const updateReview = useCallback(async (id, reviewData) => {
     const updated = await handleRequest((token) =>
       ReviewService.updateReview(id, reviewData, token)
     );
     setReviews((prev) => prev.map((r) => (r._id === id ? updated : r)));
     return updated;
-  };
+  }, [handleRequest]);
 
   return (
     <ReviewContext.Provider
@@ -61,6 +72,7 @@ export const ReviewProvider = ({ children }) => {
         error,
         createReview,
         getMyReviews,
+        getArtisanReviews,
         updateReview,
       }}
     >

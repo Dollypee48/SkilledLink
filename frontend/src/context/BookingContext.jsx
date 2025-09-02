@@ -10,6 +10,8 @@ export const BookingProvider = ({ children }) => {
   const [customerBookings, setCustomerBookings] = useState([]); // New state for customer bookings
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); // State for modal visibility
+  const [selectedArtisan, setSelectedArtisan] = useState(null); // State for selected artisan
 
   const handleRequest = useCallback( // Memoize handleRequest
     async (callback) => {
@@ -90,11 +92,14 @@ export const BookingProvider = ({ children }) => {
     [handleRequest]
   );
 
+  const openBookingModal = useCallback(() => setIsBookingModalOpen(true), []);
+  const closeBookingModal = useCallback(() => setIsBookingModalOpen(false), []);
+
   return (
     <BookingContext.Provider
       value={{
         artisanBookings: bookings, // Renamed 'bookings' to 'artisanBookings' for clarity in context
-        customerBookings, // Exposed new customer bookings state
+        customerBookings,
         loading,
         error,
         createBooking,
@@ -102,7 +107,12 @@ export const BookingProvider = ({ children }) => {
         viewBooking,
         updateBookingStatus,
         deleteBooking,
-        fetchArtisanBookings, // Exposed new function
+        fetchArtisanBookings,
+        isBookingModalOpen,
+        openBookingModal,
+        closeBookingModal,
+        selectedArtisan,
+        setSelectedArtisan,
       }}
     >
       {children}

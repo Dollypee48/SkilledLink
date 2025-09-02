@@ -2,6 +2,10 @@ import React, { Component } from "react";
 import RoutesComponent from "./routes";  // ✅ fixed import
 import KYCReminderModal from "./components/KYCReminderModal"; // Import the KYC Reminder Modal
 import Navbar from './components/common/Navbar';
+import { useAuth } from './context/AuthContext'; // Import useAuth hook
+import { useLocation } from 'react-router-dom'; // Import useLocation hook
+import { ToastContainer } from 'react-toastify'; // Import ToastContainer
+import 'react-toastify/dist/ReactToastify.css'; // Import toast styles
 
 // Error Boundary
 class ErrorBoundary extends Component {
@@ -24,13 +28,23 @@ class ErrorBoundary extends Component {
 }
 
 const App = () => {
+  const { isAuthenticated } = useAuth(); // Get authentication status
+  const location = useLocation(); // Get current location
+  const shouldShowNavbar = [
+    '/',
+    '/services',
+    '/how-it-works',
+    '/about',
+  ].includes(location.pathname);
+
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
+      <div className="min-h-screen bg-[#F8FAFC]">
+        {shouldShowNavbar && <Navbar />} {/* Conditionally render Navbar on specific public pages */}
         <RoutesComponent />  {/* ✅ use renamed component */}
       </div>
       <KYCReminderModal /> {/* Render the KYC Reminder Modal globally */}
+      <ToastContainer /> {/* Toast notifications container */}
     </ErrorBoundary>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import CustomerLayout from '../../components/common/Layouts/customerLayout';
+import CustomerLayout from '../../components/common/Layouts/CustomerLayout';
 
 const CustomerMessages = () => {
   return (

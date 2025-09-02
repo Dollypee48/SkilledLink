@@ -1,14 +1,13 @@
 import api from '../utils/api';
 
 export const kycService = {
-  submitKYC: async (formData, token) => {
+  submitKYC: async (kycData, token) => {
     if (!token) {
       throw new Error("Authentication token is required.");
     }
     try {
-      const response = await api.post('/kyc/submit', formData, {
+      const response = await api.post('/kyc/submit', kycData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
         },
       });

@@ -13,7 +13,7 @@ const Register = () => {
     nationality: 'Nigeria',
     state: '',
     address: '',
-    skills: '', // Added for artisans
+    service: '', // Changed from skills to service for artisans
   });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +33,7 @@ const Register = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'skills' ? value.split(',').map(skill => skill.trim()) : value,
+      [name]: value, // Assign value directly, no splitting by commas
     }));
   };
 
@@ -75,9 +75,9 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#5A1F00]">
+    <div className="min-h-screen flex items-center justify-center bg-[#151E3D]">
       <div className="bg-white rounded-md shadow-lg p-8 w-full max-w-md text-center mt-16">
-        <h2 className="text-lg font-semibold mb-2 text-[#5A1F00]">Create Account</h2>
+        <h2 className="text-lg font-semibold mb-2 text-[#151E3D]">Create Account</h2>
         <p className="text-sm text-gray-600 mb-6">Sign up to join SkilledLink</p>
 
         {/* Role Toggle */}
@@ -85,7 +85,7 @@ const Register = () => {
           <button
             onClick={() => handleRoleChange('customer')}
             className={`w-1/2 py-2 rounded-full text-sm font-medium transition ${
-              formData.role === 'customer' ? 'bg-[#5A1F00] text-white shadow-md' : 'text-[#5A1F00]'
+              formData.role === 'customer' ? 'bg-[#151E3D] text-white shadow-md' : 'text-[#151E3D]'
             }`}
           >
             Customer
@@ -93,7 +93,7 @@ const Register = () => {
           <button
             onClick={() => handleRoleChange('artisan')}
             className={`w-1/2 py-2 rounded-full text-sm font-medium transition ${
-              formData.role === 'artisan' ? 'bg-[#5A1F00] text-white shadow-md' : 'text-[#5A1F00]'
+              formData.role === 'artisan' ? 'bg-[#151E3D] text-white shadow-md' : 'text-[#151E3D]'
             }`}
           >
             Artisan
@@ -104,35 +104,35 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4 text-left">
             <div>
-              <label className="text-sm font-medium text-[#5A1F00]">Name</label>
+              <label className="text-sm font-medium text-[#151E3D]">Name</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-[#5A1F00]">Email Address</label>
+              <label className="text-sm font-medium text-[#151E3D]">Email Address</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               />
             </div>
             <div className="relative">
-              <label className="text-sm font-medium text-[#5A1F00]">Password</label>
+              <label className="text-sm font-medium text-[#151E3D]">Password</label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00] pr-10"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D] pr-10"
                 required
               />
               <span
@@ -143,13 +143,13 @@ const Register = () => {
               </span>
             </div>
             <div className="relative">
-              <label className="text-sm font-medium text-[#5A1F00]">Confirm Password</label>
+              <label className="text-sm font-medium text-[#151E3D]">Confirm Password</label>
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00] pr-10"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D] pr-10"
                 required
               />
               <span
@@ -160,23 +160,23 @@ const Register = () => {
               </span>
             </div>
             <div>
-              <label className="text-sm font-medium text-[#5A1F00]">Phone</label>
+              <label className="text-sm font-medium text-[#151E3D]">Phone</label>
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-[#5A1F00]">Nationality</label>
+              <label className="text-sm font-medium text-[#151E3D]">Nationality</label>
               <select
                 name="nationality"
                 value={formData.nationality}
                 onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               >
                 {africanCountries.map((country) => (
@@ -187,12 +187,12 @@ const Register = () => {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-[#5A1F00]">State</label>
+              <label className="text-sm font-medium text-[#151E3D]">State</label>
               <select
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               >
                 <option value="">Select State</option>
@@ -204,26 +204,27 @@ const Register = () => {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-[#5A1F00]">Address</label>
+              <label className="text-sm font-medium text-[#151E3D]">Address</label>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               />
             </div>
             {formData.role === 'artisan' && (
               <div>
-                <label className="text-sm font-medium text-[#5A1F00]">Skills (comma-separated)</label>
+                <label className="text-sm font-medium text-[#151E3D]">Primary Service</label>
                 <input
                   type="text"
-                  name="skills"
-                  value={formData.skills}
+                  name="service"
+                  value={formData.service}
                   onChange={handleChange}
-                  className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-md focus:outline-none focus:ring-2 focus:ring-[#5A1F00]"
+                  className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                   placeholder="e.g., Plumbing, Electrical, Carpentry"
+                  required
                 />
               </div>
             )}
@@ -233,18 +234,18 @@ const Register = () => {
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <button
             type="submit"
-            className="w-full py-2 rounded-md bg-[#FDE1F7] hover:bg-[#fcd5f5] text-[#5A1F00] font-semibold shadow-md transition"
+            className="w-full py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition"
           >
             Register
           </button>
         </form>
 
         {/* Login Redirect */}
-        <p className="text-sm mt-4 text-[#5A1F00]">
+        <p className="text-sm mt-4 text-[#151E3D]">
           Already have an account?{' '}
           <button
             onClick={() => navigate('/login')}
-            className="text-[#5A1F00] font-medium hover:underline transition"
+            className="text-[#151E3D] font-medium hover:underline transition"
           >
             Login
           </button>

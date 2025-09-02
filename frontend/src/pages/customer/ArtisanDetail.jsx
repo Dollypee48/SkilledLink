@@ -1,16 +1,20 @@
 // frontend/src/pages/customer/ArtisanDetail.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import CustomerLayout from '../../components/common/layouts/CustomerLayout'; // Assuming a customer layout or a general layout
+import CustomerLayout from '../../components/common/Layouts/CustomerLayout'; // Assuming a customer layout or a general layout
 import { getArtisanById } from '../../services/artisanService'; // Import the new service function
 import { Star } from 'lucide-react';
 import BookingModal from '../../components/BookingModal'; // Import BookingModal
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
 import { BookingService } from '../../services/BookingService'; // Import BookingService
+import { useMessage } from '../../context/MessageContext'; // New: Import useMessage
+import { useNavigate } from 'react-router-dom'; // New: Import useNavigate
 
 const ArtisanDetail = () => {
   const { id } = useParams();
   const { user, accessToken } = useAuth(); // Get user and accessToken from AuthContext
+  const { setSelectedRecipient } = useMessage(); // New: Get setSelectedRecipient from MessageContext
+  const navigate = useNavigate(); // New: Get navigate hook
   const [artisan, setArtisan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,6 +63,13 @@ const ArtisanDetail = () => {
     }
   };
 
+  const handleMessageArtisan = () => {
+    if (artisan && artisan.userId) {
+      setSelectedRecipient(artisan.userId); // Set the artisan as the selected recipient
+      navigate('/messages'); // Navigate to the messages page
+    }
+  };
+
   if (loading) {
     return <CustomerLayout><div className="p-6 text-center">Loading artisan details...</div></CustomerLayout>;
   }
@@ -100,12 +111,22 @@ const ArtisanDetail = () => {
               <span className="ml-2 text-gray-500">No skills listed.</span>
             )}
           </div>
-          <button
-            onClick={() => setShowBookingModal(true)}
-            className="mt-6 bg-[#6b2d11] hover:bg-[#a0522d] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Book Now
-          </button>
+          <div className="flex gap-4 mt-6">
+            <button
+              onClick={handleMessageArtisan}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Message Artisan
+            </button>
+            <button
+              onClick={() => {
+                setShowBookingModal(true);
+              }}
+              className="bg-[#151E3D] hover:bg-[#1E2A4A] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Book Now
+            </button>
+          </div>
           {bookingSuccess && (
             <p className="mt-4 text-green-600">Booking successful! Artisan will review your request.</p>
           )}

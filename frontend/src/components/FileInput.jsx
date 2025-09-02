@@ -32,7 +32,7 @@ const FileInput = ({ label, name, file, setFile, disabled = false }) => {
           )}
           <div className="flex text-sm text-gray-600 justify-center">
             <span
-              className={`relative cursor-pointer bg-white rounded-md font-medium text-[#6b2d11] hover:text-[#a0522d] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[#f5d4aa]
+              className={`relative cursor-pointer bg-white rounded-md font-medium text-[#151E3D] hover:text-[#1E2A4A] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[#F59E0B]
                 ${disabled ? 'cursor-not-allowed text-gray-500 hover:text-gray-500' : ''}`}
             >
               Upload a file

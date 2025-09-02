@@ -4,6 +4,8 @@ import App from './App';
 import './index.css';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { MessageProvider } from './context/MessageContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { ArtisanProvider } from './context/ArtisanContext';
 import { BookingProvider } from './context/BookingContext';
 import { ReviewProvider } from './context/ReviewContext';
@@ -14,17 +16,21 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode> 
     <BrowserRouter>
       <AuthProvider>
-        <ArtisanProvider>
-          <BookingProvider>
-            <ReviewProvider>
-              <ReportProvider>
-                <IssueProvider>
-                  <App />
-                </IssueProvider>
-              </ReportProvider>
-            </ReviewProvider>
-          </BookingProvider>
-        </ArtisanProvider>
+        <MessageProvider>
+          <NotificationProvider>
+            <ArtisanProvider>
+              <BookingProvider>
+                <ReviewProvider>
+                  <ReportProvider>
+                    <IssueProvider>
+                      <App />
+                    </IssueProvider>
+                  </ReportProvider>
+                </ReviewProvider>
+              </BookingProvider>
+            </ArtisanProvider>
+          </NotificationProvider>
+        </MessageProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

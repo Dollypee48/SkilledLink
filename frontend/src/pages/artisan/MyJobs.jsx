@@ -1,13 +1,25 @@
 import React, { useState, useContext, useEffect } from "react"; // Added useContext and useEffect
-import { CalendarCheck, CheckCircle, Clock, RefreshCw, Eye } from "lucide-react";
+import { CalendarCheck, CheckCircle, Clock, RefreshCw, Eye, Check, X, MapPin, Phone, Calendar, Clock as ClockIcon, FileText, MessageCircle } from "lucide-react";
 import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
 import { ArtisanContext } from "../../context/ArtisanContext"; // Import ArtisanContext
 import useAuth from "../../hooks/useAuth"; // Import useAuth to potentially refresh data
+import { BookingService } from "../../services/bookingService"; // Import BookingService
+import { messageService } from "../../services/messageService"; // Import message service
+import { useNotification } from "../../context/NotificationContext"; // Import notification context
+import { useMessage } from "../../context/MessageContext"; // Import MessageContext for chat functionality
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
 const MyJobs = () => {
   const [filterStatus, setFilterStatus] = useState("all");
+  const [updatingJob, setUpdatingJob] = useState(null); // Track which job is being updated
+  const [successMessage, setSuccessMessage] = useState(""); // Success message state
+  const [selectedBooking, setSelectedBooking] = useState(null); // Selected booking for modal
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
   const { user } = useAuth(); // Use useAuth to get user info
   const { bookings, loading, error, fetchBookings } = useContext(ArtisanContext); // Get real data from ArtisanContext
+  const { notifyJobStatusChange, showNotification } = useNotification(); // Get notification functions
+  const { setSelectedRecipient } = useMessage(); // Get setSelectedRecipient for chat functionality
+  const navigate = useNavigate(); // Get navigate for navigation
 
   useEffect(() => {
     // Optionally refresh bookings when component mounts or user/filter changes
@@ -15,6 +27,251 @@ const MyJobs = () => {
       fetchBookings();
     }
   }, [user, fetchBookings]);
+
+  // Function to handle chat with customer
+  const handleChatWithCustomer = (booking) => {
+    if (booking.customer && booking.customer._id) {
+      setSelectedRecipient({
+        _id: booking.customer._id,
+        name: booking.customer.name || 'Customer'
+      });
+      closeModal(); // Close the modal
+      navigate('/messages'); // Navigate to messages page
+    } else {
+      showNotification('error', 'Customer information not available for chat');
+    }
+  };
+
+  // Function to send completion confirmation message to customer
+  const handleMarkAsCompleted = async (bookingId) => {
+    // Show confirmation dialog
+    const isConfirmed = window.confirm('Are you sure you want to mark this job as completed? This action cannot be undone.');
+    
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      setUpdatingJob(bookingId);
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
+        alert('Authentication token not found. Please login again.');
+        return;
+      }
+
+      // Find the booking to get customer ID
+      const booking = bookings.find(b => b._id === bookingId);
+      if (!booking) {
+        alert('Booking not found');
+        return;
+      }
+
+      // Check if customer data exists and has proper structure
+      if (!booking.customer || !booking.customer._id) {
+        console.error('Customer data not properly populated:', booking.customer);
+        alert('Customer information not available. Please try refreshing the page.');
+        return;
+      }
+
+      // Send confirmation message to customer
+      try {
+        const messageContent = `Hi ${booking.customer.name || 'there'}! I have completed the work for your ${booking.service} job. Please confirm if you are satisfied with the work before I mark it as completed. If everything is good, please reply with "CONFIRMED" or let me know if any adjustments are needed.`;
+        
+        await messageService.sendMessage(
+          booking.customer._id, 
+          messageContent, 
+          null, 
+          null, 
+          token
+        );
+        
+        // Show success notification
+        showNotification('success', 'Confirmation message sent to customer successfully!');
+        
+      } catch (messageError) {
+        console.error('Error sending message:', messageError);
+        showNotification('error', 'Failed to send confirmation message to customer. Please try again.');
+      }
+
+      // Change status to "Pending Confirmation" - wait for customer confirmation
+      await BookingService.updateBookingStatus(bookingId, 'Pending Confirmation', token);
+      
+      // Refresh the bookings to show updated status
+      if (fetchBookings) {
+        fetchBookings();
+      }
+      
+      // Notify about job status change
+      notifyJobStatusChange(booking, 'Pending Confirmation', 'artisan');
+      
+      // Show success notification
+      showNotification('success', 'Job status updated to "Pending Confirmation". Waiting for customer confirmation.');
+      
+      setSuccessMessage('Confirmation message sent to customer. Job status changed to "Pending Confirmation".');
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('Error in completion process:', error);
+      alert(error.message || 'Failed to process completion request');
+    } finally {
+      setUpdatingJob(null);
+    }
+  };
+
+  // Function to accept a job (change status to Accepted/In Progress)
+  const handleAcceptJob = async (bookingId) => {
+    const isConfirmed = window.confirm('Are you sure you want to accept this job? This will change the status to "In Progress".');
+    
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      setUpdatingJob(bookingId);
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
+        alert('Authentication token not found. Please login again.');
+        return;
+      }
+
+      await BookingService.updateBookingStatus(bookingId, 'Accepted', token);
+      
+      // Refresh the bookings to show updated status
+      if (fetchBookings) {
+        fetchBookings();
+      }
+      
+      // Notify about job status change
+      const booking = bookings.find(b => b._id === bookingId);
+      if (booking) {
+        notifyJobStatusChange(booking, 'Accepted', 'artisan');
+      }
+      
+      setSuccessMessage('Job accepted successfully! Status changed to "In Progress".');
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('Error accepting job:', error);
+      alert(error.message || 'Failed to accept job');
+    } finally {
+      setUpdatingJob(null);
+    }
+  };
+
+  // Function to decline a job
+  const handleDeclineJob = async (bookingId) => {
+    const isConfirmed = window.confirm('Are you sure you want to decline this job? This action cannot be undone.');
+    
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      setUpdatingJob(bookingId);
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
+        alert('Authentication token not found. Please login again.');
+        return;
+      }
+
+      await BookingService.updateBookingStatus(bookingId, 'Declined', token);
+      
+      // Refresh the bookings to show updated status
+      if (fetchBookings) {
+        fetchBookings();
+      }
+      
+      // Notify about job status change
+      const booking = bookings.find(b => b._id === bookingId);
+      if (booking) {
+        notifyJobStatusChange(booking, 'Declined', 'artisan');
+      }
+      
+      setSuccessMessage('Job declined successfully.');
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('Error declining job:', error);
+      alert(error.message || 'Failed to decline job');
+    } finally {
+      setUpdatingJob(null);
+    }
+  };
+
+  // Function to view booking details
+  const handleViewBooking = (booking) => {
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
+
+  // Function to close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedBooking(null);
+  };
+
+  // Function to actually mark job as completed (after customer confirmation)
+  const handleConfirmCompletion = async (bookingId) => {
+    const isConfirmed = window.confirm('Has the customer confirmed they are satisfied with the work? Mark as completed?');
+    
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      setUpdatingJob(bookingId);
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
+        alert('Authentication token not found. Please login again.');
+        return;
+      }
+
+      await BookingService.updateBookingStatus(bookingId, 'Completed', token);
+      
+      // Refresh the bookings to show updated status
+      if (fetchBookings) {
+        fetchBookings();
+      }
+      
+      // Notify about job status change
+      const booking = bookings.find(b => b._id === bookingId);
+      if (booking) {
+        notifyJobStatusChange(booking, 'Completed', 'artisan');
+      }
+      
+      setSuccessMessage('Job marked as completed successfully!');
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('Error marking job as completed:', error);
+      alert(error.message || 'Failed to mark job as completed');
+    } finally {
+      setUpdatingJob(null);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Pending":
+        return "bg-yellow-100 text-yellow-700";
+      case "Accepted":
+        return "bg-blue-100 text-blue-700";
+      case "Pending Confirmation":
+        return "bg-orange-100 text-orange-700";
+      case "Completed":
+        return "bg-green-100 text-green-700";
+      case "Declined":
+        return "bg-red-100 text-red-700";
+      case "Cancelled":
+        return "bg-gray-100 text-gray-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
 
 
   const filteredBookings =
@@ -40,7 +297,10 @@ const MyJobs = () => {
             >
               <option value="all">All</option>
               <option value="Pending">Pending</option>
+              <option value="Accepted">In Progress</option>
+              <option value="Pending Confirmation">Pending Confirmation</option>
               <option value="Completed">Completed</option>
+              <option value="Declined">Declined</option>
               <option value="Cancelled">Cancelled</option>
             </select>
             <button
@@ -52,6 +312,24 @@ const MyJobs = () => {
           </div>
         </div>
 
+        {/* Success Message */}
+        {successMessage && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center justify-between">
+            <div className="flex items-center">
+              <CheckCircle className="w-5 h-5 mr-2" />
+              <span>{successMessage}</span>
+            </div>
+            <button
+              onClick={() => setSuccessMessage('')}
+              className="text-green-500 hover:text-green-700"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* Loading and Error States */}
         {loading && <p className="text-gray-600">Loading jobs...</p>}
         {error && (
@@ -60,7 +338,7 @@ const MyJobs = () => {
 
         {/* Jobs Summary */}
         {!loading && !error && ( // Only show if not loading and no error
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center">
@@ -87,6 +365,18 @@ const MyJobs = () => {
 
             <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
               <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">In Progress Jobs</p>
+                  <p className="text-xl font-semibold text-gray-900">{bookings?.filter((b) => b.status === "Accepted").length || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
+              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
                   <Clock className="w-6 h-6" />
                 </div>
@@ -96,8 +386,12 @@ const MyJobs = () => {
                 </div>
               </div>
             </div>
+
+
           </div>
         )}
+
+
 
         {/* Jobs Table */}
         {!loading && !error && ( // Only show if not loading and no error
@@ -128,29 +422,88 @@ const MyJobs = () => {
                       <td className="p-3 text-gray-600">{booking.service}</td>
                       <td className="p-3 text-gray-600">{new Date(booking.date).toLocaleDateString()}</td> {/* Format date */}
                       <td className="p-3">
-                        {booking.status === "Completed" && (
-                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                            Completed
-                          </span>
-                        )}
-                        {booking.status === "Pending" && (
-                          <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
-                            Pending
-                          </span>
-                        )}
-                        {booking.status === "Cancelled" && (
-                          <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                            Cancelled
-                          </span>
-                        )}
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
+                          {booking.status === 'Accepted' ? 'In Progress' : booking.status}
+                        </span>
                       </td>
                       <td className="p-3">
-                        <button
-                          className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors duration-200"
-                          onClick={() => alert(`Viewing details for ${booking._id}`)}
-                        >
-                          <Eye className="w-4 h-4" /> View
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors duration-200"
+                            onClick={() => handleViewBooking(booking)}
+                          >
+                            <Eye className="w-4 h-4" /> View
+                          </button>
+                          
+                          {/* Show Accept/Decline buttons for pending jobs */}
+                          {booking.status === "Pending" && (
+                            <>
+                              <button
+                                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                                  updatingJob === booking._id
+                                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                                    : 'bg-green-600 text-white hover:bg-green-700'
+                                }`}
+                                onClick={() => handleAcceptJob(booking._id)}
+                                disabled={updatingJob === booking._id}
+                              >
+                                {updatingJob === booking._id ? (
+                                  <>
+                                    <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Check className="w-4 h-4" /> Accept
+                                  </>
+                                )}
+                              </button>
+                              
+                              <button
+                                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                                  updatingJob === booking._id
+                                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                                    : 'bg-red-600 text-white hover:bg-red-700'
+                                }`}
+                                onClick={() => handleDeclineJob(booking._id)}
+                                disabled={updatingJob === booking._id}
+                              >
+                                {updatingJob === booking._id ? (
+                                  <>
+                                    <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <X className="w-4 h-4" /> Decline
+                                  </>
+                                )}
+                              </button>
+                            </>
+                                                    )}
+
+                          {/* Show "Confirm Completion" button for pending confirmation jobs */}
+                          {booking.status === "Pending Confirmation" && (
+                            <button
+                              className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                                updatingJob === booking._id
+                                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                                  : 'bg-green-600 text-white hover:bg-green-700'
+                              }`}
+                              onClick={() => handleConfirmCompletion(booking._id)}
+                              disabled={updatingJob === booking._id}
+                            >
+                              {updatingJob === booking._id ? (
+                                <>
+                                  <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="w-4 h-4" /> Confirm Completion
+                                </>
+                              )}
+                            </button>
+                          )}
+                          
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -160,6 +513,252 @@ const MyJobs = () => {
           </div>
         )}
       </div>
+
+      {/* Booking Details Modal */}
+      {isModalOpen && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Booking Details</h2>
+                    <p className="text-sm text-gray-500">Complete job information</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeModal}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                >
+                  <X className="w-6 h-6 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Customer Information */}
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Customer Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-lg font-bold text-blue-600">
+                        {selectedBooking.customer?.name?.charAt(0)?.toUpperCase() || 'C'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">{selectedBooking.customer?.name || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedBooking.customer?.email || 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Phone className="w-4 h-4" />
+                    <span>{selectedBooking.contactPhone || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Job Details */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-green-600" />
+                  Job Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Service</p>
+                        <p className="font-semibold text-gray-800">{selectedBooking.service}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Calendar className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Date</p>
+                        <p className="font-semibold text-gray-800">
+                          {new Date(selectedBooking.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <ClockIcon className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Time</p>
+                        <p className="font-semibold text-gray-800">{selectedBooking.time || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-yellow-600">
+                          {selectedBooking.urgencyLevel?.charAt(0)?.toUpperCase() || 'N'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Urgency Level</p>
+                        <p className="font-semibold text-gray-800 capitalize">{selectedBooking.urgencyLevel || 'Normal'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedBooking.status)}`}>
+                          {selectedBooking.status}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Status</p>
+                        <p className="font-semibold text-gray-800">{selectedBooking.status}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description & Requirements */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-purple-600" />
+                  Job Description & Requirements
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">Description</p>
+                    <p className="text-gray-800 bg-gray-50 p-4 rounded-lg border-l-4 border-purple-200">
+                      {selectedBooking.description || 'No description provided'}
+                    </p>
+                  </div>
+                  {selectedBooking.specialRequirements && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-2">Special Requirements</p>
+                      <p className="text-gray-800 bg-gray-50 p-4 rounded-lg border-l-4 border-orange-200">
+                        {selectedBooking.specialRequirements}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">Preferred Contact Method</p>
+                    <p className="text-gray-800 bg-gray-50 p-4 rounded-lg border-l-4 border-blue-200 capitalize">
+                      {selectedBooking.preferredContactMethod || 'Phone'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                {/* Chat Button - Always visible */}
+                <button
+                  onClick={() => handleChatWithCustomer(selectedBooking)}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Chat with Customer</span>
+                </button>
+                
+                <button
+                  onClick={closeModal}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Close
+                </button>
+                
+                {/* Show Accept/Decline buttons for pending jobs */}
+                {selectedBooking.status === "Pending" && (
+                  <>
+                    <button
+                      className={`px-6 py-2 rounded-lg text-white font-medium transition-colors duration-200 ${
+                        updatingJob === selectedBooking._id
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-700'
+                      }`}
+                      onClick={() => handleAcceptJob(selectedBooking._id)}
+                      disabled={updatingJob === selectedBooking._id}
+                    >
+                      {updatingJob === selectedBooking._id ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 inline mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4 inline mr-2" />
+                          Accept Job
+                        </>
+                      )}
+                    </button>
+                    
+                    <button
+                      className={`px-6 py-2 rounded-lg text-white font-medium transition-colors duration-200 ${
+                        updatingJob === selectedBooking._id
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                      onClick={() => handleDeclineJob(selectedBooking._id)}
+                      disabled={updatingJob === selectedBooking._id}
+                    >
+                      {updatingJob === selectedBooking._id ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 inline mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <X className="w-4 h-4 inline mr-2" />
+                          Decline Job
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+                
+                {/* Show Complete button for accepted jobs */}
+                {selectedBooking.status === "Accepted" && (
+                  <button
+                    className={`px-6 py-2 rounded-lg text-white font-medium transition-colors duration-200 ${
+                      updatingJob === selectedBooking._id
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
+                    }`}
+                    onClick={() => handleMarkAsCompleted(selectedBooking._id)}
+                    disabled={updatingJob === selectedBooking._id}
+                  >
+                    {updatingJob === selectedBooking._id ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 inline mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 inline mr-2" />
+                        Mark as Completed
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </ArtisanLayout>
   );
 };

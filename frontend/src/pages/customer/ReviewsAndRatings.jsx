@@ -1,12 +1,14 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { Star, MessageSquare } from "lucide-react";
-import CustomerLayout from "../../components/common/layouts/CustomerLayout";
-import { ReviewContext } from "../../context/ReviewContext";
-import { useBooking } from "../../context/BookingContext"; 
+import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
+import { useReview } from "../../context/ReviewContext";
+import { useBooking } from "../../context/BookingContext";
+import { useAuth } from "../../context/AuthContext"; 
 
-const Reviews = () => {
-  const { reviews, loading, error, addReview } = useContext(ReviewContext);
-  const { bookings } = useBooking(); 
+const CustomerReviews = () => {
+  const { reviews, loading, error, createReview, getMyReviews } = useReview();
+  const { customerBookings, getBookings } = useBooking();
+  const { accessToken } = useAuth();
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
@@ -14,8 +16,22 @@ const Reviews = () => {
   const [formError, setFormError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  // Filter completed bookings for review
-  const completedBookings = bookings?.filter((b) => b.status === "completed") || [];
+  // Fetch bookings and reviews on mount
+  useEffect(() => {
+    console.log('CustomerReviews: useEffect triggered, accessToken:', accessToken ? 'exists' : 'missing');
+    if (accessToken) {
+      console.log('CustomerReviews: Fetching bookings and reviews...');
+      getBookings();
+      getMyReviews();
+    }
+  }, [accessToken, getBookings, getMyReviews]);
+
+  // Filter completed bookings for review (case-sensitive)
+  const completedBookings = customerBookings?.filter((b) => b.status === "Completed") || [];
+  
+  // Debug logging
+  console.log('CustomerReviews: customerBookings:', customerBookings);
+  console.log('CustomerReviews: completedBookings:', completedBookings);
 
   // Handle review submission
   const handleSubmitReview = async (e) => {
@@ -37,21 +53,31 @@ const Reviews = () => {
     }
 
     try {
-      await addReview(
-        {
-          artisanId: selectedBooking.artisanId._id,
-          bookingId: selectedBooking._id,
-          rating,
-          comment: reviewText,
-        },
-        localStorage.getItem("token") // or however you store token
-      );
+      const reviewData = {
+        artisanId: selectedBooking.artisan._id,
+        bookingId: selectedBooking._id,
+        rating,
+        comment: reviewText.trim(),
+      };
+
+      console.log('Submitting review:', reviewData);
+      
+      await createReview(reviewData);
+      
+      // Reset form
       setRating(0);
       setReviewText("");
       setSelectedBooking(null);
       setSuccess("Review submitted successfully!");
-    } catch {
-      setFormError("Failed to submit review. Please try again.");
+      
+      // Refresh reviews
+      await getMyReviews();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      setFormError(error.message || "Failed to submit review. Please try again.");
     }
   };
 
@@ -66,9 +92,9 @@ const Reviews = () => {
 
   return (
     <CustomerLayout>
-      <div className="p-6 text-[#6b2d11]">
+      <div className="p-6 text-[#151E3D]">
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <MessageSquare className="w-8 h-8 text-[#6b2d11]" />
+          <MessageSquare className="w-8 h-8 text-[#151E3D]" />
           Reviews & Ratings
         </h1>
         <p className="text-gray-600 mb-6">Leave feedback for artisans after completed work.</p>
@@ -79,19 +105,19 @@ const Reviews = () => {
           <form onSubmit={handleSubmitReview} className="space-y-4">
             {/* Select Booking */}
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">Select Completed Booking</label>
+              <label className="text-sm font-medium text-[#151E3D]">Select Completed Booking</label>
               <select
                 value={selectedBooking?._id || ""}
                 onChange={(e) => {
                   const booking = completedBookings.find((b) => b._id === e.target.value);
                   setSelectedBooking(booking);
                 }}
-                className="w-full mt-1 px-4 py-2 rounded-lg bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-lg bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
               >
                 <option value="">Select a booking</option>
                 {completedBookings.map((booking) => (
                   <option key={booking._id} value={booking._id}>
-                    {booking.service} - {new Date(booking.date).toLocaleDateString()} (Artisan: {booking.artisanId.name})
+                    {booking.service} - {new Date(booking.date).toLocaleDateString()} (Artisan: {booking.artisan?.name || 'N/A'})
                   </option>
                 ))}
               </select>
@@ -99,7 +125,7 @@ const Reviews = () => {
 
             {/* Rating */}
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">Rating</label>
+              <label className="text-sm font-medium text-[#151E3D]">Rating</label>
               <div className="flex gap-1 mt-1">
                 {Array(5)
                   .fill()
@@ -119,12 +145,12 @@ const Reviews = () => {
 
             {/* Comment */}
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">Comment</label>
+              <label className="text-sm font-medium text-[#151E3D]">Comment</label>
               <textarea
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
                 placeholder="Share your experience..."
-                className="w-full mt-1 px-4 py-2 rounded-lg bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11] h-28 resize-none"
+                className="w-full mt-1 px-4 py-2 rounded-lg bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D] h-28 resize-none"
               />
             </div>
 
@@ -134,7 +160,7 @@ const Reviews = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 rounded-lg bg-[#FDE1F7] hover:bg-[#fcd5f5] text-[#6b2d11] font-semibold shadow-md transition"
+              className="w-full py-2 rounded-lg bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition"
             >
               {loading ? "Submitting..." : "Submit Review"}
             </button>
@@ -157,26 +183,25 @@ const Reviews = () => {
                   key={review._id}
                   className="border rounded-lg p-4 hover:shadow-md transition-shadow flex flex-col sm:flex-row gap-4"
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#FDE1F7] text-[#6b2d11] flex items-center justify-center font-bold">
-                    {getInitials(review.artisanId.name)}
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#F59E0B] text-white flex items-center justify-center font-bold">
+                    {getInitials(review.artisanId?.name || 'Artisan')}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-lg font-medium text-[#6b2d11]">{review.artisanId.name}</h3>
+                      <h3 className="text-lg font-medium text-[#151E3D]">{review.artisanId?.name || 'Artisan'}</h3>
                       <span className="text-xs text-gray-500">{new Date(review.date).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-1">Service: {review.bookingId.service}</p>
+                    <p className="text-sm text-gray-600 mb-1">Service: {review.bookingId?.service || 'N/A'}</p>
                     <div className="flex items-center gap-1 text-yellow-500 mb-2">
                       {Array(5)
                         .fill()
                         .map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-4 h-4 ${i < Math.floor(review.rating) ? "text-yellow-500" : "text-gray-300"}`}
-                            fill={i < Math.floor(review.rating) ? "currentColor" : "none"}
+                            className={`w-4 h-4 ${i < review.rating ? "text-yellow-500 fill-current" : "text-gray-300"}`}
                           />
                         ))}
-                      <span className="text-sm text-gray-600 ml-1">{review.rating}</span>
+                      <span className="text-sm text-gray-600 ml-1">{review.rating}/5</span>
                     </div>
                     <p className="text-sm text-gray-700 italic">{review.comment}</p>
                   </div>
@@ -190,4 +215,4 @@ const Reviews = () => {
   );
 };
 
-export default Reviews;
+export default CustomerReviews;

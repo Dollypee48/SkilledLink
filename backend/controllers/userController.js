@@ -31,23 +31,4 @@ exports.deleteProfile = async (req, res) => {
   }
 };
 
-exports.uploadProfilePicture = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded.' });
-    }
-
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-
-    user.profileImageUrl = `/uploads/profileImages/${req.file.filename}`;
-    await user.save();
-
-    res.json({ message: 'Profile picture uploaded successfully', user: user });
-  } catch (err) {
-    console.error('Error uploading profile picture:', err);
-    res.status(500).json({ message: err.message });
-  }
-};
+// NOTE: Profile picture upload is now handled by authController.updateProfile using Cloudinary

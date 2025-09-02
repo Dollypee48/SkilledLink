@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { ArtisanContext } from '../../context/ArtisanContext';
 import { useAuth } from '../../context/AuthContext';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
-import { Wallet, CalendarCheck, Star } from 'lucide-react'; // Removed KYC related icons
+import { CalendarCheck, Star } from 'lucide-react'; // Removed KYC related icons
 import { useNavigate } from 'react-router-dom';
 // import KYCForm from '../../components/KYCForm'; // Removed KYCForm import
 
@@ -23,9 +23,6 @@ const ArtisanDashboard = () => {
   }, [user, fetchCurrentProfile, fetchBookings, navigate]);
 
   // Calculate summary stats from bookings
-  const totalEarnings = bookings?.reduce((sum, booking) => {
-    return booking.status === 'Completed' ? sum + (booking.price || 0) : sum;
-  }, 0) || 0;
   const pendingBookings = bookings?.filter((booking) => booking.status === 'Pending').length || 0;
   const completedBookings = bookings?.filter((booking) => booking.status === 'Completed').length || 0;
 
@@ -87,16 +84,18 @@ const ArtisanDashboard = () => {
         {/* Summary Cards */}
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {/* Total Earnings */}
+            {/* Active Bookings */}
             <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                  <Wallet className="w-6 h-6" />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Total Earnings</p>
+                  <p className="text-sm text-gray-500">Active Bookings</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    ₦{totalEarnings.toLocaleString()}
+                    {bookings?.filter(b => b.status === 'Accepted' || b.status === 'Pending Confirmation').length || 0}
                   </p>
                 </div>
               </div>
@@ -145,11 +144,24 @@ const ArtisanDashboard = () => {
                 <p className="text-sm text-gray-600">
                   {currentArtisan.artisanProfile?.service || 'Role Not Set'}
                 </p>
-                <div className="flex items-center mt-1">
-                  <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                  <span className="text-sm text-gray-600">
-                    {currentArtisan.artisanProfile?.rating || '0.0'}
-                  </span>
+                <div className="flex items-center mt-2">
+                  <div className="flex items-center space-x-1 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-200">
+                    <div className="flex items-center space-x-1">
+                      {Array(5).fill().map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < Math.floor(currentArtisan.artisanProfile?.rating || 0) 
+                              ? "text-yellow-400 fill-current" 
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-semibold text-yellow-700 ml-2">
+                      {currentArtisan.artisanProfile?.rating ? currentArtisan.artisanProfile.rating.toFixed(1) : '0.0'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -163,45 +175,69 @@ const ArtisanDashboard = () => {
             {bookings?.length === 0 ? (
               <p className="text-gray-500">No bookings available.</p>
             ) : (
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 text-gray-700">
                     <th className="p-3 font-medium">Date</th>
                     <th className="p-3 font-medium">Customer</th>
                     <th className="p-3 font-medium">Service</th>
                     <th className="p-3 font-medium">Status</th>
-                    <th className="p-3 font-medium">Earnings</th>
+                    
                   </tr>
                 </thead>
                 <tbody>
                   {bookings?.map((booking) => (
                     <tr
-                      key={booking.id}
+                      key={booking._id || booking.id}
                       className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                     >
-                      <td className="p-3 text-gray-600">{booking.date}</td>
-                      <td className="p-3 text-gray-600">{booking.customerName || `Customer ${booking.id}`}</td>
-                      <td className="p-3 text-gray-600">{booking.service}</td>
+                      <td className="p-3 text-gray-600">
+                        {booking.date ? new Date(booking.date).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {booking.customer?.name || booking.customerName || 'Customer'}
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {booking.service || 'N/A'}
+                      </td>
                       <td className="p-3">
                         {booking.status === 'Completed' && (
-                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
+                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
                             Completed
                           </span>
                         )}
                         {booking.status === 'Pending' && (
-                          <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
+                          <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs">
                             Pending
                           </span>
                         )}
+                        {booking.status === 'Accepted' && (
+                          <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">
+                            In Progress
+                          </span>
+                        )}
+                        {booking.status === 'Pending Confirmation' && (
+                          <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs">
+                            Pending Confirmation
+                          </span>
+                        )}
+                        {booking.status === 'Declined' && (
+                          <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">
+                            Declined
+                          </span>
+                        )}
                         {booking.status === 'Cancelled' && (
-                          <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
+                          <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
                             Cancelled
                           </span>
                         )}
+                        {(!booking.status || booking.status === "") && (
+                          <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs">
+                            Unknown
+                          </span>
+                        )}
                       </td>
-                      <td className="p-3 text-gray-600">
-                        ₦{booking.price?.toLocaleString() || '0.00'}
-                      </td>
+                                                                    
                     </tr>
                   ))}
                 </tbody>

@@ -51,6 +51,34 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("refreshToken");
   }, []);
 
+  const updateProfile = useCallback(async (profileData, userRole) => {
+    if (!accessToken) {
+      throw new Error("No access token found. Please log in.");
+    }
+    try {
+      const updatedUser = await authService.updateProfile(profileData, accessToken, userRole);
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating profile in AuthContext:", error);
+      throw error;
+    }
+  }, [accessToken]);
+
+  const changePassword = useCallback(async (passwordData) => {
+    if (!accessToken) {
+      throw new Error("No access token found. Please log in.");
+    }
+    try {
+      await authService.changePassword(passwordData, accessToken);
+      return true;
+    } catch (error) {
+      console.error("Error changing password in AuthContext:", error);
+      throw error;
+    }
+  }, [accessToken]);
+
   // Try to refresh token when app loads
   useEffect(() => {
     const refresh = async () => {
@@ -71,7 +99,7 @@ export const AuthProvider = ({ children }) => {
             setUser(data.user);
             localStorage.setItem("user", JSON.stringify(data.user));
           }
-        } catch {
+        } catch (error) {
           handleLogout();
         }
       }
@@ -80,7 +108,7 @@ export const AuthProvider = ({ children }) => {
   }, [handleLogout]);
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, isAuthenticated, role, handleLogin, handleRegister, handleLogout, updateUser }}>
+    <AuthContext.Provider value={{ user, accessToken, isAuthenticated, role, handleLogin, handleRegister, handleLogout, updateUser, updateProfile, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

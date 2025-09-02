@@ -20,3 +20,27 @@ export const refreshToken = async (refreshToken) => {
   const res = await axios.post(`${API_URL}/refresh`, { refreshToken });
   return res.data;
 };
+
+// Update Profile
+export const updateProfile = async (profileData, token, userRole) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  };
+  const res = await axios.put(`${API_URL}/profile`, { ...profileData, role: userRole }, config);
+  return res.data;
+};
+
+// Change Password
+export const changePassword = async (passwordData, token) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  };
+  const res = await axios.put(`${API_URL}/change-password`, passwordData, config);
+  return res.data;
+};

@@ -33,31 +33,31 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-[#5B2104] text-white py-4 shadow">
+    <header className="bg-[#151E3D] text-white py-4 shadow">
       <div className="container mx-auto px-6 flex justify-between items-center">
         
         <div className="text-2xl font-semibold">
-          <Link to="/" className="hover:text-[#FEE4C3] transition">
-            Skilled<span className="text-[#FEE4C3]">Link</span>
+          <Link to="/" className="hover:text-[#F59E0B] transition">
+            Skilled<span className="text-[#F59E0B]">Link</span>
           </Link>
         </div>
 
         
         <nav className="space-x-10 hidden md:flex">
-          <Link to="/" className="hover:text-[#FEE4C3] transition">Home</Link>
-          <Link to="/services" className="hover:text-[#FEE4C3] transition">Services</Link>
-          <Link to="/how-it-works" className="hover:text-[#FEE4C3] transition">How It works</Link>
-          <Link to="/about" className="hover:text-[#FEE4C3] transition">About Us</Link>
+          <Link to="/" className="hover:text-[#F59E0B] transition">Home</Link>
+          <Link to="/services" className="hover:text-[#F59E0B] transition">Services</Link>
+          <Link to="/how-it-works" className="hover:text-[#F59E0B] transition">How It works</Link>
+          <Link to="/about" className="hover:text-[#F59E0B] transition">About Us</Link>
         </nav>
 
         
         <div className="space-x-3 flex items-center">
           {!isAuthenticated ? (
             <>
-              <Link to="/login" className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
+              <Link to="/login" className="bg-[#F59E0B] text-white px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
                 Sign in
               </Link>
-              <Link to="/register" className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
+              <Link to="/register" className="bg-[#10B981] text-white px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
                 Get Started
               </Link>
             </>
@@ -76,10 +76,10 @@ const Header = () => {
                 </div>
               )} */}
               <span className="text-white font-medium hidden sm:block">Hi, {user.name}</span>
-              <Link to={getDashboardPath()} className="bg-[#FEE4C3] text-[#5B2104] px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
+              <Link to={getDashboardPath()} className="bg-[#F59E0B] text-white px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
                 Dashboard
               </Link>
-              <button onClick={onLogout} className="flex items-center gap-2 bg-[#FEE4C3] text-[#5B2104] px-4 py-2 rounded-md text-sm font-medium hover:opacity-90">
+              <button onClick={onLogout} className="flex items-center gap-2 bg-[#10B981] text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>

@@ -2,6 +2,7 @@ const User = require("../models/User");
 const ArtisanProfile = require("../models/ArtisanProfile");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { uploadFile } = require("../utils/cloudinary"); // Import Cloudinary utility
 
 const ROLES = ["customer", "artisan", "admin"];
 
@@ -10,7 +11,7 @@ const generateTokens = (user) => {
   const accessToken = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "8h" } // Changed from "1h" to "8h"
   );
 
   const refreshToken = jwt.sign(
@@ -22,10 +23,21 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken };
 };
 
+// Helper: Get user details with populated artisan profile
+const getPopulatedUser = async (userId) => {
+  const user = await User.findById(userId)
+    .populate({
+      path: 'artisanProfile',
+      model: 'ArtisanProfile',
+    })
+    .select('-password -refreshToken'); // Exclude sensitive fields
+  return user;
+};
+
 // REGISTER
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role, nationality, state, address, occupation, skills } = req.body;
+    const { name, email, password, phone, role, nationality, state, address, occupation, service } = req.body;
 
     // Basic validation
     if (!name || !email || !password || !phone || !nationality || !state || !address) {
@@ -59,7 +71,7 @@ exports.register = async (req, res) => {
 
     // If artisan, create profile
     if (role === "artisan") {
-      const profile = await ArtisanProfile.create({ userId: user._id, skills });
+      const profile = await ArtisanProfile.create({ userId: user._id, service });
       user.artisanProfile = profile._id;
       await user.save();
     }
@@ -69,22 +81,13 @@ exports.register = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
+    const populatedUser = await getPopulatedUser(user._id);
+
     res.status(201).json({
       message: "Registration successful",
       accessToken,
       refreshToken,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-        nationality: user.nationality,
-        state: user.state,
-        address: user.address,
-        occupation: user.occupation,
-        kycVerified: user.kycVerified,
-      },
+      user: populatedUser,
     });
   } catch (err) {
     console.error("Register error:", err.message);
@@ -114,22 +117,13 @@ exports.login = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
+    const populatedUser = await getPopulatedUser(user._id);
+
     res.json({
       message: "Login successful",
       accessToken,
       refreshToken,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-        nationality: user.nationality,
-        state: user.state,
-        address: user.address,
-        occupation: user.occupation,
-        kycVerified: user.kycVerified,
-      },
+      user: populatedUser,
     });
   } catch (err) {
     console.error("Login error:", err.message);
@@ -147,29 +141,135 @@ exports.refreshToken = async (req, res) => {
     const user = await User.findOne({ _id: payload.id, refreshToken });
     if (!user) return res.status(401).json({ message: "Invalid or expired refresh token" });
 
-    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user); // issue new access and refresh tokens
-    user.refreshToken = newRefreshToken; // Update refresh token in DB
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+    user.refreshToken = newRefreshToken;
     await user.save();
+
+    const populatedUser = await getPopulatedUser(user._id);
 
     res.json({
       accessToken,
       refreshToken: newRefreshToken,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-        nationality: user.nationality,
-        state: user.state,
-        address: user.address,
-        occupation: user.occupation,
-        kycVerified: user.kycVerified,
-        ...(user.role === 'artisan' && user.artisanProfile && { artisanProfile: user.artisanProfile }), // Include artisanProfile if artisan
-      },
-    }); // Send back new refresh token and user object
+      user: populatedUser,
+    });
   } catch (err) {
     console.error("Refresh error:", err.message);
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Refresh token has expired. Please log in again.' });
+    }
     res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+};
+
+// UPDATE PROFILE
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id; // User ID from authenticated token
+    const { name, phone, address, nationality, occupation, service, bio, experience, skills, profileImage, role } = req.body;
+
+    let user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update basic user fields
+    user.name = name || user.name;
+    user.phone = phone || user.phone;
+    user.address = address || user.address;
+    user.nationality = nationality || user.nationality;
+    user.occupation = occupation || user.occupation;
+
+    // Handle profile image upload/removal
+    if (profileImage) {
+      if (profileImage === 'REMOVE_IMAGE') {
+        user.profileImageUrl = null;
+      } else {
+        // Handle new image data structure with type
+        let imageData, fileType;
+        if (typeof profileImage === 'object' && profileImage.data && profileImage.type) {
+          // New structure: { data: base64, type: mimeType }
+          imageData = profileImage.data;
+          fileType = profileImage.type;
+        } else {
+          // Fallback for old structure (just base64 string)
+          imageData = profileImage;
+          fileType = 'image/jpeg'; // Default fallback
+        }
+        
+        const result = await uploadFile(imageData, fileType, 'profile_images');
+        user.profileImageUrl = result.secure_url;
+      }
+    }
+
+    await user.save();
+
+    // Update artisan profile if user is an artisan
+    if (role === 'artisan' && user.artisanProfile) {
+      let artisanProfile = await ArtisanProfile.findById(user.artisanProfile);
+
+      if (artisanProfile) {
+        artisanProfile.service = service || artisanProfile.service;
+        artisanProfile.bio = bio || artisanProfile.bio;
+        artisanProfile.experience = experience || artisanProfile.experience;
+        artisanProfile.skills = skills || artisanProfile.skills; // skills should be an array
+        await artisanProfile.save();
+      } else {
+        console.warn("Artisan profile not found for user:", userId);
+      }
+    }
+
+    // Return the updated user with populated artisan profile
+    const updatedUser = await getPopulatedUser(user._id);
+
+    res.json({
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+
+  } catch (err) {
+    console.error("Update profile error:", err.message);
+    res.status(500).json({ message: "Server error during profile update" });
+  }
+};
+
+// CHANGE PASSWORD
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters long" });
+    }
+
+    // Find user and include password for comparison
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update password
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.json({
+      message: "Password changed successfully"
+    });
+
+  } catch (err) {
+    console.error("Change password error:", err.message);
+    res.status(500).json({ message: "Server error during password change" });
   }
 };

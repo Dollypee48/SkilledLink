@@ -12,6 +12,7 @@ const UserProfileEditForm = () => {
     phone: '',
     locationAddress: '',
     skills: '', // For artisans
+    service: '', // New: For artisans
     bio: '',
     experience: '',
   });
@@ -32,6 +33,7 @@ const UserProfileEditForm = () => {
         phone: user.phone || '',
         locationAddress: user.address || '',
         skills: user.artisanProfile?.skills?.join(', ') || '', // For artisans
+        service: user.artisanProfile?.service || '',
         bio: user.artisanProfile?.bio || '',
         experience: user.artisanProfile?.experience || '',
       });
@@ -76,6 +78,7 @@ const UserProfileEditForm = () => {
           phone: user.phone || '',
           locationAddress: user.address || '',
           skills: user.artisanProfile?.skills?.join(', ') || '',
+          service: user.artisanProfile?.service || '',
           bio: user.artisanProfile?.bio || '',
           experience: user.artisanProfile?.experience || '',
         });
@@ -103,6 +106,7 @@ const UserProfileEditForm = () => {
         address: formData.locationAddress,
         ...(user.role === 'artisan' && { 
           skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
+          service: formData.service, // Include service for artisans
           bio: formData.bio,
           experience: formData.experience,
         }),
@@ -134,7 +138,7 @@ const UserProfileEditForm = () => {
         {!isEditing && (
           <button
             onClick={handleEditClick}
-            className="px-4 py-2 bg-[#f5d4aa] text-[#6b2d11] rounded-md hover:bg-[#e0b48a]"
+            className="px-4 py-2 bg-[#F59E0B] text-white rounded-md hover:bg-[#D97706]"
           >
             Edit
           </button>
@@ -157,7 +161,7 @@ const UserProfileEditForm = () => {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#f5d4aa] focus:border-[#f5d4aa] sm:text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#F59E0B] focus:border-[#F59E0B] sm:text-sm"
               required
               disabled={!isEditing}
             />
@@ -172,7 +176,7 @@ const UserProfileEditForm = () => {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#f5d4aa] focus:border-[#f5d4aa] sm:text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#F59E0B] focus:border-[#F59E0B] sm:text-sm"
               required
               disabled={!isEditing}
             />
@@ -187,7 +191,7 @@ const UserProfileEditForm = () => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#f5d4aa] focus:border-[#f5d4aa] sm:text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#F59E0B] focus:border-[#F59E0B] sm:text-sm"
               required
               disabled={!isEditing}
             />
@@ -202,12 +206,30 @@ const UserProfileEditForm = () => {
               name="locationAddress"
               value={formData.locationAddress}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#f5d4aa] focus:border-[#f5d4aa] sm:text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#F59E0B] focus:border-[#F59E0B] sm:text-sm"
               required
               disabled={!isEditing}
             />
           </div>
         </div>
+
+        {/* Service (Artisan Only) */}
+        {user?.role === 'artisan' && (
+          <div>
+            <label htmlFor="service" className="block text-sm font-medium text-gray-700">Primary Service</label>
+            <input
+              type="text"
+              id="service"
+              name="service"
+              value={formData.service}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#F59E0B] focus:border-[#F59E0B] sm:text-sm"
+              placeholder="e.g., Plumbing, Electrical"
+              required
+              disabled={!isEditing}
+            />
+          </div>
+        )}
 
         {/* Skills (Artisan Only) */}
         {user?.role === 'artisan' && (
@@ -219,7 +241,7 @@ const UserProfileEditForm = () => {
               name="skills"
               value={formData.skills}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#f5d4aa] focus:border-[#f5d4aa] sm:text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#F59E0B] focus:border-[#F59E0B] sm:text-sm"
               placeholder="e.g., Plumbing, Electrical, Carpentry"
               disabled={!isEditing}
             />
@@ -236,7 +258,7 @@ const UserProfileEditForm = () => {
               value={formData.bio}
               onChange={handleChange}
               rows="4"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#f5d4aa] focus:border-[#f5d4aa] sm:text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#F59E0B] focus:border-[#F59E0B] sm:text-sm"
               placeholder="Tell us about yourself and your craft..."
               disabled={!isEditing}
             ></textarea>
@@ -253,7 +275,7 @@ const UserProfileEditForm = () => {
               value={formData.experience}
               onChange={handleChange}
               rows="2"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#f5d4aa] focus:border-[#f5d4aa] sm:text-sm"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#F59E0B] focus:border-[#F59E0B] sm:text-sm"
               placeholder="e.g., 5 years in plumbing, certified electrician..."
               disabled={!isEditing}
             ></textarea>
@@ -278,11 +300,11 @@ const UserProfileEditForm = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#f5d4aa] hover:bg-[#e0b48a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#F59E0B] hover:bg-[#D97706] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F59E0B] disabled:opacity-50"
               disabled={loading}
             >
               {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2 text-[#6b2d11]" />
+                <Loader2 className="w-5 h-5 animate-spin mr-2 text-white" />
               ) : (
                 'Save Changes'
               )}

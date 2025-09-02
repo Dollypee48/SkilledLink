@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
-const upload = require('../middleware/upload'); // Multer middleware
 const kycController = require('../controllers/kycController');
 
 // @route   POST /api/kyc/submit
@@ -11,11 +10,6 @@ const kycController = require('../controllers/kycController');
 router.post(
   '/submit',
   auth,
-  upload.fields([
-    { name: 'idProof', maxCount: 1 },
-    { name: 'addressProof', maxCount: 1 },
-    { name: 'credentials', maxCount: 1 }, // For artisans
-  ]),
   kycController.submitKYC
 );
 

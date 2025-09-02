@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import CustomerLayout from "../components/common/layouts/CustomerLayout";
-import ArtisanLayout from "../components/common/layouts/ArtisanLayout";
+import CustomerLayout from "../components/common/Layouts/CustomerLayout";
+import ArtisanLayout from "../components/common/Layouts/ArtisanLayout";
 import KYCForm from "../components/KYCForm";
 import { ShieldCheck, Clock, XCircle, AlertTriangle } from 'lucide-react';
 
@@ -53,7 +53,7 @@ const KYCPage = () => {
 
   return (
     <Layout>
-      <div className="p-6 text-[#6b2d11]">
+      <div className="p-6 text-[#151E3D]">
         <h1 className="text-3xl font-bold mb-2">KYC Verification</h1>
         <p className="text-gray-600 mb-6">
           Complete your Know Your Customer (KYC) verification to unlock full platform features.

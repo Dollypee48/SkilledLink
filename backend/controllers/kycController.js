@@ -1,10 +1,14 @@
 const User = require('../models/User');
+const { uploadFile } = require('../utils/cloudinary'); // Import Cloudinary upload utility
+const dotenv = require('dotenv');
+dotenv.config();
 
 // @desc    Submit KYC documents
 // @route   POST /api/kyc/submit
 // @access  Private
 exports.submitKYC = async (req, res) => {
   try {
+    console.log('Incoming KYC request body:', req.body); // Added log
     const userId = req.user.id;
     const user = await User.findById(userId);
 
@@ -12,20 +16,39 @@ exports.submitKYC = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Extract base64 strings from req.body
+    const { idProof, addressProof, credentials, faceImage, personalInfo } = req.body; // Added personalInfo for completeness
+    
     const kycDocuments = {};
+    
+    if (idProof) {
+      const idProofUrl = await uploadFile(idProof.split(',')[1], 'image/jpeg', 'kyc/id_proofs');
+      kycDocuments.idProof = idProofUrl.secure_url;
+    }
+    if (addressProof) {
+      const addressProofUrl = await uploadFile(addressProof.split(',')[1], 'image/jpeg', 'kyc/address_proofs');
+      kycDocuments.addressProof = addressProofUrl.secure_url;
+    }
+    if (user.role === 'artisan' && credentials) {
+      const credentialsUrl = await uploadFile(credentials.split(',')[1], 'image/jpeg', 'kyc/credentials');
+      kycDocuments.credentials = credentialsUrl.secure_url;
+    }
+    if (faceImage) {
+      const faceImageUrl = await uploadFile(faceImage.split(',')[1], 'image/jpeg', 'kyc/face_images');
+      kycDocuments.faceImage = faceImageUrl.secure_url;
+    }
 
-    if (req.files.idProof && req.files.idProof[0]) {
-      kycDocuments.idProof = req.files.idProof[0].path;
-    }
-    if (req.files.addressProof && req.files.addressProof[0]) {
-      kycDocuments.addressProof = req.files.addressProof[0].path;
-    }
-    if (user.role === 'artisan' && req.files.credentials && req.files.credentials[0]) {
-      kycDocuments.credentials = req.files.credentials[0].path;
+    console.log('KYC Documents after Cloudinary processing:', kycDocuments); // Added log
+
+    // Update validation logic to check for the presence of the uploaded URLs
+    if (!kycDocuments.idProof || !kycDocuments.addressProof || (user.role === 'artisan' && !kycDocuments.credentials) || !kycDocuments.faceImage) {
+      return res.status(400).json({ message: 'Missing required KYC documents or face image' });
     }
 
-    if (!kycDocuments.idProof || !kycDocuments.addressProof || (user.role === 'artisan' && !kycDocuments.credentials)) {
-      return res.status(400).json({ message: 'Missing required KYC documents' });
+    // Update user's personal information from frontend if provided
+    if (personalInfo) {
+      user.name = personalInfo.fullName;
+      // Add other personalInfo fields to update user model if needed
     }
 
     user.kycDocuments = kycDocuments;
@@ -36,7 +59,7 @@ exports.submitKYC = async (req, res) => {
     const updatedUser = await User.findById(userId).select("-password -refreshToken");
     res.status(200).json({ message: 'KYC documents submitted successfully for review', user: updatedUser });
   } catch (error) {
-    console.error('Error submitting KYC:', error.message);
+    console.error('Error submitting KYC:', error.stack); // Changed to error.stack
     res.status(500).json({ message: 'Server error during KYC submission' });
   }
 };

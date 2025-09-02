@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
-import CustomerLayout from "../../components/common/layouts/CustomerLayout";
+import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
 import { ReportContext } from "../../context/ReportContext";
 
 const ReportIssue = () => {
@@ -70,7 +70,7 @@ const ReportIssue = () => {
 
   return (
     <CustomerLayout>
-      <div className="p-6 text-[#6b2d11]">
+      <div className="p-6 text-[#151E3D]">
         <div className="flex items-center gap-2 mb-6">
           <AlertTriangle className="w-8 h-8 text-red-500" />
           <h1 className="text-3xl font-bold">Report Issue</h1>
@@ -85,23 +85,23 @@ const ReportIssue = () => {
           <form onSubmit={handleSubmitIssue} className="space-y-4 text-left">
             {/* Title */}
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">Title</label>
+              <label className="text-sm font-medium text-[#151E3D]">Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Summarize the issue..."
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               />
             </div>
             {/* Category */}
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">Category</label>
+              <label className="text-sm font-medium text-[#151E3D]">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               >
                 <option value="">Select a category</option>
@@ -116,11 +116,11 @@ const ReportIssue = () => {
 
             {/* Priority */}
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">Priority</label>
+              <label className="text-sm font-medium text-[#151E3D]">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
                 required
               >
                 <option value="low">Low</option>
@@ -131,24 +131,24 @@ const ReportIssue = () => {
 
             {/* Description */}
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">Description</label>
+              <label className="text-sm font-medium text-[#151E3D]">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe the issue in detail..."
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11] h-28 resize-none"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D] h-28 resize-none"
                 required
               />
             </div>
 
             {/* File Upload */}
             <div>
-              <label className="text-sm font-medium text-[#6b2d11]">Upload Evidence (JPEG/PNG)</label>
+              <label className="text-sm font-medium text-[#151E3D]">Upload Evidence (JPEG/PNG)</label>
               <input
                 type="file"
                 accept="image/jpeg,image/png"
                 onChange={handleFileChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#FDF1F2] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6b2d11]"
+                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
               />
               {file && <p className="text-sm text-gray-600 mt-1">Selected: {file.name}</p>}
             </div>
@@ -162,7 +162,7 @@ const ReportIssue = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 rounded-md bg-[#FDE1F7] hover:bg-[#fcd5f5] text-[#6b2d11] font-semibold shadow-md transition"
+              className="w-full py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition"
             >
               {loading ? "Submitting..." : "Submit Report"}
             </button>
@@ -183,7 +183,7 @@ const ReportIssue = () => {
                 >
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-lg font-medium text-[#6b2d11]">{report.category}</h3>
+                      <h3 className="text-lg font-medium text-[#151E3D]">{report.category}</h3>
                       <span className="text-xs text-gray-500">{new Date(report.date).toLocaleDateString()}</span>
                     </div>
                     <p className="text-sm text-gray-600 mb-1">{report.description}</p>

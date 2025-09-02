@@ -1,25 +1,25 @@
 // ... existing code ...
-import React, { useState, useEffect, useContext } from "react"; // Added useEffect and useContext
+import React, { useState, useEffect } from "react";
 import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
 import { Star, CheckCircle, User, RefreshCcw } from "lucide-react";
-import { ReviewContext } from "../../context/ReviewContext"; // Import ReviewContext
+import { useReview } from "../../context/ReviewContext"; // Import useReview hook
 import useAuth from "../../hooks/useAuth"; // Import useAuth to get user role
 
 const ArtisanReviews = () => {
   const [filterRating, setFilterRating] = useState("all");
   const { user } = useAuth();
   const {
-    artisanReviews: reviews, // Assuming context provides reviews as artisanReviews
+    reviews,
     loading,
     error,
-    fetchArtisanReviews, // Assuming context provides a function to fetch artisan reviews
-  } = useContext(ReviewContext);
+    getArtisanReviews,
+  } = useReview();
 
   useEffect(() => {
-    if (user?.role === "artisan" && fetchArtisanReviews) {
-      fetchArtisanReviews(); // Fetch reviews for the artisan on mount
+    if (user?.role === "artisan" && getArtisanReviews) {
+      getArtisanReviews(); // Fetch reviews for the artisan on mount
     }
-  }, [user, fetchArtisanReviews]);
+  }, [user, getArtisanReviews]);
 
 
   // Calculate stats safely
@@ -29,7 +29,7 @@ const ArtisanReviews = () => {
       : 0;
 
   const uniqueReviewers = new Set(
-    reviews?.map((r) => r.customer?.name || "Anonymous") // Assuming customer object with name
+    reviews?.map((r) => r.customerId?.name || "Anonymous") // Using customerId from populated data
   ).size;
 
   // Filter reviews
@@ -59,7 +59,7 @@ const ArtisanReviews = () => {
             </select>
             <button
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
-              onClick={fetchArtisanReviews} // Call fetchArtisanReviews from context
+              onClick={getArtisanReviews} // Call getArtisanReviews from context
             >
               <RefreshCcw className="w-4 h-4" />
               Refresh
@@ -138,11 +138,11 @@ const ArtisanReviews = () => {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center">
                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold">
-                          {review.customer?.name?.charAt(0) || "C"} {/* Access customer name */}
+                          {review.customerId?.name?.charAt(0) || "C"} {/* Access customer name */}
                         </div>
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">
-                            {review.customer?.name || "Anonymous"}
+                            {review.customerId?.name || "Anonymous"}
                           </p>
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
@@ -150,22 +150,23 @@ const ArtisanReviews = () => {
                                 key={i}
                                 className={`w-4 h-4 ${
                                   i < (review.rating || 0)
-                                    ? "text-yellow-500"
+                                    ? "text-yellow-500 fill-current"
                                     : "text-gray-300"
                                 }`}
                               />
                             ))}
+                            <span className="text-sm text-gray-600 ml-1">{review.rating}/5</span>
                           </div>
                         </div>
                       </div>
                       <p className="text-xs text-gray-500">
-                        {review.createdAt // Assuming review has a createdAt timestamp
-                          ? new Date(review.createdAt).toLocaleDateString()
+                        {review.date // Using the date field from the Review model
+                          ? new Date(review.date).toLocaleDateString()
                           : "N/A"}
                       </p>
                     </div>
                     <p className="text-gray-600 text-sm ml-13">
-                      {review.comment || "No comment provided"}
+                      <span className="font-medium">Service:</span> {review.bookingId?.service || "N/A"} - {review.comment || "No comment provided"}
                     </p>
                   </div>
                 ))}

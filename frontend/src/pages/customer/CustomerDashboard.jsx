@@ -1,6 +1,6 @@
 // frontend/src/pages/customer/CustomerDashboard.jsx
 import React, { useEffect, useState, useContext } from "react";
-import CustomerLayout from "../../components/common/layouts/CustomerLayout";
+import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
 import { CalendarCheck, Wallet, Heart, Star } from "lucide-react"; // Removed KYC related icons
 import { useBooking } from "../../context/BookingContext"; // Assuming useBooking provides customer's bookings
 import { useAuth } from "../../context/AuthContext";
@@ -39,15 +39,18 @@ export default function CustomerDashboard() {
     }
   }, [getBookings, loadSuggestions, hasFetched, user, accessToken]); // Keep dependencies updated
 
-  // Safely access myBookings (which will be an array, or empty array initially)
-  const upcomingBooking =
-    customerBookings?.find((b) => b.status === "Pending") || {
-      service: "Light fixture installation",
-      date: "April 3, 2025 at 2:00 PM",
-    };
+  // Get bookings in progress (Accepted or Pending Confirmation)
+  const bookingsInProgress = customerBookings?.filter((b) => 
+    b.status === "Accepted" || b.status === "Pending Confirmation"
+  ) || [];
 
-  const totalSpent =
-    customerBookings?.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0).toFixed(2) || "0.00";
+  const inProgressBooking = bookingsInProgress[0] || {
+    service: "No active bookings",
+    date: "All services completed",
+  };
+
+  // Count total bookings made
+  const totalBookings = customerBookings?.length || 0;
 
   const loading = bookingsLoading || artisansLoading;
   const error = bookingsError || artisansError;
@@ -99,28 +102,34 @@ export default function CustomerDashboard() {
         {/* Top stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <div className="bg-white shadow hover:shadow-lg transition rounded-xl p-5 flex items-center gap-4">
-            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#f5d4aa] text-[#6b2d11]">
+            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#F59E0B] text-white">
               <CalendarCheck className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="font-semibold">Upcoming Booking</h2>
-              <p className="text-sm mt-1 text-gray-600">{upcomingBooking.service}</p>
-              <p className="text-xs text-gray-400">{upcomingBooking.date}</p>
+              <h2 className="font-semibold">Bookings in Progress</h2>
+              <p className="text-sm mt-1 text-gray-600">{inProgressBooking.service}</p>
+              <p className="text-xs text-gray-400">{inProgressBooking.date}</p>
+              {bookingsInProgress.length > 1 && (
+                <p className="text-xs text-blue-600 font-medium">+{bookingsInProgress.length - 1} more</p>
+              )}
             </div>
           </div>
 
-          <div className="bg-white shadow hover:shadow-lg transition rounded-xl p-5 flex items-center gap-4">
-            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#f5d4aa] text-[#6b2d11]">
-              <Wallet className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="font-semibold">Total Spent</h2>
-              <p className="mt-1 text-lg font-bold">₦{totalSpent}</p>
-            </div>
-          </div>
+                     <div className="bg-white shadow hover:shadow-lg transition rounded-xl p-5 flex items-center gap-4">
+             <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#F59E0B] text-white">
+               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+               </svg>
+             </div>
+             <div>
+               <h2 className="font-semibold">Total Bookings</h2>
+               <p className="mt-1 text-lg font-bold">{totalBookings}</p>
+               <p className="text-xs text-gray-500">All time bookings</p>
+             </div>
+           </div>
 
           <div className="bg-white shadow hover:shadow-lg transition rounded-xl p-5 flex items-center gap-4">
-            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#f5d4aa] text-[#6b2d11]">
+            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#F59E0B] text-white">
               <Heart className="w-6 h-6" />
             </div>
             <div>
@@ -170,12 +179,31 @@ export default function CustomerDashboard() {
                             Pending
                           </span>
                         )}
-                        {booking.status === "Cancelled" && (
+                        {booking.status === "Accepted" && (
+                          <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs">
+                            In Progress
+                          </span>
+                        )}
+                        {booking.status === "Pending Confirmation" && (
+                          <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs">
+                            Pending Confirmation
+                          </span>
+                        )}
+                        {booking.status === "Declined" && (
                           <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs">
+                            Declined
+                          </span>
+                        )}
+                        {booking.status === "Cancelled" && (
+                          <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">
                             Cancelled
                           </span>
                         )}
-                        {!booking.status && <span className="text-gray-500">N/A</span>}
+                        {(!booking.status || booking.status === "") && (
+                          <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs">
+                            Unknown
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -201,7 +229,7 @@ export default function CustomerDashboard() {
                     className="flex items-center justify-between border rounded-lg p-3 hover:shadow-md transition"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#f5d4aa] flex items-center justify-center text-[#6b2d11] font-bold">
+                      <div className="w-10 h-10 rounded-full bg-[#F59E0B] flex items-center justify-center text-white font-bold">
                         {artisan.skills?.[0]?.charAt(0) || "A"}
                       </div>
                       <div>

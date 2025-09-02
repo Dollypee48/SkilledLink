@@ -16,18 +16,19 @@ import CustomerBookings from './pages/customer/Bookings';
 import CustomerProfile from './pages/customer/Profile';
 import CustomerReport from './pages/customer/ReportIssue';
 import CustomerReviews from './pages/customer/ReviewsAndRatings'; 
-import CustomerMessages from './pages/customer/Messages'; // Uncommented
 import Services from './pages/Services'; // New: Import Services page
 import HowItWorks from './pages/HowItWorks'; // New: Import HowItWorks page
 import AboutUs from './pages/AboutUs'; // New: Import AboutUs page
+import CustomerSettings from './pages/customer/CustomerSettings'; // New: Import CustomerSettings
+import MessagesPage from './pages/MessagesPage'; // New: Import MessagesPage
 
 // Artisan Pages
 import ArtisanDashboard from './pages/artisan/ArtisanDashboard';
 import MyJobs from './pages/artisan/MyJobs';
 import JobRequests from './pages/artisan/JobRequests';
-import ArtisanMessages from './pages/artisan/Messages';
 import ArtisanReviews from './pages/artisan/Reviews';
 import ArtisanProfile from './pages/artisan/Profile';
+import ArtisanSettings from './pages/artisan/ArtisanSettings'; // New: Import ArtisanSettings
 import Subscription from './pages/artisan/Subscription';
 import ArtisanReport from './pages/artisan/ReportIssues';
 
@@ -59,11 +60,43 @@ const RoutesComponent = () => {
       <Route path="/about" element={<AboutUs />} /> {/* New: About Us page */}
       <Route path="/customer-dashboard" element={<CustomerDashboard />} />
       <Route path="/customer-bookings" element={<CustomerBookings />} />
-      <Route path="/customer-profile" element={<CustomerProfile />} />
+      <Route
+        path="/customer-profile"
+        element={
+          <ProtectedRoute requiredRole="customer">
+            <CustomerProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customer-settings"
+        element={
+          <ProtectedRoute requiredRole="customer">
+            <CustomerSettings />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/customer-reviews" element={<CustomerReviews />} />
       <Route path="/customer-report" element={<CustomerReport />} />
-      <Route path="/customer-messages" element={<CustomerMessages />} /> // Uncommented
 
+      {/* New Messages Page Route */}
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute requiredRoles={['customer', 'artisan']}>
+            <MessagesPage />
+          </ProtectedRoute>
+        }
+      />
+      {/* Dynamic route for individual conversations */}
+      <Route
+        path="/messages/:otherUserId"
+        element={
+          <ProtectedRoute requiredRoles={['customer', 'artisan']}>
+            <MessagesPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Artisan Routes (Protected) */}
       <Route
@@ -94,7 +127,7 @@ const RoutesComponent = () => {
         path="/artisan/messages"
         element={
           <ProtectedRoute requiredRole="artisan">
-            <ArtisanMessages />
+            <MessagesPage />
           </ProtectedRoute>
         }
       />
@@ -107,10 +140,18 @@ const RoutesComponent = () => {
         }
       />
       <Route
-        path="/profile"
+        path="/artisan-profile"
         element={
           <ProtectedRoute requiredRole="artisan">
             <ArtisanProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/artisan-settings"
+        element={
+          <ProtectedRoute requiredRole="artisan">
+            <ArtisanSettings />
           </ProtectedRoute>
         }
       />
@@ -191,9 +232,9 @@ const RoutesComponent = () => {
 
       {/* New KYC Page Route */}
       <Route
-        path="/kyc"
+        path="/kyc-verification"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRoles={['customer', 'artisan']}>
             <KYCPage />
           </ProtectedRoute>
         }

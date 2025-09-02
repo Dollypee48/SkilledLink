@@ -42,6 +42,7 @@ const userSchema = new mongoose.Schema(
       idProof: { type: String },
       addressProof: { type: String },
       credentials: { type: String }, // For artisans only
+      faceImage: { type: String }, // New: For face recognition
     },
     isSuspended: { type: Boolean, default: false },
     artisanProfile: { type: mongoose.Schema.Types.ObjectId, ref: "ArtisanProfile", default: null },

@@ -1,10 +1,30 @@
 const Booking = require("../models/Booking");
 const User = require("../models/User"); // Import User model if not already
+const NotificationService = require('../services/notificationService'); // Import notification service
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
   try {
-    const { artisan, service, date, time, description, price } = req.body; // Added price
+    const { 
+      artisan, 
+      service, 
+      date, 
+      time, 
+      description, 
+      urgencyLevel,
+      contactPhone,
+      preferredContactMethod,
+      specialRequirements,
+      price 
+    } = req.body;
+    
+    // Validate required fields
+    if (!artisan || !service || !date || !time || !description || !contactPhone) {
+      return res.status(400).json({ 
+        message: "Missing required fields: artisan, service, date, time, description, and contactPhone are required" 
+      });
+    }
+
     const booking = await Booking.create({
       customer: req.user.id, // Use 'customer' field
       artisan,
@@ -12,12 +32,17 @@ exports.createBooking = async (req, res) => {
       date,
       time,
       description,
-      price, // Save price
+      urgencyLevel: urgencyLevel || 'normal',
+      contactPhone,
+      preferredContactMethod: preferredContactMethod || 'phone',
+      specialRequirements: specialRequirements || '',
+      price: price || 0, // Use provided price or default to 0
       status: "Pending", // Initial status
     });
+    
     res.status(201).json(booking);
   } catch (err) {
-    console.error("Create booking error:", err.message);
+    console.error("Create booking error:", err.stack); // Changed to err.stack
     res.status(500).json({ message: "Server error during booking creation" });
   }
 };
@@ -26,7 +51,8 @@ exports.createBooking = async (req, res) => {
 exports.getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ customer: req.user.id }) // Use 'customer' field
-      .populate("artisan", "name email"); // Populate artisan details
+      .populate("artisan", "name email") // Populate artisan details
+      .populate("customer", "name email"); // Also populate customer details for consistency
     res.json(bookings);
   } catch (err) {
     console.error("Get my bookings error:", err.message);
@@ -52,6 +78,7 @@ exports.getArtisanBookings = async (req, res) => {
 // Get a single booking by ID (accessible by customer or artisan if involved)
 exports.getBookingById = async (req, res) => {
   try {
+    console.log("--- Entering getBookingById controller ---");
     const booking = await Booking.findById(req.params.id)
       .populate("customer", "name email")
       .populate("artisan", "name email");
@@ -60,10 +87,15 @@ exports.getBookingById = async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
+    console.log("User ID from token (req.user.id):", req.user.id);
+    console.log("User Role from token (req.user.role):", req.user.role);
+    console.log("Booking Customer ID:", booking.customer._id.toString());
+    console.log("Booking Artisan ID:", booking.artisan._id.toString());
+
     // Ensure only involved customer/artisan or admin can view
     if (
-      booking.customer.toString() !== req.user.id &&
-      booking.artisan.toString() !== req.user.id &&
+      booking.customer._id.toString() !== req.user.id &&
+      booking.artisan._id.toString() !== req.user.id &&
       req.user.role !== "admin"
     ) {
       return res.status(403).json({ message: "Unauthorized to view this booking" });
@@ -84,23 +116,53 @@ exports.updateBookingStatus = async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    if (!["Pending", "Accepted", "Declined", "Completed", "Cancelled"].includes(status)) {
+    console.log('updateBookingStatus called with:', { id, status, userId, userRole });
+
+    if (!["Pending", "Accepted", "Declined", "Pending Confirmation", "Completed", "Cancelled"].includes(status)) {
+      console.log('Invalid status received:', status);
+      console.log('Allowed statuses:', ["Pending", "Accepted", "Declined", "Pending Confirmation", "Completed", "Cancelled"]);
       return res.status(400).json({ message: "Invalid status provided" });
     }
 
-    let booking = await Booking.findById(id);
+    let booking = await Booking.findById(id)
+      .populate("customer", "name email")
+      .populate("artisan", "name email");
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
 
     // Only the assigned artisan or an admin can update status
-    if (booking.artisan.toString() !== userId && userRole !== "admin") {
+    if (booking.artisan._id.toString() !== userId && userRole !== "admin") {
       return res.status(403).json({ message: "Unauthorized to update this booking" });
     }
 
     booking.status = status;
     await booking.save();
+
+    // Send notifications to both customer and artisan
+    try {
+      // Notify customer about status change
+      await NotificationService.notifyJobStatusChange(
+        booking, 
+        status, 
+        booking.customer._id, 
+        userRole === 'admin' ? null : userId
+      );
+
+      // Notify artisan about status change (if not initiated by them)
+      if (userRole !== 'admin') {
+        await NotificationService.notifyJobStatusChange(
+          booking, 
+          status, 
+          booking.artisan._id, 
+          null
+        );
+      }
+    } catch (notificationError) {
+      console.error('Error sending notifications:', notificationError);
+      // Don't fail the status update if notifications fail
+    }
 
     res.json(booking);
   } catch (err) {

@@ -103,7 +103,7 @@ const ManageUsers = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 text-[#6b2d11]">
+      <div className="p-6 text-[#151E3D]">
         <h1 className="text-3xl font-bold mb-6">Manage Users</h1>
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
