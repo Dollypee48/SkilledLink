@@ -8,32 +8,18 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',
     role: 'customer',
-    nationality: 'Nigeria',
-    state: '',
-    address: '',
-    service: '', // Changed from skills to service for artisans
   });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
-  const africanCountries = [
-    'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Algeria', 'Egypt', 'Morocco', 'Uganda',
-    'Tunisia', 'Ethiopia', 'Senegal', 'Cameroon', 'Angola', 'Zambia', 'Zimbabwe',
-  ];
-
-  const nigerianStates = [
-    'Lagos', 'Abuja', 'Kano', 'Oyo', 'Rivers', 'Kaduna', 'Delta', 'Ogun', 'Edo', 'Enugu',
-  ];
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value, // Assign value directly, no splitting by commas
+      [name]: value,
     }));
   };
 
@@ -43,25 +29,35 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    // Password validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
     if (!passwordRegex.test(formData.password)) {
       setError('Password must contain at least 8 characters, including uppercase, lowercase, and a special character (!@#$%^&*).');
       return;
     }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
-      return;
-    }
-    if (!africanCountries.includes(formData.nationality)) {
-      setError('Please select a nationality from African countries only.');
       return;
     }
 
     try {
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }, // Added header for JSON
-        body: JSON.stringify(formData), // Send as JSON instead of FormData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+        }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -84,33 +80,34 @@ const Register = () => {
         <div className="flex justify-between mb-6 bg-[#F5F5F5] p-1 rounded-full shadow-inner">
           <button
             onClick={() => handleRoleChange('customer')}
-            className={`w-1/2 py-2 rounded-full text-sm font-medium transition ${
-              formData.role === 'customer' ? 'bg-[#151E3D] text-white shadow-md' : 'text-[#151E3D]'
+            className={`w-1/2 py-2 rounded-full text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2 ${
+              formData.role === 'customer' ? 'bg-[#151E3D] text-white shadow-md' : 'text-[#151E3D] hover:bg-[#151E3D]/10'
             }`}
           >
             Customer
           </button>
           <button
             onClick={() => handleRoleChange('artisan')}
-            className={`w-1/2 py-2 rounded-full text-sm font-medium transition ${
-              formData.role === 'artisan' ? 'bg-[#151E3D] text-white shadow-md' : 'text-[#151E3D]'
+            className={`w-1/2 py-2 rounded-full text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2 ${
+              formData.role === 'artisan' ? 'bg-[#151E3D] text-white shadow-md' : 'text-[#151E3D] hover:bg-[#151E3D]/10'
             }`}
           >
             Artisan
           </button>
         </div>
 
-        {/* Form in One Column */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4 text-left">
             <div>
-              <label className="text-sm font-medium text-[#151E3D]">Name</label>
+              <label className="text-sm font-medium text-[#151E3D]">Full Name</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
+                placeholder="Enter your full name"
                 required
               />
             </div>
@@ -122,6 +119,7 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
+                placeholder="Enter your email address"
                 required
               />
             </div>
@@ -133,14 +131,16 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D] pr-10"
+                placeholder="Create a strong password"
                 required
               />
-              <span
-                className="absolute right-2 top-9 cursor-pointer text-gray-500"
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-[#151E3D] transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2 rounded"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
+              </button>
             </div>
             <div className="relative">
               <label className="text-sm font-medium text-[#151E3D]">Confirm Password</label>
@@ -150,91 +150,24 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D] pr-10"
+                placeholder="Confirm your password"
                 required
               />
-              <span
-                className="absolute right-2 top-9 cursor-pointer text-gray-500"
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-[#151E3D] transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2 rounded"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
+              </button>
             </div>
-            <div>
-              <label className="text-sm font-medium text-[#151E3D]">Phone</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-[#151E3D]">Nationality</label>
-              <select
-                name="nationality"
-                value={formData.nationality}
-                onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
-                required
-              >
-                {africanCountries.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-[#151E3D]">State</label>
-              <select
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
-                required
-              >
-                <option value="">Select State</option>
-                {nigerianStates.map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-[#151E3D]">Address</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
-                required
-              />
-            </div>
-            {formData.role === 'artisan' && (
-              <div>
-                <label className="text-sm font-medium text-[#151E3D]">Primary Service</label>
-                <input
-                  type="text"
-                  name="service"
-                  value={formData.service}
-                  onChange={handleChange}
-                  className="w-full mt-1 px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
-                  placeholder="e.g., Plumbing, Electrical, Carpentry"
-                  required
-                />
-              </div>
-            )}
           </div>
 
           {/* Error Display and Submit Button */}
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <button
             type="submit"
-            className="w-full py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold shadow-md transition"
+            className="w-full py-2 rounded-md bg-[#151E3D] hover:bg-[#1E2A4A] text-white font-semibold shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2"
           >
             Register
           </button>
@@ -245,7 +178,7 @@ const Register = () => {
           Already have an account?{' '}
           <button
             onClick={() => navigate('/login')}
-            className="text-[#151E3D] font-medium hover:underline transition"
+            className="text-[#151E3D] font-medium hover:underline transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2 rounded"
           >
             Login
           </button>
