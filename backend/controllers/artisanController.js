@@ -256,9 +256,14 @@ exports.getArtisanById = async (req, res) => {
 // Suggest artisans based on user location
 exports.suggestArtisansByLocation = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("state");
-    if (!user || !user.state) {
-      return res.status(400).json({ message: "User location not available" });
+    const user = await User.findById(req.user.id).select("state address");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // If user doesn't have location, return empty suggestions instead of error
+    if (!user.state && !user.address) {
+      return res.json({ message: "No location-based suggestions available", suggestions: [] });
     }
 
     const artisans = await ArtisanProfile.find({

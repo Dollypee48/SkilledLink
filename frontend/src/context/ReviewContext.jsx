@@ -28,11 +28,11 @@ export const ReviewProvider = ({ children }) => {
 
   // Create a review
   const createReview = useCallback(async (reviewData) => {
-    console.log('ReviewContext: Creating review with data:', reviewData);
+    // Creating review
     const newReview = await handleRequest((token) =>
       ReviewService.createReview(reviewData, token)
     );
-    console.log('ReviewContext: Review created successfully:', newReview);
+    // Review created successfully
     setReviews((prev) => [...prev, newReview]);
     return newReview;
   }, [handleRequest]);

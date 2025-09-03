@@ -118,27 +118,39 @@ const ArtisanProfile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 text-gray-700 mb-8">
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">Phone Number</span>
-                <span className="text-base font-semibold mt-1">{user.phone || 'N/A'}</span>
+                <span className="text-base font-semibold mt-1">{user.phone || 'Not provided'}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">Address</span>
-                <span className="text-base font-semibold mt-1">{user.address || 'N/A'}</span>
+                <span className="text-base font-semibold mt-1">{user.address || 'Not provided'}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">Nationality</span>
-                <span className="text-base font-semibold mt-1">{user.nationality || 'N/A'}</span>
+                <span className="text-base font-semibold mt-1">{user.nationality || 'Not provided'}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">State</span>
-                <span className="text-base font-semibold mt-1">{user.state || 'N/A'}</span>
+                <span className="text-base font-semibold mt-1">{user.state || 'Not provided'}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">Occupation</span>
-                <span className="text-base font-semibold mt-1">{user.occupation || 'N/A'}</span>
+                <span className="text-base font-semibold mt-1">{user.occupation || 'Not provided'}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">KYC Status</span>
                 <span className="mt-1">{getKycStatusDisplay(user.kycStatus)}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-500">Account Status</span>
+                <span className={`text-base font-semibold mt-1 ${user.isSuspended ? 'text-red-600' : 'text-green-600'}`}>
+                  {user.isSuspended ? 'Suspended' : 'Active'}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-500">Member Since</span>
+                <span className="text-base font-semibold mt-1">
+                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                </span>
               </div>
             </div>
 
@@ -206,6 +218,24 @@ const ArtisanProfile = () => {
                 </div>
               </div>
             )}
+            
+            {/* Action Buttons */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => window.location.href = '/artisan-settings'}
+                  className="bg-[#151E3D] hover:bg-[#1E2A4A] text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2"
+                >
+                  Edit Profile
+                </button>
+                <button
+                  onClick={() => window.location.href = '/artisan-dashboard'}
+                  className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2"
+                >
+                  Go to Dashboard
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           <p className="text-center text-gray-600 text-lg py-12">Please log in to view your profile.</p>

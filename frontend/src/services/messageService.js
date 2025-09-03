@@ -67,10 +67,7 @@ export const messageService = {
     try {
       // Debug logging - only in development
       if (process.env.NODE_ENV === 'development') {
-        console.log("=== MESSAGE SERVICE DEBUG ===");
-        console.log("messageService: Clearing conversation for user:", otherUserId);
-        console.log("messageService: Using token:", token ? token.substring(0, 20) + '...' : 'No token');
-        console.log("messageService: API endpoint:", `/messages/conversation/${otherUserId}`);
+        // Clearing conversation for user
       }
       
       const response = await api.delete(`/messages/conversation/${otherUserId}`, {
@@ -81,17 +78,11 @@ export const messageService = {
       
       // Debug logging - only in development
       if (process.env.NODE_ENV === 'development') {
-        console.log("messageService: Clear conversation response:", response.data);
-        console.log("messageService: Response status:", response.status);
-        console.log("=== MESSAGE SERVICE SUCCESS ===");
+        // Clear conversation successful
       }
       return response.data;
     } catch (error) {
-      console.error("=== MESSAGE SERVICE ERROR ===");
-      console.error("messageService: Error clearing conversation:", error);
-      console.error("messageService: Error response:", error.response?.data);
-      console.error("messageService: Error status:", error.response?.status);
-      console.error("messageService: Error message:", error.message);
+      console.error("Error clearing conversation:", error);
       throw new Error(error.response?.data?.message || "Failed to clear conversation");
     }
   },

@@ -111,8 +111,12 @@ export const ArtisanProvider = ({ children }) => {
         setLoading(false);
       }
     };
-    initializeArtisanData();
-  }, [user, token, loadProfile, fetchBookings]); // Dependencies include memoized functions
+    
+    // Only initialize if we have a user and haven't loaded data yet
+    if (user && !profile && !loading) {
+      initializeArtisanData();
+    }
+  }, [user, token]); // Reduced dependencies to prevent excessive re-renders
 
   return (
     <ArtisanContext.Provider

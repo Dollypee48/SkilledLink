@@ -232,11 +232,7 @@ export const MessageProvider = ({ children }) => {
     try {
       // Debug logging - only in development
       if (process.env.NODE_ENV === 'development') {
-        console.log("=== CLEAR CONVERSATION DEBUG ===");
-        console.log("Attempting to clear conversation for user:", otherUserId);
-        console.log("Access token available:", !!accessToken);
-        console.log("Current user:", user?.name);
-        console.log("Selected recipient:", selectedRecipient?.name);
+        // Attempting to clear conversation
       }
       
       const result = await messageService.clearConversation(otherUserId, accessToken);
@@ -246,22 +242,13 @@ export const MessageProvider = ({ children }) => {
       
       // Debug logging - only in development
       if (process.env.NODE_ENV === 'development') {
-        console.log("Clear conversation API response:", result);
-        console.log("Current conversation cleared from state");
-        console.log("=== CLEAR CONVERSATION SUCCESS ===");
+        // Clear conversation successful
       }
       
       // Note: This only clears the current user's view
       // The other user's messages remain unchanged
     } catch (error) {
-      console.error("=== CLEAR CONVERSATION ERROR ===");
       console.error("Failed to clear conversation:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        otherUserId,
-        hasAccessToken: !!accessToken
-      });
       throw error;
     }
   }, [accessToken, user]);

@@ -4,10 +4,7 @@ export const notificationService = {
   // Get user's notifications
   getUserNotifications: async (token, limit = 50, skip = 0) => {
     try {
-      console.log('Making API call to fetch notifications...');
-      console.log('Token:', token ? token.substring(0, 20) + '...' : 'No token');
-      console.log('API endpoint:', `/notifications?limit=${limit}&skip=${skip}`);
-      console.log('Full API URL:', `http://localhost:5000/api/notifications?limit=${limit}&skip=${skip}`);
+          // Fetching notifications from API
       
       const response = await api.get(`/notifications?limit=${limit}&skip=${skip}`, {
         headers: {
@@ -15,8 +12,7 @@ export const notificationService = {
         },
       });
       
-      console.log('API response received:', response.data);
-      console.log('Response status:', response.status);
+      // API response received successfully
       return response.data;
     } catch (error) {
       console.error('Error fetching notifications:', error);

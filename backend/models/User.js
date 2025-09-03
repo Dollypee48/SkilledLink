@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6 },
     phone: {
       type: String,
-      required: true,
+      required: false,
       match: [/^\+?\d{10,15}$/, "Invalid phone number"],
     },
     role: {
@@ -22,9 +22,9 @@ const userSchema = new mongoose.Schema(
       enum: ["customer", "artisan", "admin"],
       default: "customer",
     },
-    nationality: { type: String, required: true, trim: true },
-    state: { type: String, required: true, trim: true },
-    address: { type: String, required: true, trim: true },
+    nationality: { type: String, required: false, trim: true },
+    state: { type: String, required: false, trim: true },
+    address: { type: String, required: false, trim: true },
     kycVerified: {
       type: Boolean,
       default: function () {

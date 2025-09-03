@@ -14,21 +14,24 @@ export const useNotification = () => {
   return context;
 };
 
+// Custom hook to safely get socket from MessageContext
+const useSocket = () => {
+  try {
+    const { socket } = useMessage();
+    return socket;
+  } catch (error) {
+    // MessageProvider not available yet, return null
+    return null;
+  }
+};
+
 export const NotificationProvider = ({ children }) => {
   const { user, accessToken } = useAuth();
-  const { socket } = useMessage();
+  const socket = useSocket();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   
-  // Debug logging - only in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('NotificationProvider initialized:', { 
-      user: user?.name, 
-      hasToken: !!accessToken,
-      userId: user?._id,
-      tokenPreview: accessToken ? accessToken.substring(0, 20) + '...' : 'No token'
-    });
-  }
+  // Debug logging removed for production
 
   // Show toast notification
   const showNotification = useCallback((type, message, options = {}) => {
@@ -81,7 +84,7 @@ export const NotificationProvider = ({ children }) => {
       if (isDuplicate) {
         // Debug logging - only in development
         if (process.env.NODE_ENV === 'development') {
-          console.log('Duplicate notification prevented:', newNotification.title);
+          // Duplicate notification prevented
         }
         return prev;
       }
@@ -266,15 +269,12 @@ export const NotificationProvider = ({ children }) => {
     if (!accessToken) {
       // Debug logging - only in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('No access token available for notifications');
+        // No access token available for notifications
       }
       return;
     }
     
-    // Debug logging - only in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Attempting to fetch notifications with token:', accessToken.substring(0, 20) + '...');
-    }
+    // Fetching notifications from API
     
     try {
       const data = await notificationService.getUserNotifications(accessToken);
@@ -286,11 +286,7 @@ export const NotificationProvider = ({ children }) => {
         timestamp: new Date(notification.createdAt || notification.timestamp)
       }));
       
-      // Debug logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Successfully fetched notifications from API:', data);
-        console.log('Transformed notifications from API:', transformedNotifications);
-      }
+      // Successfully fetched notifications from API
       
       // Check for duplicates before setting
       setNotifications(prev => {
@@ -303,10 +299,7 @@ export const NotificationProvider = ({ children }) => {
         );
         
         if (uniqueNotifications.length !== newNotifications.length) {
-          // Debug logging - only in development
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Filtered out duplicate notifications from API');
-          }
+                  // Filtered out duplicate notifications from API
         }
         
         return [...uniqueNotifications, ...prev];
@@ -314,10 +307,7 @@ export const NotificationProvider = ({ children }) => {
       
       // Get unread count
       const unreadData = await notificationService.getUnreadCount(accessToken);
-      // Debug logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Unread count from API:', unreadData);
-      }
+      // Unread count fetched from API
       setUnreadCount(unreadData.unreadCount);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -354,10 +344,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (socket && user) {
       const handleNewMessage = (message) => {
-        // Debug logging - only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Socket.IO message received:', message);
-        }
+        // Socket.IO message received
         // Only notify if the message is for the current user
         if (message.recipient._id === user._id) {
           notifyNewMessage(message, false);
@@ -376,10 +363,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (socket && user) {
       const handleNewNotification = (notification) => {
-        // Debug logging - only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Socket.IO notification received:', notification);
-        }
+        // Socket.IO notification received
         addNotification({
           _id: notification._id,
           title: notification.title,

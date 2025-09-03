@@ -37,10 +37,10 @@ const getPopulatedUser = async (userId) => {
 // REGISTER
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role, nationality, state, address, occupation, service } = req.body;
+    const { name, email, password, role } = req.body;
 
     // Basic validation
-    if (!name || !email || !password || !phone || !nationality || !state || !address) {
+    if (!name || !email || !password) {
       return res.status(400).json({ message: "Please fill in all required fields" });
     }
 
@@ -55,23 +55,41 @@ exports.register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with minimal required fields
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      phone,
       role,
-      nationality,
-      state,
-      address,
-      occupation,
+      phone: '', // Will be filled in profile settings
+      nationality: '', // Will be filled in profile settings
+      state: '', // Will be filled in profile settings
+      address: '', // Will be filled in profile settings
       kycVerified: role === "customer", // auto verify customers
     });
 
-    // If artisan, create profile
+    // If artisan, create basic profile
     if (role === "artisan") {
-      const profile = await ArtisanProfile.create({ userId: user._id, service });
+      const profile = await ArtisanProfile.create({ 
+        userId: user._id, 
+        service: '', // Will be filled in profile settings
+        bio: '',
+        experience: '',
+        hourlyRate: 0,
+        availability: true,
+        skills: [],
+        portfolio: [],
+        certifications: [],
+        reviews: [],
+        rating: 0,
+        totalJobs: 0,
+        completedJobs: 0,
+        location: {
+          state: '',
+          city: '',
+          address: ''
+        }
+      });
       user.artisanProfile = profile._id;
       await user.save();
     }

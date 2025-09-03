@@ -30,7 +30,7 @@ export const updateProfile = async (profileData, token, userRole) => {
     },
   };
   const res = await axios.put(`${API_URL}/profile`, { ...profileData, role: userRole }, config);
-  return res.data;
+  return res.data.user; // Return the user object from the response
 };
 
 // Change Password

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext"; // Corrected import path
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -20,12 +20,7 @@ const CustomerLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  console.log('CustomerLayout rendered:', { 
-    user: user?.name, 
-    userId: user?._id, 
-    role: user?.role,
-    pathname: location.pathname 
-  });
+  // Debug logging removed for production
 
   const navItems = [
     { name: "Home", path: "/", icon: Home }, // New: Home button

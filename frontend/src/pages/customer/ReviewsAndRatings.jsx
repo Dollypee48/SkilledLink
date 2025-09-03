@@ -18,9 +18,8 @@ const CustomerReviews = () => {
 
   // Fetch bookings and reviews on mount
   useEffect(() => {
-    console.log('CustomerReviews: useEffect triggered, accessToken:', accessToken ? 'exists' : 'missing');
-    if (accessToken) {
-      console.log('CustomerReviews: Fetching bookings and reviews...');
+      // Fetching bookings and reviews
+  if (accessToken) {
       getBookings();
       getMyReviews();
     }
@@ -30,8 +29,7 @@ const CustomerReviews = () => {
   const completedBookings = customerBookings?.filter((b) => b.status === "Completed") || [];
   
   // Debug logging
-  console.log('CustomerReviews: customerBookings:', customerBookings);
-  console.log('CustomerReviews: completedBookings:', completedBookings);
+  // Processing completed bookings for reviews
 
   // Handle review submission
   const handleSubmitReview = async (e) => {
@@ -60,7 +58,7 @@ const CustomerReviews = () => {
         comment: reviewText.trim(),
       };
 
-      console.log('Submitting review:', reviewData);
+      // Submitting review
       
       await createReview(reviewData);
       

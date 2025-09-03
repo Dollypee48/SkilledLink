@@ -8,16 +8,7 @@ const NotificationDropdown = () => {
   const dropdownRef = useRef(null);
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotification();
   
-  // Debug logging - only in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('NotificationDropdown render:', { 
-      notifications: notifications?.length || 0, 
-      unreadCount, 
-      isOpen,
-      hasNotifications: !!notifications?.length,
-      firstNotification: notifications?.[0]
-    });
-  }
+  // Debug logging removed for production
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -34,7 +25,7 @@ const NotificationDropdown = () => {
   const handleNotificationClick = (notification) => {
     // Debug logging - only in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('Notification clicked:', notification);
+      // Notification clicked
     }
     
     // Don't mark offline notifications as read
@@ -86,7 +77,7 @@ const NotificationDropdown = () => {
         onClick={() => {
           // Debug logging - only in development
           if (process.env.NODE_ENV === 'development') {
-            console.log('Bell button clicked, current state:', isOpen);
+            // Bell button clicked
           }
           setIsOpen(!isOpen);
         }}

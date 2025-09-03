@@ -12,7 +12,7 @@ const fileToBase64 = (file) => {
     reader.onload = () => {
       // Debug logging - only in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('fileToBase64 - Reader result:', reader.result.substring(0, 50) + '...');
+        // File converted to base64
       }
       resolve(reader.result.split(',')[1]); // Extract only the base64 part
     };
@@ -64,7 +64,7 @@ const ChatWindow = () => {
     const file = e.target.files[0];
     // Debug logging - only in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('handleFileChange - Selected file:', file);
+      // File selected for upload
     }
     if (file) {
       setSelectedFile(file);
@@ -127,8 +127,7 @@ const ChatWindow = () => {
       try {
         // Debug logging - only in development
         if (process.env.NODE_ENV === 'development') {
-          console.log('Starting clear conversation process...');
-          console.log('Selected recipient ID:', selectedRecipient._id);
+          // Starting clear conversation process
         }
         
         await clearConversation(selectedRecipient._id);
@@ -136,7 +135,7 @@ const ChatWindow = () => {
         
         // Show success feedback
         if (process.env.NODE_ENV === 'development') {
-          console.log('Conversation cleared successfully');
+          // Conversation cleared successfully
         }
         alert('Conversation cleared successfully!');
         
