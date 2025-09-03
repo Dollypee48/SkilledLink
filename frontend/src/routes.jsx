@@ -19,7 +19,7 @@ import CustomerReviews from './pages/customer/ReviewsAndRatings';
 import Services from './pages/Services'; // New: Import Services page
 import HowItWorks from './pages/HowItWorks'; // New: Import HowItWorks page
 import AboutUs from './pages/AboutUs'; // New: Import AboutUs page
-import CustomerSettings from './pages/customer/CustomerSettings'; // New: Import CustomerSettings
+import CustomerSettings from './pages/customer/SettingsPage'; // Updated: Import SettingsPage
 import MessagesPage from './pages/MessagesPage'; // New: Import MessagesPage
 
 // Artisan Pages
@@ -28,7 +28,7 @@ import MyJobs from './pages/artisan/MyJobs';
 import JobRequests from './pages/artisan/JobRequests';
 import ArtisanReviews from './pages/artisan/Reviews';
 import ArtisanProfile from './pages/artisan/Profile';
-import ArtisanSettings from './pages/artisan/ArtisanSettings'; // New: Import ArtisanSettings
+import ArtisanSettings from './pages/artisan/SettingsPage'; // Updated: Import SettingsPage
 import Subscription from './pages/artisan/Subscription';
 import ArtisanReport from './pages/artisan/ReportIssues';
 

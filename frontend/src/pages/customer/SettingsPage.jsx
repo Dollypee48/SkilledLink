@@ -3,7 +3,6 @@ import CustomerLayout from '../../components/common/Layouts/CustomerLayout';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { User, Lock, Eye, EyeOff, Camera, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle } from 'lucide-react';
-import TestComponent from '../../components/TestComponent';
 
 const SettingsPage = () => {
   const { user, updateProfile, changePassword } = useAuth();
@@ -276,7 +275,6 @@ const SettingsPage = () => {
 
   return (
     <CustomerLayout>
-      <TestComponent />
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Modern Header with Glass Effect */}
         <div className="relative bg-white/90 backdrop-blur-sm shadow-xl border-b border-white/20">
@@ -285,7 +283,7 @@ const SettingsPage = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-[#151E3D] via-blue-600 to-[#1E2A4A] bg-clip-text text-transparent">
-                  🎨 Account Settings - UPDATED
+                  Account Settings
                 </h1>
                 <p className="text-gray-600 text-lg">Manage your profile, security, and preferences</p>
                 <div className="flex items-center space-x-4 mt-3">

@@ -295,7 +295,7 @@ const ArtisanSettingsPage = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-[#151E3D] via-orange-600 to-[#F59E0B] bg-clip-text text-transparent">
-                  🔧 Artisan Settings - UPDATED
+                  Artisan Settings
                 </h1>
                 <p className="text-gray-600 text-lg">Manage your professional profile, services, and preferences</p>
                 <div className="flex items-center space-x-4 mt-3">
