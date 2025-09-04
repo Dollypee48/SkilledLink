@@ -56,7 +56,7 @@ const RoutesComponent = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email/:token" element={<VerifyEmail />} />
       <Route path="/find-artisans" element={<AllArtisans />} />
-      <Route path="/artisans" element={<AllArtisans />} /> {/* New: Add /artisans route for compatibility */}
+      <Route path="/artisans" element={<FindArtisans />} /> {/* New: Add /artisans route for compatibility */}
       <Route path="/artisan/:id" element={<ArtisanDetail />} />
       <Route path="/services" element={<Services />} /> {/* New: Services page */}
       <Route path="/how-it-works" element={<HowItWorks />} /> {/* New: How It Works page */}
