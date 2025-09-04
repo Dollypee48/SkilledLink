@@ -10,6 +10,8 @@ import Home from './pages/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import VerifyEmail from './pages/Auth/VerifyEmail';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 import FindArtisans from './pages/customer/FindArtisans';
 import AllArtisans from './pages/AllArtisans';
 import ArtisanDetail from './pages/customer/ArtisanDetail';
@@ -55,6 +57,8 @@ const RoutesComponent = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email/:token" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/find-artisans" element={<AllArtisans />} />
       <Route path="/artisans" element={<FindArtisans />} /> {/* New: Add /artisans route for compatibility */}
       <Route path="/artisan/:id" element={<ArtisanDetail />} />

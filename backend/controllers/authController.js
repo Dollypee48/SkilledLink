@@ -3,7 +3,7 @@ const ArtisanProfile = require("../models/ArtisanProfile");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { uploadFile } = require("../utils/cloudinary"); // Import Cloudinary utility
-const { generateVerificationToken, sendVerificationEmail } = require("../utils/emailService");
+const { generateVerificationToken, generateOTP, sendVerificationEmail, sendPasswordResetOTP } = require("../utils/emailService");
 const { checkProfileCompletion, getProfileCompletionMessage } = require("../utils/profileCompletion");
 
 const ROLES = ["customer", "artisan", "admin"];
@@ -447,5 +447,143 @@ exports.changePassword = async (req, res) => {
   } catch (err) {
     console.error("Change password error:", err.message);
     res.status(500).json({ message: "Server error during password change" });
+  }
+};
+
+// FORGOT PASSWORD
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validate input
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      // For security, don't reveal if email exists or not
+      return res.json({ 
+        message: "If an account with that email exists, a password reset code has been sent.",
+        success: true 
+      });
+    }
+
+    // Check if user is verified
+    if (!user.isVerified) {
+      return res.status(400).json({ 
+        message: "Please verify your email address before resetting your password.",
+        requiresVerification: true,
+        email: user.email
+      });
+    }
+
+    // Generate 6-digit OTP
+    const resetCode = generateOTP();
+    const resetCodeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Save reset code and expiry to user
+    user.resetCode = resetCode;
+    user.resetCodeExpiry = resetCodeExpiry;
+    await user.save();
+
+    // Send OTP email
+    const emailResult = await sendPasswordResetOTP(email, resetCode, user.name);
+    
+    if (!emailResult.success) {
+      console.error('Failed to send password reset OTP:', emailResult.error);
+      return res.status(500).json({ 
+        message: "Failed to send reset code. Please try again later.",
+        success: false 
+      });
+    }
+
+    res.json({ 
+      message: "Password reset code has been sent to your email.",
+      success: true 
+    });
+
+  } catch (err) {
+    console.error("Forgot password error:", err.message);
+    res.status(500).json({ 
+      message: "Server error during forgot password",
+      success: false 
+    });
+  }
+};
+
+// RESET PASSWORD
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ 
+        message: "Email, reset code, and new password are required" 
+      });
+    }
+
+    // Password validation
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        message: "Password must be at least 6 characters long" 
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ 
+        message: "Invalid email or reset code" 
+      });
+    }
+
+    // Check if reset code exists and is not expired
+    if (!user.resetCode || !user.resetCodeExpiry) {
+      return res.status(400).json({ 
+        message: "No password reset request found. Please request a new reset code." 
+      });
+    }
+
+    if (new Date() > user.resetCodeExpiry) {
+      // Clear expired reset code
+      user.resetCode = null;
+      user.resetCodeExpiry = null;
+      await user.save();
+      
+      return res.status(400).json({ 
+        message: "Reset code has expired. Please request a new one." 
+      });
+    }
+
+    // Verify reset code
+    if (user.resetCode !== resetCode) {
+      return res.status(400).json({ 
+        message: "Invalid reset code" 
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update password and clear reset code
+    user.password = hashedPassword;
+    user.resetCode = null;
+    user.resetCodeExpiry = null;
+    await user.save();
+
+    res.json({
+      message: "Password has been reset successfully. You can now log in with your new password.",
+      success: true
+    });
+
+  } catch (err) {
+    console.error("Reset password error:", err.message);
+    res.status(500).json({ 
+      message: "Server error during password reset",
+      success: false 
+    });
   }
 };
