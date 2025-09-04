@@ -7,9 +7,11 @@ import { useAuth } from './context/AuthContext'; // Corrected import path
 
 // Public/Customer Pages
 import Home from './pages/Home';
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import VerifyEmail from './pages/Auth/VerifyEmail';
 import FindArtisans from './pages/customer/FindArtisans';
+import AllArtisans from './pages/AllArtisans';
 import ArtisanDetail from './pages/customer/ArtisanDetail';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import CustomerBookings from './pages/customer/Bookings';
@@ -52,8 +54,9 @@ const RoutesComponent = () => {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/find-artisans" element={<FindArtisans />} />
-      <Route path="/artisans" element={<FindArtisans />} /> {/* New: Add /artisans route for compatibility */}
+      <Route path="/verify-email/:token" element={<VerifyEmail />} />
+      <Route path="/find-artisans" element={<AllArtisans />} />
+      <Route path="/artisans" element={<AllArtisans />} /> {/* New: Add /artisans route for compatibility */}
       <Route path="/artisan/:id" element={<ArtisanDetail />} />
       <Route path="/services" element={<Services />} /> {/* New: Services page */}
       <Route path="/how-it-works" element={<HowItWorks />} /> {/* New: How It Works page */}

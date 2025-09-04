@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
     const savedToken = localStorage.getItem("accessToken");
     return savedToken || null;
   });
+  const [profileCompletion, setProfileCompletion] = useState(null);
 
   const isAuthenticated = !!user && !!accessToken;
   const role = user ? user.role : null;
@@ -27,6 +28,7 @@ export const AuthProvider = ({ children }) => {
     const data = await authService.login(credentials);
     setUser(data.user);
     setAccessToken(data.accessToken);
+    setProfileCompletion(data.profileCompletion || null);
     localStorage.setItem("user", JSON.stringify(data.user)); // Save user with role and artisanProfile
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("refreshToken", data.refreshToken);
@@ -108,7 +110,7 @@ export const AuthProvider = ({ children }) => {
   }, [handleLogout]);
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, isAuthenticated, role, handleLogin, handleRegister, handleLogout, updateUser, updateProfile, changePassword }}>
+    <AuthContext.Provider value={{ user, accessToken, isAuthenticated, role, handleLogin, handleRegister, handleLogout, updateUser, updateProfile, changePassword, profileCompletion, setProfileCompletion }}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,6 +3,8 @@ const ArtisanProfile = require("../models/ArtisanProfile");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { uploadFile } = require("../utils/cloudinary"); // Import Cloudinary utility
+const { generateVerificationToken, sendVerificationEmail } = require("../utils/emailService");
+const { checkProfileCompletion, getProfileCompletionMessage } = require("../utils/profileCompletion");
 
 const ROLES = ["customer", "artisan", "admin"];
 
@@ -55,6 +57,10 @@ exports.register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate verification token
+    const verificationToken = generateVerificationToken();
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     // Create user with minimal required fields
     const user = await User.create({
       name,
@@ -66,6 +72,9 @@ exports.register = async (req, res) => {
       state: '', // Will be filled in profile settings
       address: '', // Will be filled in profile settings
       kycVerified: role === "customer", // auto verify customers
+      isVerified: false, // Email verification required
+      verificationToken,
+      verificationTokenExpires,
     });
 
     // If artisan, create basic profile
@@ -94,18 +103,29 @@ exports.register = async (req, res) => {
       await user.save();
     }
 
-    // Tokens
-    const { accessToken, refreshToken } = generateTokens(user);
-    user.refreshToken = refreshToken;
-    await user.save();
+    // Send verification email
+    const emailResult = await sendVerificationEmail(email, verificationToken, name);
+    
+    if (!emailResult.success) {
+      console.error('Failed to send verification email:', emailResult.error);
+      // Don't fail registration if email fails, just log it
+    }
 
+    // Don't return tokens until email is verified
     const populatedUser = await getPopulatedUser(user._id);
+    // Remove sensitive fields from response
+    const safeUser = {
+      ...populatedUser.toObject(),
+      password: undefined,
+      verificationToken: undefined,
+      verificationTokenExpires: undefined,
+    };
 
     res.status(201).json({
-      message: "Registration successful",
-      accessToken,
-      refreshToken,
-      user: populatedUser,
+      message: "Registration successful. Please check your email to verify your account.",
+      user: safeUser,
+      emailSent: emailResult.success,
+      requiresVerification: true,
     });
   } catch (err) {
     console.error("Register error:", err.message);
@@ -117,18 +137,43 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
+    
+    console.log('🔍 Backend received:', { email, role, passwordLength: password ? password.length : 0 });
 
     // Find user by email
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) {
+      console.log('❌ User not found:', email);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+    
+    console.log('✅ User found:', { email: user.email, role: user.role });
+
+    // Check if email is verified
+    if (!user.isVerified) {
+      console.log('❌ Email not verified:', email);
+      return res.status(403).json({ 
+        message: "Please verify your email address before logging in. Check your email for verification link.",
+        requiresVerification: true,
+        email: user.email
+      });
+    }
 
     // If a role is provided and the user is not an admin, check if it matches the user's role in the database
     if (role && user.role !== "admin" && user.role !== role) {
+      console.log('❌ Role mismatch:', { requestedRole: role, userRole: user.role });
       return res.status(403).json({ message: `Access denied. You are registered as a ${user.role}.` });
     }
+    
+    console.log('✅ Role check passed');
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(401).json({ message: "Invalid password" });
+    if (!match) {
+      console.log('❌ Password mismatch for user:', email);
+      return res.status(401).json({ message: "Invalid password" });
+    }
+    
+    console.log('✅ Password check passed for user:', email);
 
     // Tokens
     const { accessToken, refreshToken } = generateTokens(user);
@@ -136,12 +181,20 @@ exports.login = async (req, res) => {
     await user.save();
 
     const populatedUser = await getPopulatedUser(user._id);
+    
+    // Check profile completion
+    const profileCompletion = checkProfileCompletion(populatedUser);
+    const profileMessage = getProfileCompletionMessage(profileCompletion, user.role);
 
     res.json({
       message: "Login successful",
       accessToken,
       refreshToken,
       user: populatedUser,
+      profileCompletion: {
+        ...profileCompletion,
+        message: profileMessage
+      }
     });
   } catch (err) {
     console.error("Login error:", err.message);
@@ -183,7 +236,9 @@ exports.refreshToken = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id; // User ID from authenticated token
-    const { name, phone, address, nationality, occupation, service, bio, experience, skills, profileImage, role } = req.body;
+    const { name, phone, address, nationality, state, occupation, service, bio, experience, skills, profileImage, role } = req.body;
+    
+    console.log('Update Profile - Received data:', { name, phone, address, nationality, state, occupation, role });
 
     let user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -193,6 +248,7 @@ exports.updateProfile = async (req, res) => {
     user.phone = phone || user.phone;
     user.address = address || user.address;
     user.nationality = nationality || user.nationality;
+    user.state = state || user.state;
     user.occupation = occupation || user.occupation;
 
     // Handle profile image upload/removal
@@ -227,7 +283,10 @@ exports.updateProfile = async (req, res) => {
         artisanProfile.service = service || artisanProfile.service;
         artisanProfile.bio = bio || artisanProfile.bio;
         artisanProfile.experience = experience || artisanProfile.experience;
-        artisanProfile.skills = skills || artisanProfile.skills; // skills should be an array
+        // Handle skills - convert string to array if needed
+        if (skills) {
+          artisanProfile.skills = Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim()).filter(s => s);
+        }
         await artisanProfile.save();
       } else {
         console.warn("Artisan profile not found for user:", userId);
@@ -245,6 +304,105 @@ exports.updateProfile = async (req, res) => {
   } catch (err) {
     console.error("Update profile error:", err.message);
     res.status(500).json({ message: "Server error during profile update" });
+  }
+};
+
+// VERIFY EMAIL
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Find user with valid verification token
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        message: "Invalid or expired verification token",
+        success: false 
+      });
+    }
+
+    // Mark email as verified
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    console.log('✅ Email verified for user:', user.email);
+
+    res.json({
+      message: "Email verified successfully! You can now log in.",
+      success: true,
+      email: user.email
+    });
+
+  } catch (err) {
+    console.error("Email verification error:", err.message);
+    res.status(500).json({ 
+      message: "Server error during email verification",
+      success: false 
+    });
+  }
+};
+
+// RESEND VERIFICATION EMAIL
+exports.resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if already verified
+    if (user.isVerified) {
+      return res.status(400).json({ 
+        message: "Email is already verified",
+        success: false 
+      });
+    }
+
+    // Generate new verification token
+    const verificationToken = generateVerificationToken();
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Update user with new token
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpires = verificationTokenExpires;
+    await user.save();
+
+    // Send verification email
+    const emailResult = await sendVerificationEmail(email, verificationToken, user.name);
+    
+    if (!emailResult.success) {
+      console.error('Failed to send verification email:', emailResult.error);
+      return res.status(500).json({ 
+        message: "Failed to send verification email",
+        success: false 
+      });
+    }
+
+    res.json({
+      message: "Verification email sent successfully!",
+      success: true,
+      email: user.email
+    });
+
+  } catch (err) {
+    console.error("Resend verification error:", err.message);
+    res.status(500).json({ 
+      message: "Server error during resend verification",
+      success: false 
+    });
   }
 };
 

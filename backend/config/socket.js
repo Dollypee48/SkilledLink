@@ -18,7 +18,10 @@ const setupSocket = (httpServer) => {
 
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
+    console.log('Socket.IO Auth - Token received:', token ? 'Yes' : 'No');
+    
     if (!token) {
+      console.log('Socket.IO Auth - No token provided');
       return next(new Error('Authentication error: Token not provided'));
     }
 
@@ -26,8 +29,10 @@ const setupSocket = (httpServer) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       socket.userId = decoded.id;
       socket.userRole = decoded.role;
+      console.log('Socket.IO Auth - User authenticated:', decoded.id, decoded.role);
       next();
     } catch (err) {
+      console.log('Socket.IO Auth - Token verification failed:', err.message);
       if (err.name === 'TokenExpiredError') {
         return next(new Error('Authentication error: Token expired'));
       } else if (err.name === 'JsonWebTokenError') {
@@ -38,11 +43,13 @@ const setupSocket = (httpServer) => {
   });
 
   io.on('connection', (socket) => {
+    console.log('Socket.IO - User connected:', socket.userId, socket.id);
     connectedUsers.set(socket.userId, socket.id);
 
     socket.join(socket.userId);
 
     socket.on('disconnect', (reason) => {
+      console.log('Socket.IO - User disconnected:', socket.userId, reason);
       connectedUsers.delete(socket.userId);
     });
 

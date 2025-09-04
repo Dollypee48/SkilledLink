@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema(
     nationality: { type: String, required: false, trim: true },
     state: { type: String, required: false, trim: true },
     address: { type: String, required: false, trim: true },
+    occupation: { type: String, required: false, trim: true },
     kycVerified: {
       type: Boolean,
       default: function () {
@@ -48,6 +49,10 @@ const userSchema = new mongoose.Schema(
     artisanProfile: { type: mongoose.Schema.Types.ObjectId, ref: "ArtisanProfile", default: null },
     refreshToken: { type: String },
     profileImageUrl: { type: String, default: '' },
+    // Email verification fields
+    isVerified: { type: Boolean, default: false },
+    verificationToken: { type: String, default: null },
+    verificationTokenExpires: { type: Date, default: null },
   },
   { timestamps: true }
 );

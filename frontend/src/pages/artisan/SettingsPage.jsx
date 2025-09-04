@@ -14,6 +14,7 @@ const ArtisanSettingsPage = () => {
     phone: '',
     address: '',
     nationality: '',
+    state: '',
     occupation: '',
     // Artisan specific
     service: '',
@@ -69,6 +70,7 @@ const ArtisanSettingsPage = () => {
         phone: user.phone || '',
         address: user.address || '',
         nationality: user.nationality || '',
+        state: user.state || '',
         occupation: user.occupation || '',
         // Artisan specific
         service: user.artisanProfile?.service || '',
@@ -532,6 +534,58 @@ const ArtisanSettingsPage = () => {
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-200 bg-white"
                                 placeholder="Enter your nationality"
                               />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <label htmlFor="state" className="block text-sm font-semibold text-gray-700">
+                                State/Province
+                              </label>
+                              <select
+                                name="state"
+                                id="state"
+                                value={profileForm.state}
+                                onChange={handleProfileChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-200 bg-white"
+                              >
+                                <option value="">Select your state</option>
+                                <option value="Abia">Abia</option>
+                                <option value="Adamawa">Adamawa</option>
+                                <option value="Akwa Ibom">Akwa Ibom</option>
+                                <option value="Anambra">Anambra</option>
+                                <option value="Bauchi">Bauchi</option>
+                                <option value="Bayelsa">Bayelsa</option>
+                                <option value="Benue">Benue</option>
+                                <option value="Borno">Borno</option>
+                                <option value="Cross River">Cross River</option>
+                                <option value="Delta">Delta</option>
+                                <option value="Ebonyi">Ebonyi</option>
+                                <option value="Edo">Edo</option>
+                                <option value="Ekiti">Ekiti</option>
+                                <option value="Enugu">Enugu</option>
+                                <option value="FCT">Federal Capital Territory</option>
+                                <option value="Gombe">Gombe</option>
+                                <option value="Imo">Imo</option>
+                                <option value="Jigawa">Jigawa</option>
+                                <option value="Kaduna">Kaduna</option>
+                                <option value="Kano">Kano</option>
+                                <option value="Katsina">Katsina</option>
+                                <option value="Kebbi">Kebbi</option>
+                                <option value="Kogi">Kogi</option>
+                                <option value="Kwara">Kwara</option>
+                                <option value="Lagos">Lagos</option>
+                                <option value="Nasarawa">Nasarawa</option>
+                                <option value="Niger">Niger</option>
+                                <option value="Ogun">Ogun</option>
+                                <option value="Ondo">Ondo</option>
+                                <option value="Osun">Osun</option>
+                                <option value="Oyo">Oyo</option>
+                                <option value="Plateau">Plateau</option>
+                                <option value="Rivers">Rivers</option>
+                                <option value="Sokoto">Sokoto</option>
+                                <option value="Taraba">Taraba</option>
+                                <option value="Yobe">Yobe</option>
+                                <option value="Zamfara">Zamfara</option>
+                              </select>
                             </div>
                             
                             <div className="space-y-2 md:col-span-2">

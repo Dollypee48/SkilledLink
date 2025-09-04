@@ -151,7 +151,7 @@ exports.getArtisans = async (req, res) => {
         role: "Artisan",
         skills: ap.skills.length ? ap.skills : ["Unknown"],
         service: ap.service || "Unknown",
-        location: ap.location || "Unknown",
+        location: ap.location || { state: "", city: "", address: "" },
         rating: calculatedRating,
         reviewCount: reviewCount,
         bio: ap.bio || "", // Include bio
@@ -167,6 +167,7 @@ exports.getArtisans = async (req, res) => {
         artisanProfile: {
           skills: ap.skills.length ? ap.skills : ["Unknown"],
           service: ap.service || "Unknown",
+          location: ap.location || { state: "", city: "", address: "" },
           bio: ap.bio || "",
           experience: ap.experience || "",
           rating: calculatedRating,
@@ -304,7 +305,7 @@ exports.suggestArtisansByLocation = async (req, res) => {
         role: "Artisan",
         skills: ap.skills.length ? ap.skills : ["Unknown"],
         service: ap.service || "Unknown",
-        location: ap.location || "Unknown",
+        location: ap.location || { state: "", city: "", address: "" },
         rating: calculatedRating,
         reviewCount: reviewCount,
         bio: ap.bio || "",
@@ -320,6 +321,7 @@ exports.suggestArtisansByLocation = async (req, res) => {
         artisanProfile: {
           skills: ap.skills.length ? ap.skills : ["Unknown"],
           service: ap.service || "Unknown",
+          location: ap.location || { state: "", city: "", address: "" },
           bio: ap.bio || "",
           experience: ap.experience || "",
           rating: calculatedRating,

@@ -16,6 +16,14 @@ export const useMessage = () => {
 // --- Global Socket.IO Instance (outside React's lifecycle) ---
 let globalSocketInstance = null;
 
+// Function to reset the global socket instance
+const resetGlobalSocket = () => {
+  if (globalSocketInstance) {
+    globalSocketInstance.disconnect();
+    globalSocketInstance = null;
+  }
+};
+
 const initializeSocket = (accessToken) => {
   if (globalSocketInstance) {
     return globalSocketInstance;
@@ -25,18 +33,20 @@ const initializeSocket = (accessToken) => {
     auth: { token: accessToken || null },
     transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
+    reconnectionAttempts: 5, // Limit reconnection attempts
+    reconnectionDelay: 2000,
+    reconnectionDelayMax: 10000,
     timeout: 20000,
     autoConnect: false, // Prevent auto-connection
+    forceNew: true, // Force new connection
   });
 
   return globalSocketInstance;
 };
 
 export const MessageProvider = ({ children }) => {
-  const { user, accessToken } = useAuth();
+  const authContext = useAuth();
+  const { user, accessToken } = authContext || {};
   // const [socket, setSocket] = useState(null); // No longer needed, manage globalSocketInstance directly
   const [conversations, setConversations] = useState([]);
   const [currentConversation, setCurrentConversation] = useState([]);
@@ -48,8 +58,20 @@ export const MessageProvider = ({ children }) => {
     selectedRecipientRef.current = selectedRecipient;
   }, [selectedRecipient]);
 
+  // Effect to reset socket when user logs out
+  useEffect(() => {
+    if (!user) {
+      resetGlobalSocket();
+      return;
+    }
+  }, [user]);
+
   // Effect to manage the global socket instance and its listeners
   useEffect(() => {
+    if (!accessToken || !user) {
+      return; // Don't initialize socket if no access token or user
+    }
+    
     const currentSocket = initializeSocket(accessToken);
 
     const onConnect = () => {
@@ -59,7 +81,7 @@ export const MessageProvider = ({ children }) => {
       // setSocket(null); // No longer needed
     };
     const onConnectError = (err) => {
-      console.error('Socket.IO Connection Error:', err.message, err.data);
+      console.error('Socket.IO Connection Error:', err.message || 'websocket error', err.data || err);
     };
     const onNewMessage = (message) => {
       setConversations(prev => {
@@ -127,6 +149,11 @@ export const MessageProvider = ({ children }) => {
       currentSocket.off('newMessage', onNewMessage);
       currentSocket.off('messageDeleted', onMessageDeleted);
       currentSocket.off('conversationCleared', onConversationCleared);
+      
+      // Disconnect the socket if it's connected
+      if (currentSocket.connected) {
+        currentSocket.disconnect();
+      }
     };
   }, [user, accessToken]);
 

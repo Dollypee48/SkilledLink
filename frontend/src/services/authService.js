@@ -11,8 +11,17 @@ export const register = async (data) => {
 
 // Login
 export const login = async (data) => {
-  const res = await axios.post(`${API_URL}/login`, data);
-  return res.data;
+  console.log('🔍 Login request data:', data);
+  console.log('🔍 Login URL:', `${API_URL}/login`);
+  
+  try {
+    const res = await axios.post(`${API_URL}/login`, data);
+    console.log('✅ Login successful:', res.data);
+    return res.data;
+  } catch (error) {
+    console.error('❌ Login failed:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 // Refresh token
@@ -42,5 +51,11 @@ export const changePassword = async (passwordData, token) => {
     },
   };
   const res = await axios.put(`${API_URL}/change-password`, passwordData, config);
+  return res.data;
+};
+
+// Resend Verification Email
+export const resendVerificationEmail = async (email) => {
+  const res = await axios.post(`${API_URL}/resend-verification`, { email });
   return res.data;
 };

@@ -356,14 +356,29 @@ const FindArtisans = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       <span className="text-sm font-medium">
-                        {selectedArtisanProfile.location && selectedArtisanProfile.location !== 'Unknown' && selectedArtisanProfile.location.trim() !== ''
-                          ? selectedArtisanProfile.location 
-                          : selectedArtisanProfile.address && selectedArtisanProfile.address !== 'Unknown' && selectedArtisanProfile.address.trim() !== ''
-                          ? selectedArtisanProfile.address
-                          : selectedArtisanProfile.state && selectedArtisanProfile.state !== 'Unknown' && selectedArtisanProfile.state.trim() !== ''
-                          ? `${selectedArtisanProfile.state} State`
-                          : 'Location not specified'
-                        }
+                        {(() => {
+                          // Handle location object structure
+                          if (selectedArtisanProfile.location && typeof selectedArtisanProfile.location === 'object') {
+                            const { state, city, address } = selectedArtisanProfile.location;
+                            if (city && city.trim() !== '') {
+                              return `${city}${state ? `, ${state}` : ''}`;
+                            } else if (state && state.trim() !== '') {
+                              return `${state} State`;
+                            } else if (address && address.trim() !== '') {
+                              return address;
+                            }
+                          }
+                          
+                          // Fallback to user's state/address if location object is empty
+                          if (selectedArtisanProfile.state && selectedArtisanProfile.state.trim() !== '') {
+                            return `${selectedArtisanProfile.state} State`;
+                          }
+                          if (selectedArtisanProfile.address && selectedArtisanProfile.address.trim() !== '') {
+                            return selectedArtisanProfile.address;
+                          }
+                          
+                          return 'Location not specified';
+                        })()}
                       </span>
                     </div>
 

@@ -17,11 +17,22 @@ const notificationRoutes = require('./routes/notificationRoutes'); // Import not
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '50mb' })); // Increased limit to 50mb
+app.use(express.urlencoded({ extended: true, limit: '50mb' })); // Add URL encoding support
 
 // Serve static files from the 'uploads' directory
 app.use('/uploads', express.static('uploads'));
+
+// Simple health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
