@@ -7,11 +7,11 @@ import { useAuth } from './context/AuthContext'; // Corrected import path
 
 // Public/Customer Pages
 import Home from './pages/Home';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import VerifyEmail from './pages/Auth/VerifyEmail';
-import ForgotPassword from './pages/Auth/ForgotPassword';
-import ResetPassword from './pages/Auth/ResetPassword';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import VerifyEmail from './pages/auth/VerifyEmail';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import FindArtisans from './pages/customer/FindArtisans';
 import AllArtisans from './pages/AllArtisans';
 import ArtisanDetail from './pages/customer/ArtisanDetail';
