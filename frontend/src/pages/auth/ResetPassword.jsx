@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, Lock, ArrowRight, Sparkles, Shield, Zap, User, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Lock, ArrowRight, Sparkles, Shield, Zap, User, CheckCircle, ArrowLeft, Mail } from 'lucide-react';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -16,7 +16,8 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [step, setStep] = useState(1); // 1: Enter code, 2: Enter new password
+  const [step, setStep] = useState(1); // 1: Verify code, 2: Enter new password
+  const [codeVerified, setCodeVerified] = useState(false);
 
   useEffect(() => {
     const email = searchParams.get('email');
@@ -38,28 +39,34 @@ const ResetPassword = () => {
     setLoading(true);
     setError('');
 
+    // Validate email and reset code are provided
+    if (!formData.email || !formData.resetCode) {
+      setError('Please enter both email and verification code');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+      // First, verify the code by making a request to check if it's valid
+      const response = await fetch('http://localhost:5000/api/auth/verify-reset-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: formData.email,
-          resetCode: formData.resetCode,
-          newPassword: formData.newPassword
+          resetCode: formData.resetCode
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(true);
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        setCodeVerified(true);
+        setStep(2);
+        setError('');
       } else {
-        setError(data.message || 'Failed to reset password');
+        setError(data.message || 'Invalid verification code');
       }
     } catch (err) {
       setError('Network error. Please check your connection and try again.');
@@ -202,13 +209,35 @@ const ResetPassword = () => {
           {/* Right Side - Reset Password Form */}
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 lg:p-8 border border-white/20 max-w-md mx-auto lg:mx-0">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-[#151E3D] mb-1">Create New Password</h3>
-              <p className="text-[#151E3D]/70 text-sm">Enter your verification code and new password</p>
+              <h3 className="text-xl font-bold text-[#151E3D] mb-1">
+                {step === 1 ? 'Verify Reset Code' : 'Create New Password'}
+              </h3>
+              <p className="text-[#151E3D]/70 text-sm">
+                {step === 1 
+                  ? 'Enter your email and verification code to proceed' 
+                  : 'Enter your new password to complete the reset'
+                }
+              </p>
             </div>
 
             <form onSubmit={step === 1 ? handleCodeSubmit : handlePasswordSubmit} className="space-y-4">
               {step === 1 ? (
                 <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-[#151E3D] flex items-center">
+                      <Mail className="w-4 h-4 mr-2 text-[#F59E0B]" />
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50"
+                      placeholder="Enter your email address"
+                      required
+                    />
+                  </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-[#151E3D] flex items-center">
                       <Lock className="w-4 h-4 mr-2 text-[#F59E0B]" />
@@ -225,7 +254,7 @@ const ResetPassword = () => {
                       required
                     />
                     <p className="text-xs text-[#151E3D]/60 text-center">
-                      Enter the 6-digit code sent to {formData.email}
+                      Enter the 6-digit code sent to your email
                     </p>
                   </div>
                 </>
@@ -300,7 +329,7 @@ const ResetPassword = () => {
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {step === 1 ? 'Verifying...' : 'Resetting...'}
+                      {step === 1 ? 'Verifying Code...' : 'Resetting Password...'}
                     </>
                   ) : (
                     <>
@@ -309,16 +338,6 @@ const ResetPassword = () => {
                     </>
                   )}
                 </button>
-
-                {step === 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="w-full py-2 rounded-lg border-2 border-[#151E3D]/20 text-[#151E3D] font-semibold hover:bg-[#151E3D]/5 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#151E3D]/20"
-                  >
-                    Enter New Password
-                  </button>
-                )}
               </div>
             </form>
 

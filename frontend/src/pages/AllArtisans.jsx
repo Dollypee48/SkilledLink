@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Star, MapPin, Clock, Filter, Search } from 'lucide-react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const AllArtisans = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [artisans, setArtisans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,6 +17,23 @@ const AllArtisans = () => {
   const [sortBy, setSortBy] = useState('rating');
 
   const API_URL = "http://localhost:5000/api";
+
+  // Handle booking click
+  const handleBookClick = (artisanId) => {
+    if (!user) {
+      // Redirect to login with return URL
+      navigate('/login?redirect=/find-artisans');
+      return;
+    }
+    
+    if (user.role !== 'customer') {
+      alert('Only customers can book services. Please log in as a customer.');
+      return;
+    }
+    
+    // Navigate to artisan detail page for booking
+    navigate(`/artisan/${artisanId}`);
+  };
 
   // Debounce search term
   useEffect(() => {
@@ -306,12 +326,12 @@ const AllArtisans = () => {
                   >
                     View Profile
                   </Link>
-                  <Link
-                    to={`/book/${artisan.id}`}
+                  <button
+                    onClick={() => handleBookClick(artisan.id)}
                     className="flex-1 border-2 border-[#151E3D] text-[#151E3D] hover:bg-[#151E3D] hover:text-white text-center py-3 px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                   >
                     Book Now
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>

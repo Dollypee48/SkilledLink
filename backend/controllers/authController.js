@@ -311,6 +311,10 @@ exports.updateProfile = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
+    
+    console.log('🔍 Verification attempt with token:', token);
+    console.log('🔍 Current time:', new Date().toISOString());
+    console.log('🔍 Token length:', token ? token.length : 'undefined');
 
     // Find user with valid verification token
     const user = await User.findOne({
@@ -318,7 +322,22 @@ exports.verifyEmail = async (req, res) => {
       verificationTokenExpires: { $gt: Date.now() }
     });
 
+    console.log('🔍 User found:', user ? { email: user.email, isVerified: user.isVerified, tokenExpires: user.verificationTokenExpires } : 'No user found');
+
     if (!user) {
+      // Let's also check if user exists with this token but expired
+      const expiredUser = await User.findOne({ verificationToken: token });
+      if (expiredUser) {
+        console.log('❌ Token found but expired:', { 
+          email: expiredUser.email, 
+          expires: expiredUser.verificationTokenExpires,
+          currentTime: new Date(),
+          isExpired: expiredUser.verificationTokenExpires < Date.now()
+        });
+      } else {
+        console.log('❌ No user found with this token');
+      }
+      
       return res.status(400).json({ 
         message: "Invalid or expired verification token",
         success: false 
@@ -508,6 +527,65 @@ exports.forgotPassword = async (req, res) => {
     console.error("Forgot password error:", err.message);
     res.status(500).json({ 
       message: "Server error during forgot password",
+      success: false 
+    });
+  }
+};
+
+// VERIFY RESET CODE
+exports.verifyResetCode = async (req, res) => {
+  try {
+    const { email, resetCode } = req.body;
+
+    // Validate input
+    if (!email || !resetCode) {
+      return res.status(400).json({ 
+        message: "Email and reset code are required" 
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ 
+        message: "Invalid email or reset code" 
+      });
+    }
+
+    // Check if reset code exists and is not expired
+    if (!user.resetCode || !user.resetCodeExpiry) {
+      return res.status(400).json({ 
+        message: "No password reset request found. Please request a new reset code." 
+      });
+    }
+
+    if (new Date() > user.resetCodeExpiry) {
+      // Clear expired reset code
+      user.resetCode = null;
+      user.resetCodeExpiry = null;
+      await user.save();
+      
+      return res.status(400).json({ 
+        message: "Reset code has expired. Please request a new one." 
+      });
+    }
+
+    // Verify reset code
+    if (user.resetCode !== resetCode) {
+      return res.status(400).json({ 
+        message: "Invalid reset code" 
+      });
+    }
+
+    res.json({
+      message: "Verification code is valid. You can now set your new password.",
+      success: true
+    });
+
+  } catch (err) {
+    console.error("Verify reset code error:", err.message);
+    res.status(500).json({ 
+      message: "Server error during code verification",
       success: false 
     });
   }

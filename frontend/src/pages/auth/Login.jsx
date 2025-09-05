@@ -239,6 +239,16 @@ const Login = () => {
                   </>
                 )}
               </button>
+
+              {/* Forgot Password Link */}
+              <div className="text-center mt-4 mb-4">
+                <Link 
+                  to="/forgot-password" 
+                  className="inline-block text-[#F59E0B] font-semibold hover:text-[#D97706] transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 rounded-lg px-4 py-2 text-sm hover:bg-[#F59E0B]/10 border border-[#F59E0B]/20 hover:border-[#F59E0B]"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
             </form>
 
             {/* Signup Redirect */}

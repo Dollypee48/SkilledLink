@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
 import { useAuth } from '../../context/AuthContext'; // Import useAuth hook
-import { User, CheckCircle, XCircle, Clock, RefreshCw, Calendar, Shield } from 'lucide-react'; // Import icons
+import { User, CheckCircle, XCircle, Clock, RefreshCw, Calendar, Shield, Mail } from 'lucide-react'; // Import icons
 
 const CustomerProfile = () => {
   const { user, accessToken } = useAuth(); // Get user and accessToken from AuthContext
@@ -15,6 +15,14 @@ const CustomerProfile = () => {
       case 'pending': return <span className="text-yellow-600 font-medium flex items-center gap-1"><Clock className="w-4 h-4" /> Pending</span>;
       case 'rejected': return <span className="text-red-600 font-medium flex items-center gap-1"><XCircle className="w-4 h-4" /> Rejected</span>;
       default: return <span className="text-gray-500 font-medium">Not Submitted</span>;
+    }
+  };
+
+  const getEmailVerificationDisplay = (isVerified) => {
+    if (isVerified) {
+      return <span className="text-green-600 font-medium flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>;
+    } else {
+      return <span className="text-yellow-600 font-medium flex items-center gap-1"><Clock className="w-4 h-4" /> Pending</span>;
     }
   };
 
@@ -51,6 +59,32 @@ const CustomerProfile = () => {
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  const resendVerificationEmail = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        alert('Verification email sent successfully! Please check your email.');
+      } else {
+        alert(data.message || 'Failed to send verification email');
+      }
+    } catch (err) {
+      console.error('Error sending verification email:', err);
+      alert('Failed to send verification email. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,9 +192,19 @@ const CustomerProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 text-gray-700">
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-500">Email Verification</span>
-                  <span className={`text-base font-semibold mt-1 ${user.emailVerified ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {user.emailVerified ? 'Verified' : 'Pending'}
-                  </span>
+                  <div className="mt-1 flex items-center gap-2">
+                    {getEmailVerificationDisplay(user.isVerified)}
+                    {!user.isVerified && (
+                      <button
+                        onClick={resendVerificationEmail}
+                        disabled={loading}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <Mail className="w-3 h-3" />
+                        Resend
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-500">Profile Completion</span>
