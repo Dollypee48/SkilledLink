@@ -8,40 +8,80 @@ const PaystackPayment = ({
   onSuccess, 
   onClose, 
   publicKey,
-  subscriptionCode,
+  reference,
+  accessCode,
   customerCode 
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [error, setError] = useState(null);
 
   const config = {
-    reference: (new Date()).getTime().toString(),
+    reference: reference,
     email: email,
-    amount: amount * 100, // Convert to kobo
+    amount: amount, // Amount is already in kobo from backend
     publicKey: publicKey,
+    currency: 'NGN',
     metadata: {
-      subscriptionCode: subscriptionCode,
       customerCode: customerCode
     }
   };
 
+
   const initializePayment = usePaystackPayment(config);
 
   const onSuccessCallback = (reference) => {
+    console.log('✅ Payment successful:', reference);
     setIsProcessing(true);
     setPaymentStatus('success');
+    
+    // Call the success handler
     onSuccess(reference);
+    
+    // Close the modal after a short delay to show success message
+    setTimeout(() => {
+      onClose();
+    }, 2000);
   };
 
   const onCloseCallback = () => {
+    console.log('❌ Payment cancelled by user');
     setPaymentStatus('cancelled');
     onClose();
   };
 
+  const onErrorCallback = (error) => {
+    console.error('❌ Paystack payment error:', error);
+    setError(`Payment failed: ${error.message || 'Unknown error'}`);
+    setIsProcessing(false);
+    setPaymentStatus('error');
+  };
+
   const handlePayment = () => {
+    // Validate required parameters
+    if (!publicKey || publicKey === 'pk_test_your_public_key_here' || publicKey === 'pk_test_your_actual_public_key_here') {
+      console.error('❌ Invalid Paystack public key');
+      setError('Paystack configuration error. Please contact support.');
+      return;
+    }
+    
+    if (!reference || !email || !amount) {
+      console.error('❌ Missing required payment parameters:', { reference, email, amount });
+      setError('Missing payment information. Please try again.');
+      return;
+    }
+    
+    if (amount <= 0) {
+      console.error('❌ Invalid amount:', amount);
+      setError('Invalid payment amount. Please try again.');
+      return;
+    }
+
+    console.log('🚀 Initializing Paystack payment with config:', config);
+    console.log('🚀 Public key validation passed:', publicKey);
     setIsProcessing(true);
     setPaymentStatus('processing');
-    initializePayment(onSuccessCallback, onCloseCallback);
+    initializePayment(onSuccessCallback, onCloseCallback, onErrorCallback);
   };
 
   useEffect(() => {
@@ -58,7 +98,14 @@ const PaystackPayment = ({
       <div className="text-center py-8">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-green-800 mb-2">Payment Successful!</h3>
-        <p className="text-gray-600">Your subscription has been activated.</p>
+        <p className="text-gray-600 mb-4">Your subscription has been activated.</p>
+        <p className="text-sm text-gray-500 mb-4">This window will close automatically...</p>
+        <button
+          onClick={onClose}
+          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          Close
+        </button>
       </div>
     );
   }
@@ -72,6 +119,22 @@ const PaystackPayment = ({
         <button
           onClick={() => setPaymentStatus(null)}
           className="mt-4 px-6 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-red-800 mb-2">Payment Error</h3>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <button
+          onClick={() => setError(null)}
+          className="px-6 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors"
         >
           Try Again
         </button>

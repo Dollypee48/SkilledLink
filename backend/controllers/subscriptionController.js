@@ -24,7 +24,7 @@ exports.getSubscriptionPlans = async (req, res) => {
 // @access  Private
 exports.getCurrentSubscription = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('subscription isPremium');
+    const user = await User.findById(req.user.id).select('subscription isPremium premiumFeatures');
     
     if (!user) {
       return res.status(404).json({
@@ -33,10 +33,16 @@ exports.getCurrentSubscription = async (req, res) => {
       });
     }
 
+    console.log('🔍 Current subscription for user:', user.email);
+    console.log('🔍 Subscription data:', user.subscription);
+    console.log('🔍 IsPremium:', user.isPremium);
+    console.log('🔍 PremiumFeatures:', user.premiumFeatures);
+
     res.status(200).json({
       success: true,
       subscription: user.subscription,
       isPremium: user.isPremium,
+      premiumFeatures: user.premiumFeatures,
       plan: SUBSCRIPTION_PLANS[user.subscription.plan]
     });
   } catch (error) {
@@ -120,31 +126,40 @@ exports.initializeSubscription = async (req, res) => {
       await user.save();
     }
 
-    // Create subscription on Paystack
-    const subscription = await paystack.subscription.create({
-      customer: customerId,
-      plan: planConfig.name.toLowerCase().replace(' ', '_'),
-      authorization: null // Will be provided by user during payment
+    // Initialize payment transaction with Paystack
+    const transaction = await paystack.transaction.initialize({
+      email: user.email,
+      amount: amount,
+      currency: 'NGN',
+      reference: `sub_${Date.now()}_${userId}`,
+      metadata: {
+        plan: plan,
+        userId: userId,
+        customerId: customerId
+      }
     });
 
-    if (!subscription.status) {
+    if (!transaction.status) {
+      console.log('❌ Failed to initialize Paystack transaction:', transaction);
       return res.status(400).json({
         success: false,
-        message: 'Failed to create subscription'
+        message: 'Failed to initialize payment'
       });
     }
 
     // Update user subscription details
-    user.subscription.paystackSubscriptionId = subscription.data.subscription_code;
     user.subscription.plan = plan;
     user.subscription.status = 'inactive'; // Will be activated after payment
+    user.subscription.paystackCustomerId = customerId;
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: 'Subscription initialized successfully',
-      subscription: {
-        subscriptionCode: subscription.data.subscription_code,
+      message: 'Payment initialized successfully',
+      payment: {
+        authorizationUrl: transaction.data.authorization_url,
+        accessCode: transaction.data.access_code,
+        reference: transaction.data.reference,
         customerCode: customerId,
         amount: amount,
         plan: planConfig
@@ -198,18 +213,45 @@ exports.verifySubscriptionPayment = async (req, res) => {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + SUBSCRIPTION_PLANS.premium.duration);
 
+      user.subscription.plan = 'premium';
       user.subscription.status = 'active';
       user.subscription.startDate = new Date();
       user.subscription.endDate = endDate;
+      user.subscription.autoRenew = true;
       user.isPremium = true;
+      
+      // Add premium benefits
+      user.premiumFeatures = {
+        verifiedBadge: true,
+        prioritySearch: true,
+        advancedAnalytics: true,
+        unlimitedBookings: true,
+        premiumSupport: true,
+        featuredListing: true
+      };
       
       await user.save();
 
-      res.status(200).json({
+      console.log(`✅ Premium subscription activated for user: ${user.email}`);
+      console.log(`🔍 User isPremium status: ${user.isPremium}`);
+      console.log(`🔍 User premiumFeatures:`, user.premiumFeatures);
+
+      const responseData = {
         success: true,
-        message: 'Subscription activated successfully',
-        subscription: user.subscription
-      });
+        message: 'Premium subscription activated successfully! You now have access to all premium features.',
+        subscription: user.subscription,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          isPremium: user.isPremium,
+          premiumFeatures: user.premiumFeatures
+        }
+      };
+
+      console.log(`🔍 Sending response:`, responseData);
+
+      res.status(200).json(responseData);
     } else {
       res.status(400).json({
         success: false,

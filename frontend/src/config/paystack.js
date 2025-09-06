@@ -1,6 +1,6 @@
 // Paystack configuration
 const PAYSTACK_CONFIG = {
-  publicKey: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PAYSTACK_PUBLIC_KEY) || 'pk_test_your_public_key',
+  publicKey: 'pk_test_e6defeccb8ad306e50fe0f9b47cbdc1dcde9b324', // Your actual Paystack public key
   // You can add more Paystack configuration here
 };
 

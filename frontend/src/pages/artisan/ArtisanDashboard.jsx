@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
 import { CalendarCheck, Star, AlertTriangle, Clock, XCircle, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PremiumFeatures from '../../components/PremiumFeatures';
 // import KYCForm from '../../components/KYCForm'; // Removed KYCForm import
 
 const ArtisanDashboard = () => {
@@ -261,6 +262,14 @@ const ArtisanDashboard = () => {
             )}
           </div>
         )}
+
+        {/* Premium Features Section */}
+        <div className="mb-6">
+          <PremiumFeatures 
+            isPremium={user?.isPremium || false} 
+            premiumFeatures={user?.premiumFeatures} 
+          />
+        </div>
       </div>
     </ArtisanLayout>
   );

@@ -19,8 +19,10 @@ export const AuthProvider = ({ children }) => {
   const role = user ? user.role : null;
 
   const updateUser = useCallback((newUserData) => {
+    console.log('🔄 AuthContext updateUser called with:', newUserData);
     setUser(newUserData);
     localStorage.setItem("user", JSON.stringify(newUserData));
+    console.log('✅ AuthContext user updated and saved to localStorage');
   }, []);
 
   // Save user + token in localStorage

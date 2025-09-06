@@ -1,6 +1,6 @@
 // src/pages/customer/FindArtisans.jsx
 import React, { useState, useEffect } from "react";
-import { Search, Eye, Star } from "lucide-react";
+import { Search, Eye, Star, Crown } from "lucide-react";
 import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
 import { ArtisanContext } from "../../context/ArtisanContext";
 import { useContext } from "react";
@@ -9,6 +9,7 @@ import { BookingContext } from '../../context/BookingContext'; // Import Booking
 import { ReviewContext } from '../../context/ReviewContext'; // Import ReviewContext
 import { ReviewService } from '../../services/reviewService'; // Import ReviewService
 import BookingModal from '../../components/BookingModal'; // Import BookingModal
+import PremiumBadge from '../../components/PremiumBadge';
 
 const FindArtisans = () => {
   const { artisans, searchArtisans } = useContext(ArtisanContext); // ✅ use context directly
@@ -181,12 +182,25 @@ const FindArtisans = () => {
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">
-                        {artisan?.name || 'Artisan Name'}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-bold text-gray-900 truncate">
+                          {artisan?.name || 'Artisan Name'}
+                        </h3>
+                        {artisan?.isPremium && (
+                          <PremiumBadge size="sm" variant="default" showText={false} />
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600 mb-3">
                         {artisan?.artisanProfile?.service || artisan?.service || 'Professional Service'}
                       </p>
+                      {artisan?.isPremium && (
+                        <div className="mb-2">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white">
+                            <Crown className="w-3 h-3 mr-1" />
+                            Premium Artisan
+                          </span>
+                        </div>
+                      )}
                       
                       {/* Location */}
                       {artisan?.state && (

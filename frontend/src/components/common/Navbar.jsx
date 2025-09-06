@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext'; // Corrected import path
 // import { useArtisan } from '../../context/ArtisanContext';
 import { User, Power, LogOut } from 'lucide-react';
+import PremiumBadge from '../PremiumBadge';
 
 const Header = () => {
   const { user, isAuthenticated, handleLogout } = useAuth(); // Get user from AuthContext
@@ -71,7 +72,12 @@ const Header = () => {
                   {isOnline ? "Online" : "Offline"}
                 </div>
               )} */}
-              <span className="text-white font-medium hidden sm:block">Hi, {user.name}</span>
+              <div className="flex items-center gap-2 hidden sm:flex">
+                <span className="text-white font-medium">Hi, {user.name}</span>
+                {user.isPremium && (
+                  <PremiumBadge size="sm" variant="default" showText={false} />
+                )}
+              </div>
               <Link to={getDashboardPath()} className="bg-[#F59E0B] text-white px-5 py-2 rounded-md text-sm font-medium hover:opacity-90">
                 Dashboard
               </Link>

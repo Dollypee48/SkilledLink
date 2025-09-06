@@ -82,6 +82,14 @@ const userSchema = new mongoose.Schema(
                (!this.subscription?.endDate || this.subscription?.endDate > new Date());
       }
     },
+    premiumFeatures: {
+      verifiedBadge: { type: Boolean, default: false },
+      prioritySearch: { type: Boolean, default: false },
+      advancedAnalytics: { type: Boolean, default: false },
+      unlimitedBookings: { type: Boolean, default: false },
+      premiumSupport: { type: Boolean, default: false },
+      featuredListing: { type: Boolean, default: false }
+    },
   },
   { timestamps: true }
 );

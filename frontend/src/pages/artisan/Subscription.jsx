@@ -33,6 +33,19 @@ const Subscription = () => {
     fetchData();
   }, []);
 
+  // Auto-close payment modal after successful payment
+  useEffect(() => {
+    if (currentSubscription?.subscription?.status === 'active' && showPayment) {
+      const timer = setTimeout(() => {
+        setShowPayment(false);
+        setPaymentData(null);
+        setSelectedPlan(null);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [currentSubscription, showPayment]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -42,6 +55,7 @@ const Subscription = () => {
       ]);
       
       setPlans(plansResponse.plans);
+      console.log('🔍 Fetched subscription response:', subscriptionResponse);
       setCurrentSubscription(subscriptionResponse);
     } catch (err) {
       setError(err.message);
@@ -59,10 +73,13 @@ const Subscription = () => {
     try {
       setLoading(true);
       const response = await subscriptionService.initializeSubscription(plan, accessToken);
-      setPaymentData(response.subscription);
+      console.log('🔍 Subscription response:', response);
+      console.log('🔍 Payment data:', response.payment);
+      setPaymentData(response.payment);
       setSelectedPlan(plan);
       setShowPayment(true);
     } catch (err) {
+      console.error('❌ Subscription error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -71,16 +88,59 @@ const Subscription = () => {
 
   const handlePaymentSuccess = async (reference) => {
     try {
+      console.log('🚀 Starting payment verification for reference:', reference);
+      setLoading(true);
+      
       const response = await subscriptionService.verifyPayment(reference, accessToken);
+      
+      console.log('✅ Payment verification response:', response);
+      console.log('🔍 Response user data:', response.user);
+      console.log('🔍 Response subscription data:', response.subscription);
+      
+      // Update current subscription with the response data
+      console.log('🔄 Updating current subscription with:', response);
       setCurrentSubscription(response);
+      
+      // Update user context with premium status
       if (response.user) {
+        console.log('🔄 Updating user context with:', response.user);
         updateUser(response.user);
+        console.log('✅ User context updated successfully');
+      } else {
+        console.log('❌ No user data in response');
       }
+      
+      // Show success message
+      setError(null);
+      
+      // Close payment modal
       setShowPayment(false);
       setPaymentData(null);
       setSelectedPlan(null);
+      
+      // Refresh subscription data to get the latest status
+      console.log('🔄 Refreshing subscription data...');
+      await fetchData();
+      console.log('✅ Subscription data refreshed');
+      
+      // Show success notification
+      alert('🎉 Congratulations! You are now a Premium Artisan! You have access to all premium features including verified badge, priority search, and advanced analytics.');
+      
+      // Ensure modal is closed
+      setShowPayment(false);
+      setPaymentData(null);
+      setSelectedPlan(null);
+      
+      // Force page refresh to ensure UI updates
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      
     } catch (err) {
+      console.error('❌ Payment verification error:', err);
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,6 +220,17 @@ const Subscription = () => {
           </div>
         )}
 
+        {/* Success Message for Active Premium Subscription */}
+        {currentSubscription?.subscription?.status === 'active' && currentSubscription?.subscription?.plan === 'premium' && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+              <span className="text-green-700 font-semibold">🎉 Premium Subscription Active!</span>
+            </div>
+            <p className="text-green-600 text-sm mt-1">You now have access to all premium features including verified badge, priority search, and advanced analytics.</p>
+          </div>
+        )}
+
         {/* Current Subscription Status */}
         {currentSubscription && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
@@ -168,6 +239,11 @@ const Subscription = () => {
               <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(currentSubscription.subscription?.status)}`}>
                 {getStatusIcon(currentSubscription.subscription?.status)}
                 <span className="ml-2 capitalize">{currentSubscription.subscription?.status}</span>
+                {currentSubscription.subscription?.status === 'active' && currentSubscription.subscription?.plan === 'premium' && (
+                  <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                    PREMIUM
+                  </span>
+                )}
               </div>
             </div>
 
@@ -291,13 +367,20 @@ const Subscription = () => {
 
         {/* Payment Modal */}
         {showPayment && paymentData && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={handlePaymentClose}
+          >
+            <div 
+              className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
               <PaystackPayment
                 amount={paymentData.amount}
                 email={user.email}
                 publicKey={PAYSTACK_PUBLIC_KEY}
-                subscriptionCode={paymentData.subscriptionCode}
+                reference={paymentData.reference}
+                accessCode={paymentData.accessCode}
                 customerCode={paymentData.customerCode}
                 onSuccess={handlePaymentSuccess}
                 onClose={handlePaymentClose}

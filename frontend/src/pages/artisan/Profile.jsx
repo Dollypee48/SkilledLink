@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
 import { useAuth } from '../../context/AuthContext'; // Import useAuth hook
-import { User, CheckCircle, XCircle, Clock, Star, Mail } from 'lucide-react'; // Import icons
+import { User, CheckCircle, XCircle, Clock, Star, Mail, Crown } from 'lucide-react'; // Import icons
 import * as artisanService from "../../services/artisanService";
+import PremiumBadge from "../../components/PremiumBadge";
 
 const ArtisanProfile = () => {
   const { user, accessToken } = useAuth(); // Get user and accessToken from AuthContext
@@ -144,8 +145,21 @@ const ArtisanProfile = () => {
                 </div>
               )}
               <div className="text-center md:text-left">
-                <h2 className="text-3xl font-bold text-gray-800">{user.name}</h2>
+                <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                  <h2 className="text-3xl font-bold text-gray-800">{user.name}</h2>
+                  {user.isPremium && (
+                    <PremiumBadge size="md" variant="default" showText={true} />
+                  )}
+                </div>
                 <p className="text-lg text-gray-600 mt-1">{user.email}</p>
+                {user.isPremium && (
+                  <div className="mt-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white">
+                      <Crown className="w-4 h-4 mr-1" />
+                      Premium Artisan
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
