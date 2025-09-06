@@ -209,9 +209,14 @@ exports.verifySubscriptionPayment = async (req, res) => {
 
     // Check if payment was successful
     if (verification.data.status === 'success') {
+      console.log('✅ Payment verification successful, updating user subscription...');
+      
       // Update user subscription
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + SUBSCRIPTION_PLANS.premium.duration);
+      
+      console.log('🔍 Setting end date to:', endDate);
+      console.log('🔍 Premium duration:', SUBSCRIPTION_PLANS.premium.duration, 'days');
 
       user.subscription.plan = 'premium';
       user.subscription.status = 'active';
@@ -219,6 +224,8 @@ exports.verifySubscriptionPayment = async (req, res) => {
       user.subscription.endDate = endDate;
       user.subscription.autoRenew = true;
       user.isPremium = true;
+      
+      console.log('🔍 Updated subscription data:', user.subscription);
       
       // Add premium benefits
       user.premiumFeatures = {
@@ -230,22 +237,25 @@ exports.verifySubscriptionPayment = async (req, res) => {
         featuredListing: true
       };
       
-      await user.save();
+      console.log('🔍 Saving user to database...');
+      const savedUser = await user.save();
+      console.log('✅ User saved successfully');
 
-      console.log(`✅ Premium subscription activated for user: ${user.email}`);
-      console.log(`🔍 User isPremium status: ${user.isPremium}`);
-      console.log(`🔍 User premiumFeatures:`, user.premiumFeatures);
+      console.log(`✅ Premium subscription activated for user: ${savedUser.email}`);
+      console.log(`🔍 User isPremium status: ${savedUser.isPremium}`);
+      console.log(`🔍 User premiumFeatures:`, savedUser.premiumFeatures);
+      console.log(`🔍 User subscription endDate:`, savedUser.subscription.endDate);
 
       const responseData = {
         success: true,
         message: 'Premium subscription activated successfully! You now have access to all premium features.',
-        subscription: user.subscription,
+        subscription: savedUser.subscription,
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          isPremium: user.isPremium,
-          premiumFeatures: user.premiumFeatures
+          id: savedUser._id,
+          name: savedUser.name,
+          email: savedUser.email,
+          isPremium: savedUser.isPremium,
+          premiumFeatures: savedUser.premiumFeatures
         }
       };
 

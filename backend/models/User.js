@@ -76,11 +76,7 @@ const userSchema = new mongoose.Schema(
     },
     isPremium: { 
       type: Boolean, 
-      default: function() {
-        return this.subscription?.plan === 'premium' && 
-               this.subscription?.status === 'active' && 
-               (!this.subscription?.endDate || this.subscription?.endDate > new Date());
-      }
+      default: false
     },
     premiumFeatures: {
       verifiedBadge: { type: Boolean, default: false },
@@ -93,5 +89,12 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Virtual field to check if user is currently premium (for display purposes)
+userSchema.virtual('isCurrentlyPremium').get(function() {
+  return this.subscription?.plan === 'premium' && 
+         this.subscription?.status === 'active' && 
+         (!this.subscription?.endDate || this.subscription?.endDate > new Date());
+});
 
 module.exports = mongoose.model("User", userSchema);
