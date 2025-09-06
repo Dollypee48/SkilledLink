@@ -116,7 +116,7 @@ exports.getArtisans = async (req, res) => {
     if (service) query.service = { $regex: service, $options: "i" };
 
     const artisans = await ArtisanProfile.find(query)
-      .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus") // Include all necessary user fields
+      .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus subscription isPremium") // Include subscription fields
       .select("-__v");
 
     // Import Review model to calculate ratings
@@ -163,6 +163,8 @@ exports.getArtisans = async (req, res) => {
         nationality: ap.userId.nationality || "", // Include nationality
         kycVerified: ap.userId.kycVerified || false, // Include KYC verification status
         kycStatus: ap.userId.kycStatus || "pending", // Include KYC status
+        isPremium: ap.userId.isPremium || false, // Include premium status
+        subscription: ap.userId.subscription || { plan: 'free', status: 'active' }, // Include subscription info
         // Include artisanProfile data for nested access
         artisanProfile: {
           skills: ap.skills.length ? ap.skills : ["Unknown"],
@@ -180,7 +182,20 @@ exports.getArtisans = async (req, res) => {
     // Filter out null entries
     const filteredResult = result.filter(Boolean);
 
-    res.json(filteredResult);
+    // Sort artisans: Premium first, then by rating
+    const sortedResult = filteredResult.sort((a, b) => {
+      // First priority: Premium status
+      if (a.isPremium && !b.isPremium) return -1;
+      if (!a.isPremium && b.isPremium) return 1;
+      
+      // Second priority: Rating (higher rating first)
+      if (a.rating !== b.rating) return b.rating - a.rating;
+      
+      // Third priority: Review count (more reviews first)
+      return b.reviewCount - a.reviewCount;
+    });
+
+    res.json(sortedResult);
   } catch (err) {
     console.error("Get artisans error:", err);
     res.status(500).json({ message: "Server error" });
@@ -317,6 +332,8 @@ exports.suggestArtisansByLocation = async (req, res) => {
         nationality: ap.userId.nationality || "", // Include nationality
         kycVerified: ap.userId.kycVerified || false, // Include KYC verification status
         kycStatus: ap.userId.kycStatus || "pending", // Include KYC status
+        isPremium: ap.userId.isPremium || false, // Include premium status
+        subscription: ap.userId.subscription || { plan: 'free', status: 'active' }, // Include subscription info
         // Include artisanProfile data for nested access
         artisanProfile: {
           skills: ap.skills.length ? ap.skills : ["Unknown"],

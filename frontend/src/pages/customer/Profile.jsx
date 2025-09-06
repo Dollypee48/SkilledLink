@@ -11,10 +11,34 @@ const CustomerProfile = () => {
 
   const getKycStatusDisplay = (status) => {
     switch (status) {
-      case 'approved': return <span className="text-green-600 font-medium flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Approved</span>;
-      case 'pending': return <span className="text-yellow-600 font-medium flex items-center gap-1"><Clock className="w-4 h-4" /> Pending</span>;
-      case 'rejected': return <span className="text-red-600 font-medium flex items-center gap-1"><XCircle className="w-4 h-4" /> Rejected</span>;
-      default: return <span className="text-gray-500 font-medium">Not Submitted</span>;
+      case 'approved': 
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
+            <CheckCircle className="w-4 h-4 mr-2" />
+            Verified
+          </span>
+        );
+      case 'pending': 
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
+            <Clock className="w-4 h-4 mr-2" />
+            Under Review
+          </span>
+        );
+      case 'rejected': 
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800 border border-red-200">
+            <XCircle className="w-4 h-4 mr-2" />
+            Rejected
+          </span>
+        );
+      default: 
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+            <Shield className="w-4 h-4 mr-2" />
+            Not Verified
+          </span>
+        );
     }
   };
 

@@ -51,35 +51,53 @@ const KYCReminderModal = () => {
 
   if (!isOpen) return null;
 
-  return null; // Temporarily hide the modal
-
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full relative transform transition-all">
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
         >
-          <X className="w-5 h-5" />
+          <X className="w-6 h-6" />
         </button>
+        
         <div className="text-center">
-          <ShieldAlert className="mx-auto h-12 w-12 text-yellow-500" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">KYC Verification Required</h3>
-          <div className="mt-2">
-            <p className="text-sm text-gray-500">
-              Your account requires KYC verification to access full features.
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Current status: <span className="font-semibold capitalize">{user?.kycStatus || 'Not Started'}</span>
-            </p>
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] mb-6">
+            <ShieldAlert className="h-8 w-8 text-white" />
           </div>
-          <div className="mt-5 sm:mt-6">
+          
+          <h3 className="text-2xl font-bold text-[#151E3D] mb-2">KYC Verification Required</h3>
+          <p className="text-gray-600 mb-4">
+            Complete your identity verification to unlock all platform features and ensure secure transactions.
+          </p>
+          
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">Verification Status:</span>
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                user?.kycStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                user?.kycStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                'bg-blue-100 text-blue-800'
+              }`}>
+                {user?.kycStatus === 'pending' ? 'Under Review' :
+                 user?.kycStatus === 'rejected' ? 'Rejected' :
+                 'Not Started'}
+              </span>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
             <button
-              type="button"
-              className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
               onClick={handleVerifyClick}
+              className="w-full bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#0F172A] text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
             >
-              Verify My KYC
+              Complete Verification
+            </button>
+            <button
+              onClick={handleClose}
+              className="w-full text-gray-500 hover:text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              Maybe Later
             </button>
           </div>
         </div>

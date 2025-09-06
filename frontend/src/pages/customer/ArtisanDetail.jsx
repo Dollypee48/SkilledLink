@@ -1,7 +1,7 @@
 // frontend/src/pages/customer/ArtisanDetail.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import CustomerLayout from '../../components/common/Layouts/CustomerLayout'; // Assuming a customer layout or a general layout
+import { useParams, Link } from 'react-router-dom';
+// Remove CustomerLayout import - we'll create a simple layout inline
 import { getArtisanById } from '../../services/artisanService'; // Import the new service function
 import { Star, MapPin } from 'lucide-react';
 import BookingModal from '../../components/BookingModal'; // Import BookingModal
@@ -70,6 +70,20 @@ const ArtisanDetail = () => {
     }
   };
 
+  const handleBookClick = () => {
+    if (!user) {
+      navigate('/login?redirect=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+    
+    if (user.role !== 'customer') {
+      alert('Only customers can book services. Please log in as a customer.');
+      return;
+    }
+    
+    setShowBookingModal(true);
+  };
+
   const handleMessageArtisan = () => {
     if (artisan && artisan.userId) {
       setSelectedRecipient(artisan.userId); // Set the artisan as the selected recipient
@@ -78,20 +92,79 @@ const ArtisanDetail = () => {
   };
 
   if (loading) {
-    return <CustomerLayout><div className="p-6 text-center">Loading artisan details...</div></CustomerLayout>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#151E3D] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading artisan details...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <CustomerLayout><div className="p-6 text-center text-red-500">Error: {error}</div></CustomerLayout>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-4">Error: {error}</div>
+          <Link to="/find-artisans" className="text-[#151E3D] hover:underline">
+            ← Back to Find Artisans
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   if (!artisan) {
-    return <CustomerLayout><div className="p-6 text-center">Artisan not found.</div></CustomerLayout>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-600 text-xl mb-4">Artisan not found.</div>
+          <Link to="/find-artisans" className="text-[#151E3D] hover:underline">
+            ← Back to Find Artisans
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <CustomerLayout>
-      <div className="p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      {/* Simple Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link to="/" className="text-2xl font-bold text-[#151E3D]">
+                SkilledLink
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link 
+                to="/find-artisans" 
+                className="text-gray-600 hover:text-[#151E3D] px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Find Artisans
+              </Link>
+              <Link 
+                to="/login" 
+                className="bg-[#151E3D] hover:bg-[#1E2A4A] text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Login
+              </Link>
+              <Link 
+                to="/register" 
+                className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="p-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white shadow-lg rounded-lg p-8 mb-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -148,7 +221,7 @@ const ArtisanDetail = () => {
                 Message Artisan
               </button>
               <button
-                onClick={() => setShowBookingModal(true)}
+                onClick={handleBookClick}
                 className="bg-[#151E3D] hover:bg-[#1E2A4A] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:ring-offset-2"
               >
                 Book Now
@@ -206,7 +279,7 @@ const ArtisanDetail = () => {
             Error: {bookingError}
           </div>
         )}
-      </div>
+      </main>
       
       {showBookingModal && (
         <BookingModal
@@ -216,7 +289,7 @@ const ArtisanDetail = () => {
           onSubmit={handleBookingSubmit}
         />
       )}
-    </CustomerLayout>
+    </div>
   );
 };
 

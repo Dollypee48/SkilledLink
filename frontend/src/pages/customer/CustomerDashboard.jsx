@@ -95,9 +95,8 @@ export default function CustomerDashboard() {
   return (
     <CustomerLayout>
       <div className="p-6">
-        {/* Removed KYC Status Indicator */}
-
-        {/* Removed Conditionally render KYCForm if not approved */}
+        {/* KYC Status Indicator */}
+        {getKYCStatusDisplay()}
 
         {/* Top stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">

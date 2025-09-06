@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for createPortal
 import { useBooking } from '../context/BookingContext'; // Import useBooking hook
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import KYCRestriction from './KYCRestriction';
+import { isKYCVerified, needsKYC } from '../utils/kycUtils';
 
 const BookingModal = () => {
   const { isBookingModalOpen, closeBookingModal, selectedArtisan, createBooking, loading: bookingLoading } = useBooking();
+  const { user } = useAuth();
   const [bookingDetails, setBookingDetails] = useState({
     date: '',
     time: '',
@@ -71,7 +75,8 @@ const BookingModal = () => {
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-[9999] p-4 overflow-y-auto">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-2xl w-full relative max-h-[90vh] overflow-y-auto">
+      <KYCRestriction feature="booking" user={user}>
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-2xl w-full relative max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold text-[#151E3D] mb-6">Book {selectedArtisan.name} for {selectedArtisan.service || 'a service'}</h2>
         <button
           onClick={closeBookingModal}
@@ -209,7 +214,8 @@ const BookingModal = () => {
             </button>
           </div>
         </form>
-      </div>
+        </div>
+      </KYCRestriction>
     </div>,
     document.body
   );

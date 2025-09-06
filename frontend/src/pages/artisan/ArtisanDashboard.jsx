@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { ArtisanContext } from '../../context/ArtisanContext';
 import { useAuth } from '../../context/AuthContext';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
-import { CalendarCheck, Star } from 'lucide-react'; // Removed KYC related icons
+import { CalendarCheck, Star, AlertTriangle, Clock, XCircle, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 // import KYCForm from '../../components/KYCForm'; // Removed KYCForm import
 
@@ -66,9 +66,8 @@ const ArtisanDashboard = () => {
   return (
     <ArtisanLayout>
       <div className="p-6">
-        {/* Removed KYC Status Indicator */}
-
-        {/* Removed Conditionally render KYCForm */}
+        {/* KYC Status Indicator */}
+        {getKYCStatusDisplay()}
 
         {/* Header */}
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Artisan Dashboard</h1>
@@ -134,8 +133,25 @@ const ArtisanDashboard = () => {
           <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-100 mb-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Profile Overview</h2>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold">
-                {currentArtisan.name?.charAt(0) || 'A'}
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 shadow-md">
+                {currentArtisan.profileImageUrl ? (
+                  <img
+                    src={currentArtisan.profileImageUrl}
+                    alt={currentArtisan.name || 'Artisan'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className={`w-full h-full bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] flex items-center justify-center text-white font-bold text-xl ${
+                    currentArtisan.profileImageUrl ? 'hidden' : 'flex'
+                  }`}
+                >
+                  {currentArtisan.name?.charAt(0) || 'A'}
+                </div>
               </div>
               <div>
                 <p className="text-md font-medium text-gray-900">

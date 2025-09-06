@@ -13,6 +13,7 @@ const reportRoutes = require('./routes/reportRoutes'); // Uncommented new report
 const adminRoutes = require('./routes/adminRoutes');
 const kycRoutes = require('./routes/kycRoutes'); // New: Import KYC routes
 const notificationRoutes = require('./routes/notificationRoutes'); // Import notification routes
+const subscriptionRoutes = require('./routes/subscriptionRoutes'); // Import subscription routes
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/reports', reportRoutes); // Uncommented new report routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/kyc', kycRoutes); // New: Use KYC routes
 app.use('/api/notifications', notificationRoutes); // Use notification routes
+app.use('/api/subscription', subscriptionRoutes); // Use subscription routes
 
 // Error Handler
 app.use(errorHandler);

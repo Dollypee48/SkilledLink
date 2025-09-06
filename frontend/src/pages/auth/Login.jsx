@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Mail, AlertCircle, User, Lock, ArrowRight, Sparkles, Shield, Zap } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
 import { resendVerificationEmail } from "../../services/authService";
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
   const [role, setRole] = useState("customer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,10 +18,18 @@ const Login = () => {
   const navigate = useNavigate();
 
   const { user, handleLogin } = useAuth();
+  const redirectTo = searchParams.get('redirect') || null;
 
   // Redirect after login
   useEffect(() => {
     if (user) {
+      // If there's a redirect URL, use it
+      if (redirectTo) {
+        navigate(redirectTo);
+        return;
+      }
+      
+      // Otherwise, redirect based on role
       const role = user.role || "customer";
       if (role === "customer") {
         navigate("/customer-dashboard");
@@ -30,7 +39,7 @@ const Login = () => {
         navigate("/admin-dashboard");
       }
     }
-  }, [user, navigate]);
+  }, [user, navigate, redirectTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -56,6 +56,32 @@ const userSchema = new mongoose.Schema(
     // Password reset fields
     resetCode: { type: String, default: null },
     resetCodeExpiry: { type: Date, default: null },
+    // Subscription fields
+    subscription: {
+      plan: { 
+        type: String, 
+        enum: ['free', 'premium'], 
+        default: 'free' 
+      },
+      status: { 
+        type: String, 
+        enum: ['active', 'inactive', 'cancelled', 'expired'], 
+        default: 'active' 
+      },
+      startDate: { type: Date, default: Date.now },
+      endDate: { type: Date, default: null },
+      paystackSubscriptionId: { type: String, default: null },
+      paystackCustomerId: { type: String, default: null },
+      autoRenew: { type: Boolean, default: true }
+    },
+    isPremium: { 
+      type: Boolean, 
+      default: function() {
+        return this.subscription?.plan === 'premium' && 
+               this.subscription?.status === 'active' && 
+               (!this.subscription?.endDate || this.subscription?.endDate > new Date());
+      }
+    },
   },
   { timestamps: true }
 );

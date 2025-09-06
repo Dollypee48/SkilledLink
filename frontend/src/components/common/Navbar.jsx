@@ -32,6 +32,7 @@ const Header = () => {
     navigate('/');
   };
 
+
   return (
     <header className="sticky top-0 z-50 bg-[#151E3D] text-white py-4 shadow">
       <div className="container mx-auto px-6 flex justify-between items-center">
