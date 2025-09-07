@@ -8,7 +8,6 @@ dotenv.config();
 // @access  Private
 exports.submitKYC = async (req, res) => {
   try {
-    console.log('Incoming KYC request body:', req.body); // Added log
     const userId = req.user.id;
     const user = await User.findById(userId);
 
@@ -38,7 +37,7 @@ exports.submitKYC = async (req, res) => {
       kycDocuments.faceImage = faceImageUrl.secure_url;
     }
 
-    console.log('KYC Documents after Cloudinary processing:', kycDocuments); // Added log
+    // console.log('KYC Documents after Cloudinary processing:', kycDocuments); // Added log
 
     // Update validation logic to check for the presence of the uploaded URLs
     if (!kycDocuments.idProof || !kycDocuments.addressProof || (user.role === 'artisan' && !kycDocuments.credentials) || !kycDocuments.faceImage) {

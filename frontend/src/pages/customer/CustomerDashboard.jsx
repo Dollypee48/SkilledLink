@@ -33,13 +33,14 @@ export default function CustomerDashboard() {
     if (!hasFetched && user && accessToken) {
       // Fetch bookings for the customer
       // Ensure getBookings is called and error handled
-      getBookings().catch((err) => console.error("Failed to fetch customer bookings:", err));
+      getBookings().catch((err) => {
+        // Handle error silently or show user-friendly message
+      });
 
       // Fetch suggested artisans
       setArtisansLoading(true);
       // Ensure loadSuggestions is called and error handled
       loadSuggestions().catch((err) => { // loadSuggestions in ArtisanContext no longer takes token as arg
-          console.error("Failed to fetch suggested artisans:", err);
           setArtisansError("Could not load artisans.");
         })
         .finally(() => setArtisansLoading(false));

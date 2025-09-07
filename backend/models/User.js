@@ -53,6 +53,9 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String, default: null },
     verificationTokenExpires: { type: Date, default: null },
+    // Code-based verification fields
+    verificationCode: { type: String, default: null },
+    verificationCodeExpires: { type: Date, default: null },
     // Password reset fields
     resetCode: { type: String, default: null },
     resetCodeExpiry: { type: Date, default: null },

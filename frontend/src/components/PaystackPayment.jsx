@@ -31,7 +31,6 @@ const PaystackPayment = ({
   const initializePayment = usePaystackPayment(config);
 
   const onSuccessCallback = (reference) => {
-    console.log('✅ Payment successful:', reference);
     setIsProcessing(true);
     setPaymentStatus('success');
     
@@ -45,13 +44,11 @@ const PaystackPayment = ({
   };
 
   const onCloseCallback = () => {
-    console.log('❌ Payment cancelled by user');
     setPaymentStatus('cancelled');
     onClose();
   };
 
   const onErrorCallback = (error) => {
-    console.error('❌ Paystack payment error:', error);
     setError(`Payment failed: ${error.message || 'Unknown error'}`);
     setIsProcessing(false);
     setPaymentStatus('error');
@@ -60,25 +57,19 @@ const PaystackPayment = ({
   const handlePayment = () => {
     // Validate required parameters
     if (!publicKey || publicKey === 'pk_test_your_public_key_here' || publicKey === 'pk_test_your_actual_public_key_here') {
-      console.error('❌ Invalid Paystack public key');
       setError('Paystack configuration error. Please contact support.');
       return;
     }
-    
+
     if (!reference || !email || !amount) {
-      console.error('❌ Missing required payment parameters:', { reference, email, amount });
       setError('Missing payment information. Please try again.');
       return;
     }
-    
+
     if (amount <= 0) {
-      console.error('❌ Invalid amount:', amount);
       setError('Invalid payment amount. Please try again.');
       return;
     }
-
-    console.log('🚀 Initializing Paystack payment with config:', config);
-    console.log('🚀 Public key validation passed:', publicKey);
     setIsProcessing(true);
     setPaymentStatus('processing');
     initializePayment(onSuccessCallback, onCloseCallback, onErrorCallback);

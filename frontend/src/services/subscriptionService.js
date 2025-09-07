@@ -7,7 +7,6 @@ export const subscriptionService = {
       const response = await api.get('/subscription/plans');
       return response.data;
     } catch (error) {
-      console.error('Error fetching subscription plans:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch subscription plans');
     }
   },
@@ -25,7 +24,6 @@ export const subscriptionService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching current subscription:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch current subscription');
     }
   },
@@ -36,19 +34,14 @@ export const subscriptionService = {
       throw new Error("Authentication token is required.");
     }
     try {
-      console.log('🔍 Frontend: Initializing subscription for plan:', plan);
-      console.log('🔍 Frontend: Using token:', token ? 'Present' : 'Missing');
       
       const response = await api.post('/subscription/initialize', { plan }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log('🔍 Frontend: Subscription initialization response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Frontend: Error initializing subscription:', error);
-      console.error('❌ Frontend: Error response:', error.response?.data);
       throw new Error(error.response?.data?.message || 'Failed to initialize subscription');
     }
   },

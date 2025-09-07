@@ -14,7 +14,7 @@ export const issueService = {
       });
       return res.data;
     } catch (err) {
-      console.error("submitIssue error:", err.message);
+      // console.error("submitIssue error:", err.message);
       throw new Error(err.response?.data?.message || "Failed to submit issue");
     }
   },
@@ -28,7 +28,7 @@ export const issueService = {
       });
       return res.data;
     } catch (err) {
-      console.error("getMyIssues error:", err.message);
+      // console.error("getMyIssues error:", err.message);
       throw new Error(err.response?.data?.message || "Failed to fetch issues");
     }
   },

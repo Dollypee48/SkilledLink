@@ -18,7 +18,7 @@ class NotificationService {
 
       return populatedNotification;
     } catch (error) {
-      console.error('Error creating notification:', error);
+      // console.error('Error creating notification:', error);
       throw error;
     }
   }
@@ -31,7 +31,7 @@ class NotificationService {
         io.to(notification.recipient._id.toString()).emit('newNotification', notification);
       }
     } catch (error) {
-      console.error('Error sending real-time notification:', error);
+      // console.error('Error sending real-time notification:', error);
     }
   }
 
@@ -140,7 +140,7 @@ class NotificationService {
         recipient: notification.recipient
       }));
     } catch (error) {
-      console.error('Error fetching user notifications:', error);
+      // console.error('Error fetching user notifications:', error);
       throw error;
     }
   }
@@ -155,7 +155,7 @@ class NotificationService {
       );
       return notification;
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      // console.error('Error marking notification as read:', error);
       throw error;
     }
   }
@@ -169,7 +169,7 @@ class NotificationService {
       );
       return result;
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      // console.error('Error marking all notifications as read:', error);
       throw error;
     }
   }
@@ -183,7 +183,7 @@ class NotificationService {
       });
       return notification;
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      // console.error('Error deleting notification:', error);
       throw error;
     }
   }
@@ -201,15 +201,15 @@ class NotificationService {
         recipient: userId
       });
       
-      console.log('NotificationService: Delete result:', result);
+      // console.log('NotificationService: Delete result:', result);
       return result;
     } catch (error) {
-      console.error('NotificationService: Error clearing all notifications:', error);
-      console.error('NotificationService: Error details:', {
-        message: error.message,
-        stack: error.stack,
-        userId: userId
-      });
+      // console.error('NotificationService: Error clearing all notifications:', error);
+      // console.error('NotificationService: Error details:', {
+      //   message: error.message,
+      //   stack: error.stack,
+      //   userId: userId
+      // });
       throw error;
     }
   }
@@ -223,7 +223,7 @@ class NotificationService {
       });
       return count;
     } catch (error) {
-      console.error('Error getting unread count:', error);
+      // console.error('Error getting unread count:', error);
       throw error;
     }
   }
@@ -237,7 +237,7 @@ class NotificationService {
       });
       return result;
     } catch (error) {
-      console.error('Error cleaning up old notifications:', error);
+      // console.error('Error cleaning up old notifications:', error);
       throw error;
     }
   }

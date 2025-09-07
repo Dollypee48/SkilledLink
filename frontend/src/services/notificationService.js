@@ -15,10 +15,10 @@ export const notificationService = {
       // API response received successfully
       return response.data;
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-      console.error('Error response:', error.response);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
+      // // console.error('Error fetching notifications:', error);
+      // // console.error('Error response:', error.response);
+      // // console.error('Error code:', error.code);
+      // // console.error('Error message:', error.message);
       
       // Check if it's a connection error
       if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
@@ -39,7 +39,7 @@ export const notificationService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      // console.error('Error marking notification as read:', error);
       throw new Error(error.response?.data?.message || 'Failed to mark notification as read');
     }
   },
@@ -54,7 +54,7 @@ export const notificationService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      // console.error('Error marking all notifications as read:', error);
       throw new Error(error.response?.data?.message || 'Failed to mark all notifications as read');
     }
   },
@@ -69,7 +69,7 @@ export const notificationService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error getting unread count:', error);
+      // console.error('Error getting unread count:', error);
       throw new Error(error.response?.data?.message || 'Failed to get unread count');
     }
   },
@@ -84,7 +84,7 @@ export const notificationService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      // console.error('Error deleting notification:', error);
       throw new Error(error.response?.data?.message || 'Failed to delete notification');
     }
   },
@@ -99,7 +99,7 @@ export const notificationService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error clearing all notifications:', error);
+      // console.error('Error clearing all notifications:', error);
       throw new Error(error.response?.data?.message || 'Failed to clear all notifications');
     }
   },

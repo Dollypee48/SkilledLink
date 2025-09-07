@@ -59,15 +59,12 @@ const ArtisanRequests = () => {
   const filteredRequests =
     filterStatus === "all" ? requests : requests?.filter((r) => normalizeStatus(r.status) === filterStatus);
 
-  // Debug logging to check booking data
-  console.log('All requests:', requests);
-  console.log('Filtered requests:', filteredRequests);
+  // Debug logging removed for production
 
   // Accept request
   const handleAccept = async (id) => {
     try {
       setActionLoading(prev => ({ ...prev, [id]: 'accepting' }));
-      console.log('Accepting booking with ID:', id);
       
       const newStatus = "Accepted";
       if (!validateStatus(newStatus)) {
@@ -75,11 +72,9 @@ const ArtisanRequests = () => {
       }
       
       const updatedBooking = await updateBookingStatus(id, newStatus);
-      console.log('Updated booking:', updatedBooking);
       
       // Verify the status was updated correctly
       if (updatedBooking.status !== newStatus) {
-        console.warn('Status mismatch after update. Expected:', newStatus, 'Got:', updatedBooking.status);
       }
       
       await fetchArtisanBookings(); // Refresh bookings after update
@@ -98,7 +93,6 @@ const ArtisanRequests = () => {
   const handleDecline = async (id) => {
     try {
       setActionLoading(prev => ({ ...prev, [id]: 'declining' }));
-      console.log('Declining booking with ID:', id);
       
       const newStatus = "Declined";
       if (!validateStatus(newStatus)) {
@@ -106,11 +100,9 @@ const ArtisanRequests = () => {
       }
       
       const updatedBooking = await updateBookingStatus(id, newStatus);
-      console.log('Updated booking:', updatedBooking);
       
       // Verify the status was updated correctly
       if (updatedBooking.status !== newStatus) {
-        console.warn('Status mismatch after update. Expected:', newStatus, 'Got:', updatedBooking.status);
       }
       
       await fetchArtisanBookings(); // Refresh bookings after update
@@ -241,7 +233,6 @@ const ArtisanRequests = () => {
                         {(() => {
                           const originalStatus = request.status;
                           const normalizedStatus = normalizeStatus(originalStatus);
-                          console.log('Request status for', request._id, ':', 'Original:', originalStatus, 'Normalized:', normalizedStatus);
                           
                           // Only handle Pending, Accepted, Declined
                           switch (normalizedStatus) {

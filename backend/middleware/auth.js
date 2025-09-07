@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const auth = (req, res, next) => {
 
   const authHeader = req.headers.authorization;
-  console.log('Auth Middleware - Authorization Header:', authHeader); // Log auth header
   if (!authHeader) {
     return res.status(401).json({ message: 'No authorization header provided' });
   }
@@ -11,25 +10,21 @@ const auth = (req, res, next) => {
   const token = authHeader.startsWith('Bearer ') 
     ? authHeader.split(' ')[1] 
     : authHeader;
-  console.log('Auth Middleware - Extracted Token:', token ? token.substring(0, 30) + '...' : 'No Token'); // Log token snippet
   if (!token || token.trim() === '') {
     return res.status(401).json({ message: 'No valid token provided' });
   }
 
-
   if (!process.env.JWT_SECRET) {
-    console.error('Auth Middleware Error: JWT_SECRET not set in environment variables.'); // Log missing secret
+    console.error('Auth Middleware Error: JWT_SECRET not set in environment variables.');
     return res.status(500).json({ message: 'Server configuration error: JWT secret not set' });
   }
-  console.log('Auth Middleware - JWT_SECRET is set.'); // Confirm secret is set
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    console.log('Auth Middleware - Token decoded successfully for user:', decoded.id); // Log successful decoding
     next();
   } catch (err) {
-    console.error('Auth Middleware - JWT Verification Error:', err); // Log full JWT error
+    console.error('Auth Middleware - JWT Verification Error:', err);
  
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({ message: 'Token has expired' });

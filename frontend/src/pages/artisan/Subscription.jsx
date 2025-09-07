@@ -55,7 +55,6 @@ const Subscription = () => {
       ]);
       
       setPlans(plansResponse.plans);
-      console.log('🔍 Fetched subscription response:', subscriptionResponse);
       setCurrentSubscription(subscriptionResponse);
     } catch (err) {
       setError(err.message);
@@ -73,13 +72,10 @@ const Subscription = () => {
     try {
       setLoading(true);
       const response = await subscriptionService.initializeSubscription(plan, accessToken);
-      console.log('🔍 Subscription response:', response);
-      console.log('🔍 Payment data:', response.payment);
       setPaymentData(response.payment);
       setSelectedPlan(plan);
       setShowPayment(true);
     } catch (err) {
-      console.error('❌ Subscription error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -88,26 +84,16 @@ const Subscription = () => {
 
   const handlePaymentSuccess = async (reference) => {
     try {
-      console.log('🚀 Starting payment verification for reference:', reference);
       setLoading(true);
       
       const response = await subscriptionService.verifyPayment(reference, accessToken);
       
-      console.log('✅ Payment verification response:', response);
-      console.log('🔍 Response user data:', response.user);
-      console.log('🔍 Response subscription data:', response.subscription);
-      
       // Update current subscription with the response data
-      console.log('🔄 Updating current subscription with:', response);
       setCurrentSubscription(response);
       
       // Update user context with premium status
       if (response.user) {
-        console.log('🔄 Updating user context with:', response.user);
         updateUser(response.user);
-        console.log('✅ User context updated successfully');
-      } else {
-        console.log('❌ No user data in response');
       }
       
       // Show success message
@@ -119,9 +105,7 @@ const Subscription = () => {
       setSelectedPlan(null);
       
       // Refresh subscription data to get the latest status
-      console.log('🔄 Refreshing subscription data...');
       await fetchData();
-      console.log('✅ Subscription data refreshed');
       
       // Show success notification
       alert('🎉 Congratulations! You are now a Premium Artisan! You have access to all premium features including verified badge, priority search, and advanced analytics.');
@@ -137,7 +121,6 @@ const Subscription = () => {
       }, 2000);
       
     } catch (err) {
-      console.error('❌ Payment verification error:', err);
       setError(err.message);
     } finally {
       setLoading(false);

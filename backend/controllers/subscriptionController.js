@@ -11,7 +11,6 @@ exports.getSubscriptionPlans = async (req, res) => {
       plans: SUBSCRIPTION_PLANS
     });
   } catch (error) {
-    console.error('Error fetching subscription plans:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching subscription plans'
@@ -46,7 +45,7 @@ exports.getCurrentSubscription = async (req, res) => {
       plan: SUBSCRIPTION_PLANS[user.subscription.plan]
     });
   } catch (error) {
-    console.error('Error fetching current subscription:', error);
+    // console.error('Error fetching current subscription:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching current subscription'
@@ -166,7 +165,7 @@ exports.initializeSubscription = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error initializing subscription:', error);
+    // console.error('Error initializing subscription:', error);
     res.status(500).json({
       success: false,
       message: 'Error initializing subscription'
@@ -269,7 +268,7 @@ exports.verifySubscriptionPayment = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error verifying subscription payment:', error);
+    // console.error('Error verifying subscription payment:', error);
     res.status(500).json({
       success: false,
       message: 'Error verifying subscription payment'
@@ -304,7 +303,7 @@ exports.cancelSubscription = async (req, res) => {
       try {
         await paystack.subscription.disable(user.subscription.paystackSubscriptionId);
       } catch (error) {
-        console.error('Error disabling Paystack subscription:', error);
+        // console.error('Error disabling Paystack subscription:', error);
       }
     }
 
@@ -319,7 +318,7 @@ exports.cancelSubscription = async (req, res) => {
       message: 'Subscription cancelled successfully'
     });
   } catch (error) {
-    console.error('Error cancelling subscription:', error);
+    // console.error('Error cancelling subscription:', error);
     res.status(500).json({
       success: false,
       message: 'Error cancelling subscription'
@@ -365,7 +364,7 @@ exports.handleWebhook = async (req, res) => {
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Error handling webhook:', error);
+    // console.error('Error handling webhook:', error);
     res.status(500).json({
       success: false,
       message: 'Error handling webhook'
@@ -397,7 +396,7 @@ async function handleChargeSuccess(data) {
       }
     }
   } catch (error) {
-    console.error('Error handling charge success:', error);
+    // console.error('Error handling charge success:', error);
   }
 }
 
@@ -418,6 +417,6 @@ async function handleSubscriptionDisable(data) {
       console.log(`Subscription cancelled for user: ${user.email}`);
     }
   } catch (error) {
-    console.error('Error handling subscription disable:', error);
+    // console.error('Error handling subscription disable:', error);
   }
 }

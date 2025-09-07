@@ -42,7 +42,7 @@ exports.createBooking = async (req, res) => {
     
     res.status(201).json(booking);
   } catch (err) {
-    console.error("Create booking error:", err.stack); // Changed to err.stack
+    // console.error("Create booking error:", err.stack); // Changed to err.stack
     res.status(500).json({ message: "Server error during booking creation" });
   }
 };
@@ -55,7 +55,7 @@ exports.getMyBookings = async (req, res) => {
       .populate("customer", "name email"); // Also populate customer details for consistency
     res.json(bookings);
   } catch (err) {
-    console.error("Get my bookings error:", err.message);
+    // console.error("Get my bookings error:", err.message);
     res.status(500).json({ message: "Server error while fetching my bookings" });
   }
 };
@@ -70,7 +70,7 @@ exports.getArtisanBookings = async (req, res) => {
 
     res.json(bookings);
   } catch (err) {
-    console.error("Get artisan bookings error:", err.message);
+    // console.error("Get artisan bookings error:", err.message);
     res.status(500).json({ message: "Server error while fetching artisan bookings" });
   }
 };
@@ -78,7 +78,7 @@ exports.getArtisanBookings = async (req, res) => {
 // Get a single booking by ID (accessible by customer or artisan if involved)
 exports.getBookingById = async (req, res) => {
   try {
-    console.log("--- Entering getBookingById controller ---");
+    // console.log("--- Entering getBookingById controller ---");
     const booking = await Booking.findById(req.params.id)
       .populate("customer", "name email")
       .populate("artisan", "name email");
@@ -87,10 +87,6 @@ exports.getBookingById = async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    console.log("User ID from token (req.user.id):", req.user.id);
-    console.log("User Role from token (req.user.role):", req.user.role);
-    console.log("Booking Customer ID:", booking.customer._id.toString());
-    console.log("Booking Artisan ID:", booking.artisan._id.toString());
 
     // Ensure only involved customer/artisan or admin can view
     if (
@@ -103,7 +99,7 @@ exports.getBookingById = async (req, res) => {
 
     res.json(booking);
   } catch (err) {
-    console.error("Get booking by ID error:", err.message);
+    // console.error("Get booking by ID error:", err.message);
     res.status(500).json({ message: "Server error while fetching booking" });
   }
 };
@@ -116,11 +112,8 @@ exports.updateBookingStatus = async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    console.log('updateBookingStatus called with:', { id, status, userId, userRole });
 
     if (!["Pending", "Accepted", "Declined", "Pending Confirmation", "Completed", "Cancelled"].includes(status)) {
-      console.log('Invalid status received:', status);
-      console.log('Allowed statuses:', ["Pending", "Accepted", "Declined", "Pending Confirmation", "Completed", "Cancelled"]);
       return res.status(400).json({ message: "Invalid status provided" });
     }
 
@@ -160,13 +153,13 @@ exports.updateBookingStatus = async (req, res) => {
         );
       }
     } catch (notificationError) {
-      console.error('Error sending notifications:', notificationError);
+      // // console.error('Error sending notifications:', notificationError);
       // Don't fail the status update if notifications fail
     }
 
     res.json(booking);
   } catch (err) {
-    console.error("Update booking status error:", err.message);
+    // console.error("Update booking status error:", err.message);
     res.status(500).json({ message: "Server error while updating booking status" });
   }
 };
@@ -192,7 +185,7 @@ exports.deleteBooking = async (req, res) => {
     await Booking.findByIdAndDelete(id);
     res.json({ message: "Booking deleted successfully" });
   } catch (err) {
-    console.error("Delete booking error:", err.message);
+    // console.error("Delete booking error:", err.message);
     res.status(500).json({ message: "Server error while deleting booking" });
   }
 };

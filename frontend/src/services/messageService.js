@@ -14,7 +14,7 @@ export const messageService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Error sending message:", error);
+      // console.error("Error sending message:", error);
       throw new Error(error.response?.data?.message || "Failed to send message");
     }
   },
@@ -28,7 +28,7 @@ export const messageService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching conversation:", error);
+      // console.error("Error fetching conversation:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch conversation");
     }
   },
@@ -42,7 +42,7 @@ export const messageService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching conversations list:", error);
+      // console.error("Error fetching conversations list:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch conversations list");
     }
   },
@@ -57,7 +57,7 @@ export const messageService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error deleting message:", error);
+      // console.error("Error deleting message:", error);
       throw new Error(error.response?.data?.message || "Failed to delete message");
     }
   },
@@ -82,7 +82,7 @@ export const messageService = {
       }
       return response.data;
     } catch (error) {
-      console.error("Error clearing conversation:", error);
+      // console.error("Error clearing conversation:", error);
       throw new Error(error.response?.data?.message || "Failed to clear conversation");
     }
   },

@@ -57,9 +57,9 @@ exports.register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate verification token
-    const verificationToken = generateVerificationToken();
-    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Generate verification code
+    const verificationCode = generateOTP();
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Create user with minimal required fields
     const user = await User.create({
@@ -73,8 +73,8 @@ exports.register = async (req, res) => {
       address: '', // Will be filled in profile settings
       kycVerified: role === "customer", // auto verify customers
       isVerified: false, // Email verification required
-      verificationToken,
-      verificationTokenExpires,
+      verificationCode,
+      verificationCodeExpires,
     });
 
     // If artisan, create basic profile
@@ -104,7 +104,7 @@ exports.register = async (req, res) => {
     }
 
     // Send verification email
-    const emailResult = await sendVerificationEmail(email, verificationToken, name);
+    const emailResult = await sendVerificationEmail(email, verificationCode, name);
     
     if (!emailResult.success) {
       console.error('Failed to send verification email:', emailResult.error);
@@ -117,8 +117,8 @@ exports.register = async (req, res) => {
     const safeUser = {
       ...populatedUser.toObject(),
       password: undefined,
-      verificationToken: undefined,
-      verificationTokenExpires: undefined,
+      verificationCode: undefined,
+      verificationCodeExpires: undefined,
     };
 
     res.status(201).json({
@@ -307,7 +307,67 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// VERIFY EMAIL
+// VERIFY EMAIL WITH CODE
+exports.verifyEmailWithCode = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    
+    if (!email || !code) {
+      return res.status(400).json({ 
+        message: "Email and verification code are required",
+        success: false 
+      });
+    }
+
+    // Find user with valid verification code
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      verificationCode: code,
+      verificationCodeExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      // Check if user exists with this code but expired
+      const expiredUser = await User.findOne({ 
+        email: email.toLowerCase(),
+        verificationCode: code 
+      });
+      
+      if (expiredUser) {
+        return res.status(400).json({ 
+          message: "Verification code has expired. Please request a new one.",
+          success: false 
+        });
+      } else {
+        return res.status(400).json({ 
+          message: "Invalid verification code or email",
+          success: false 
+        });
+      }
+    }
+
+    // Mark email as verified
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+
+    res.json({
+      message: "Email verified successfully! You can now log in.",
+      success: true,
+      email: user.email
+    });
+
+  } catch (err) {
+    console.error("Email verification error:", err.message);
+    res.status(500).json({ 
+      message: "Server error during email verification",
+      success: false 
+    });
+  }
+};
+
+// VERIFY EMAIL WITH TOKEN (legacy - keeping for backward compatibility)
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
@@ -390,17 +450,17 @@ exports.resendVerificationEmail = async (req, res) => {
       });
     }
 
-    // Generate new verification token
-    const verificationToken = generateVerificationToken();
-    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Generate new verification code
+    const verificationCode = generateOTP();
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Update user with new token
-    user.verificationToken = verificationToken;
-    user.verificationTokenExpires = verificationTokenExpires;
+    // Update user with new code
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpires = verificationCodeExpires;
     await user.save();
 
     // Send verification email
-    const emailResult = await sendVerificationEmail(email, verificationToken, user.name);
+    const emailResult = await sendVerificationEmail(email, verificationCode, user.name);
     
     if (!emailResult.success) {
       console.error('Failed to send verification email:', emailResult.error);

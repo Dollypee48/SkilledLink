@@ -48,7 +48,6 @@ const AllArtisans = () => {
   // Handle view profile
   const handleViewProfile = async (artisan) => {
     if (!artisan || !artisan.id) {
-      console.error('Invalid artisan data:', artisan);
       return;
     }
     
@@ -58,12 +57,9 @@ const AllArtisans = () => {
     // Fetch artisan reviews
     try {
       setReviewsLoading(true);
-      console.log('Fetching reviews for artisan:', artisan.id);
       const reviews = await ReviewService.getPublicArtisanReviews(artisan.id);
       setArtisanReviews(reviews);
-      console.log('Fetched reviews:', reviews);
     } catch (error) {
-      console.error('Error fetching artisan reviews:', error);
       setArtisanReviews([]);
     } finally {
       setReviewsLoading(false);
@@ -128,7 +124,6 @@ const AllArtisans = () => {
         
         setArtisans(transformedArtisans);
       } catch (err) {
-        console.error('Error fetching artisans:', err);
         setError('Failed to load artisans. Please try again later.');
         
         // Fallback to empty array if API fails

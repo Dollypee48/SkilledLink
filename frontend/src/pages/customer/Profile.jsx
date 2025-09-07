@@ -28,7 +28,6 @@ const CustomerProfile = () => {
           // For customers, we can use the user data directly or make an API call if needed
           setCurrentProfile(user);
         } catch (err) {
-          console.error('Error fetching customer profile:', err);
           setError(err.response?.data?.message || 'Failed to fetch profile');
         } finally {
           setLoading(false);
@@ -73,7 +72,6 @@ const CustomerProfile = () => {
         alert(data.message || 'Failed to send verification email');
       }
     } catch (err) {
-      console.error('Error sending verification email:', err);
       alert('Failed to send verification email. Please try again.');
     } finally {
       setLoading(false);

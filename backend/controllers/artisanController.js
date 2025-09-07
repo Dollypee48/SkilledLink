@@ -373,11 +373,6 @@ exports.getArtisanBookings = async (req, res) => {
 // Update artisan earnings
 exports.updateEarnings = async (req, res) => {
   try {
-    console.log('Update earnings request received:', { 
-      body: req.body, 
-      user: req.user,
-      headers: req.headers.authorization 
-    });
     
     const { earnings } = req.body;
     const artisanId = req.user.id;
@@ -398,7 +393,6 @@ exports.updateEarnings = async (req, res) => {
     artisanProfile.earnings = earnings;
     await artisanProfile.save();
 
-    console.log('Earnings updated successfully:', { artisanId, earnings: artisanProfile.earnings });
 
     res.json({ 
       message: "Earnings updated successfully", 

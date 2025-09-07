@@ -61,7 +61,14 @@ const Register = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        navigate('/login');
+        // Store email for verification page
+        localStorage.setItem('pendingVerificationEmail', formData.email);
+        navigate('/verify-code', { 
+          state: { 
+            email: formData.email,
+            message: data.message 
+          } 
+        });
       } else {
         setError(data.message || 'Registration failed');
       }

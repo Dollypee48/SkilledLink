@@ -19,10 +19,8 @@ export const AuthProvider = ({ children }) => {
   const role = user ? user.role : null;
 
   const updateUser = useCallback((newUserData) => {
-    console.log('🔄 AuthContext updateUser called with:', newUserData);
     setUser(newUserData);
     localStorage.setItem("user", JSON.stringify(newUserData));
-    console.log('✅ AuthContext user updated and saved to localStorage');
   }, []);
 
   // Save user + token in localStorage
@@ -65,7 +63,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(updatedUser));
       return updatedUser;
     } catch (error) {
-      console.error("Error updating profile in AuthContext:", error);
       throw error;
     }
   }, [accessToken]);
@@ -78,7 +75,6 @@ export const AuthProvider = ({ children }) => {
       await authService.changePassword(passwordData, accessToken);
       return true;
     } catch (error) {
-      console.error("Error changing password in AuthContext:", error);
       throw error;
     }
   }, [accessToken]);

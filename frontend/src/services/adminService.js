@@ -15,7 +15,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching admin dashboard stats:", error);
+      // console.error("Error fetching admin dashboard stats:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch dashboard stats");
     }
   },
@@ -29,7 +29,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching all artisans:", error);
+      // console.error("Error fetching all artisans:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch artisans");
     }
   },
@@ -42,7 +42,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching all bookings:", error);
+      // console.error("Error fetching all bookings:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch bookings");
     }
   },
@@ -55,7 +55,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching all reports:", error);
+      // console.error("Error fetching all reports:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch reports");
     }
   },
@@ -68,7 +68,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching all reviews:", error);
+      // console.error("Error fetching all reviews:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch reviews");
     }
   },
@@ -82,7 +82,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching all users:", error);
+      // console.error("Error fetching all users:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch users");
     }
   },
@@ -95,7 +95,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching user by ID:", error);
+      // console.error("Error fetching user by ID:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch user");
     }
   },
@@ -108,7 +108,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error updating user role:", error);
+      // console.error("Error updating user role:", error);
       throw new Error(error.response?.data?.message || "Failed to update user role");
     }
   },
@@ -123,7 +123,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error suspending user:", error);
+      // console.error("Error suspending user:", error);
       throw new Error(error.response?.data?.message || "Failed to suspend user");
     }
   },
@@ -136,7 +136,7 @@ export const adminService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error deleting user:", error);
+      // console.error("Error deleting user:", error);
       throw new Error(error.response?.data?.message || "Failed to delete user");
     }
   },

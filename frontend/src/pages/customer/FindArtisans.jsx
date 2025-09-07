@@ -43,15 +43,11 @@ const FindArtisans = () => {
 
   // Debug: Log artisans data when it changes
   useEffect(() => {
-    console.log('Artisans data updated:', artisans);
-    if (artisans.length > 0) {
-      console.log('First artisan sample:', artisans[0]);
-    }
+    // Artisans data updated
   }, [artisans]);
 
   const handleBookNow = (artisan) => {
     if (!artisan || !artisan._id) {
-      console.error('Invalid artisan data for booking:', artisan);
       return;
     }
     setSelectedArtisan(artisan);
@@ -60,7 +56,6 @@ const FindArtisans = () => {
 
   const handleViewProfile = async (artisan) => {
     if (!artisan || !artisan._id) {
-      console.error('Invalid artisan data:', artisan);
       return;
     }
     
@@ -70,12 +65,9 @@ const FindArtisans = () => {
     // Fetch artisan reviews
     try {
       setReviewsLoading(true);
-      console.log('Fetching reviews for artisan:', artisan._id);
       const reviews = await ReviewService.getPublicArtisanReviews(artisan._id);
       setArtisanReviews(reviews);
-      console.log('Fetched reviews:', reviews);
     } catch (error) {
-      console.error('Error fetching artisan reviews:', error);
       setArtisanReviews([]);
     } finally {
       setReviewsLoading(false);

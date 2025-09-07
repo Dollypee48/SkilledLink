@@ -64,7 +64,6 @@ const BookingModal = () => {
       toast.success("Booking created successfully!");
       closeBookingModal();
     } catch (error) {
-      console.error("Error submitting booking:", error);
       toast.error("Failed to create booking. Please try again.");
     }
   };

@@ -1,8 +1,6 @@
 const paystack = require('paystack')(process.env.PAYSTACK_SECRET_KEY);
 
-// Debug Paystack configuration
-console.log('🔍 Paystack Secret Key:', process.env.PAYSTACK_SECRET_KEY ? 'Set' : 'Not Set');
-console.log('🔍 Paystack Public Key:', process.env.PAYSTACK_PUBLIC_KEY ? 'Set' : 'Not Set');
+// Paystack configuration loaded
 
 // Subscription plans configuration
 const SUBSCRIPTION_PLANS = {

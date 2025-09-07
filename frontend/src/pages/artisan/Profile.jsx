@@ -39,12 +39,6 @@ const ArtisanProfile = () => {
           
           setCurrentProfile(profileData);
         } catch (err) {
-          console.error('Error fetching artisan profile:', err);
-          console.error('Error details:', {
-            message: err.message,
-            response: err.response?.data,
-            status: err.response?.status
-          });
           setError(err.response?.data?.message || 'Failed to fetch profile');
         } finally {
           setLoading(false);
@@ -74,7 +68,6 @@ const ArtisanProfile = () => {
         alert(data.message || 'Failed to send verification email');
       }
     } catch (err) {
-      console.error('Error sending verification email:', err);
       alert('Failed to send verification email. Please try again.');
     } finally {
       setLoading(false);

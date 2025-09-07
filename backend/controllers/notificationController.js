@@ -14,7 +14,7 @@ exports.getUserNotifications = async (req, res) => {
 
     res.json(notifications);
   } catch (error) {
-    console.error('Error fetching user notifications:', error);
+    // console.error('Error fetching user notifications:', error);
     res.status(500).json({ message: 'Server error while fetching notifications' });
   }
 };
@@ -33,7 +33,7 @@ exports.markAsRead = async (req, res) => {
 
     res.json(notification);
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    // console.error('Error marking notification as read:', error);
     res.status(500).json({ message: 'Server error while marking notification as read' });
   }
 };
@@ -50,7 +50,7 @@ exports.markAllAsRead = async (req, res) => {
       modifiedCount: result.modifiedCount 
     });
   } catch (error) {
-    console.error('Error marking all notifications as read:', error);
+    // console.error('Error marking all notifications as read:', error);
     res.status(500).json({ message: 'Server error while marking all notifications as read' });
   }
 };
@@ -64,7 +64,7 @@ exports.getUnreadCount = async (req, res) => {
 
     res.json({ unreadCount: count });
   } catch (error) {
-    console.error('Error getting unread count:', error);
+    // console.error('Error getting unread count:', error);
     res.status(500).json({ message: 'Server error while getting unread count' });
   }
 };
@@ -83,7 +83,7 @@ exports.deleteNotification = async (req, res) => {
 
     res.json({ message: 'Notification deleted successfully' });
   } catch (error) {
-    console.error('Error deleting notification:', error);
+    // console.error('Error deleting notification:', error);
     res.status(500).json({ message: 'Server error while deleting notification' });
   }
 };
@@ -102,12 +102,12 @@ exports.clearAllNotifications = async (req, res) => {
       deletedCount: result.deletedCount 
     });
   } catch (error) {
-    console.error('Error clearing all notifications:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      userId: req.user?.id
-    });
+    // console.error('Error clearing all notifications:', error);
+    // console.error('Error details:', {
+    //   message: error.message,
+    //   stack: error.stack,
+    //   userId: req.user?.id
+    // });
     res.status(500).json({ 
       message: 'Server error while clearing all notifications',
       error: error.message 

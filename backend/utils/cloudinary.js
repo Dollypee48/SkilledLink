@@ -14,7 +14,7 @@ exports.uploadFile = async (fileBuffer, fileType, folder) => {
     });
     return result; // Return the full result object, not just the URL
   } catch (error) {
-    console.error("Cloudinary upload error:", error.message);
+    // console.error("Cloudinary upload error:", error.message);
     throw new Error("Failed to upload file to Cloudinary");
   }
 };

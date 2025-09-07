@@ -7,8 +7,6 @@ exports.createReview = async (req, res) => {
   try {
     const { artisanId, rating, comment, bookingId } = req.body;
 
-    console.log('Creating review with data:', { artisanId, rating, comment, bookingId });
-    console.log('User ID:', req.user.id);
 
     // Find the booking and validate it
     const booking = await Booking.findOne({
@@ -17,7 +15,6 @@ exports.createReview = async (req, res) => {
       status: "Completed", // Use correct case
     });
 
-    console.log('Found booking:', booking);
 
     if (!booking) {
       return res.status(400).json({ 
@@ -48,7 +45,7 @@ exports.createReview = async (req, res) => {
       comment,
     });
 
-    console.log('Review created successfully:', review);
+    // console.log('Review created successfully:', review);
 
     // Update artisan rating
     await updateArtisanRating(artisanId);
@@ -156,7 +153,7 @@ async function updateArtisanRating(artisanId) {
       { new: true }
     );
 
-    console.log(`Updated artisan ${artisanId} rating to ${averageRating}`);
+    // console.log(`Updated artisan ${artisanId} rating to ${averageRating}`);
   } catch (error) {
     console.error('Error updating artisan rating:', error);
   }
