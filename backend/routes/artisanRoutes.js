@@ -8,6 +8,7 @@ const {
   suggestArtisansByLocation,
   getArtisanBookings, // Import getArtisanBookings
   getArtisanById, // Import getArtisanById
+  updateEarnings, // Import updateEarnings
 } = require("../controllers/artisanController");
 const auth = require("../middleware/auth");
 
@@ -15,6 +16,7 @@ const auth = require("../middleware/auth");
 router.get("/me", auth, getCurrentArtisanProfile);
 router.put("/me/profile", auth, updateArtisanProfile); // New route for artisan profile update
 router.put("/subscription", auth, updateSubscription);
+router.put("/earnings", auth, updateEarnings); // New route for updating earnings
 router.get("/", getArtisans);
 router.get("/suggest-by-location", auth, suggestArtisansByLocation);
 router.get("/:id", getArtisanById); // New route to get artisan by ID

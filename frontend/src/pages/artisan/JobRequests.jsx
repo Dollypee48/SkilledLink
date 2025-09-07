@@ -6,6 +6,8 @@ import useAuth from "../../hooks/useAuth"; // Import useAuth to ensure user role
 
 const ArtisanRequests = () => {
   const [filterStatus, setFilterStatus] = useState("all");
+  const [actionLoading, setActionLoading] = useState({}); // Track loading state for individual actions
+  const [successMessage, setSuccessMessage] = useState(""); // Track success messages
   const { user } = useAuth(); // Get user to check role
   const {
     artisanBookings: requests, // Renamed for clarity, assuming BookingContext provides artisanBookings
@@ -15,29 +17,112 @@ const ArtisanRequests = () => {
     updateBookingStatus, // Assuming a function to update booking status
   } = useContext(BookingContext);
 
+  // Validate status values - only Pending, Accepted, Declined
+  const validStatuses = ["Pending", "Accepted", "Declined"];
+  
+  const validateStatus = (status) => {
+    return validStatuses.includes(status);
+  };
+
+  // Normalize status to one of the three valid statuses
+  const normalizeStatus = (status) => {
+    if (!status) return "Pending";
+    
+    const normalized = status.trim();
+    
+    // If it's already one of our three valid statuses, return it
+    if (validStatuses.includes(normalized)) {
+      return normalized;
+    }
+    
+    // Map other statuses to our three valid ones
+    switch (normalized) {
+      case "Completed":
+      case "Cancelled":
+      case "Pending Confirmation":
+        return "Accepted"; // Treat completed/cancelled as accepted for display
+      default:
+        return "Pending"; // Default to Pending for any unknown status
+    }
+  };
+
   useEffect(() => {
     if (user?.role === "artisan" && fetchArtisanBookings) {
       fetchArtisanBookings();
     }
   }, [user, fetchArtisanBookings]); // Depend on user and fetchArtisanBookings
 
-  const acceptedRequests = requests?.filter((r) => r.status === "Accepted").length || 0;
-  const declinedRequests = requests?.filter((r) => r.status === "Declined").length || 0;
+  const acceptedRequests = requests?.filter((r) => normalizeStatus(r.status) === "Accepted").length || 0;
+  const declinedRequests = requests?.filter((r) => normalizeStatus(r.status) === "Declined").length || 0;
   const totalRequests = requests?.length || 0;
 
   const filteredRequests =
-    filterStatus === "all" ? requests : requests?.filter((r) => r.status === filterStatus);
+    filterStatus === "all" ? requests : requests?.filter((r) => normalizeStatus(r.status) === filterStatus);
+
+  // Debug logging to check booking data
+  console.log('All requests:', requests);
+  console.log('Filtered requests:', filteredRequests);
 
   // Accept request
   const handleAccept = async (id) => {
-    await updateBookingStatus(id, "Accepted"); // Call context function to update status
-    fetchArtisanBookings(); // Refresh bookings after update
+    try {
+      setActionLoading(prev => ({ ...prev, [id]: 'accepting' }));
+      console.log('Accepting booking with ID:', id);
+      
+      const newStatus = "Accepted";
+      if (!validateStatus(newStatus)) {
+        throw new Error(`Invalid status: ${newStatus}`);
+      }
+      
+      const updatedBooking = await updateBookingStatus(id, newStatus);
+      console.log('Updated booking:', updatedBooking);
+      
+      // Verify the status was updated correctly
+      if (updatedBooking.status !== newStatus) {
+        console.warn('Status mismatch after update. Expected:', newStatus, 'Got:', updatedBooking.status);
+      }
+      
+      await fetchArtisanBookings(); // Refresh bookings after update
+      setSuccessMessage("Booking request accepted successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error('Error accepting request:', error);
+      setSuccessMessage("Error accepting request. Please try again.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [id]: null }));
+    }
   };
 
   // Decline request
   const handleDecline = async (id) => {
-    await updateBookingStatus(id, "Declined"); // Call context function to update status
-    fetchArtisanBookings(); // Refresh bookings after update
+    try {
+      setActionLoading(prev => ({ ...prev, [id]: 'declining' }));
+      console.log('Declining booking with ID:', id);
+      
+      const newStatus = "Declined";
+      if (!validateStatus(newStatus)) {
+        throw new Error(`Invalid status: ${newStatus}`);
+      }
+      
+      const updatedBooking = await updateBookingStatus(id, newStatus);
+      console.log('Updated booking:', updatedBooking);
+      
+      // Verify the status was updated correctly
+      if (updatedBooking.status !== newStatus) {
+        console.warn('Status mismatch after update. Expected:', newStatus, 'Got:', updatedBooking.status);
+      }
+      
+      await fetchArtisanBookings(); // Refresh bookings after update
+      setSuccessMessage("Booking request declined successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error('Error declining request:', error);
+      setSuccessMessage("Error declining request. Please try again.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [id]: null }));
+    }
   };
 
   return (
@@ -52,7 +137,7 @@ const ArtisanRequests = () => {
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
-              <option value="all">All</option>
+              <option value="all">All Requests</option>
               <option value="Pending">Pending</option>
               <option value="Accepted">Accepted</option>
               <option value="Declined">Declined</option>
@@ -70,6 +155,15 @@ const ArtisanRequests = () => {
         {loading && <p className="text-gray-600">Loading requests...</p>}
         {error && (
           <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>
+        )}
+        {successMessage && (
+          <div className={`p-3 rounded mb-4 ${
+            successMessage.includes('Error') 
+              ? 'bg-red-100 text-red-700' 
+              : 'bg-green-100 text-green-700'
+          }`}>
+            {successMessage}
+          </div>
         )}
 
         {/* Requests Summary */}
@@ -128,7 +222,9 @@ const ArtisanRequests = () => {
                     <th className="p-3 font-medium">Service</th>
                     <th className="p-3 font-medium">Date</th>
                     <th className="p-3 font-medium">Status</th>
-                    <th className="p-3 font-medium">Actions</th>
+                    {filteredRequests?.some(r => r.status === "Pending") && (
+                      <th className="p-3 font-medium">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -142,38 +238,85 @@ const ArtisanRequests = () => {
                       <td className="p-3 text-gray-600">{request.service}</td>
                       <td className="p-3 text-gray-600">{new Date(request.date).toLocaleDateString()}</td> {/* Format date */}
                       <td className="p-3">
-                        {request.status === "Accepted" && (
-                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                            Accepted
-                          </span>
-                        )}
-                        {request.status === "Pending" && (
-                          <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
-                            Pending
-                          </span>
-                        )}
-                        {request.status === "Declined" && (
-                          <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                            Declined
-                          </span>
-                        )}
+                        {(() => {
+                          const originalStatus = request.status;
+                          const normalizedStatus = normalizeStatus(originalStatus);
+                          console.log('Request status for', request._id, ':', 'Original:', originalStatus, 'Normalized:', normalizedStatus);
+                          
+                          // Only handle Pending, Accepted, Declined
+                          switch (normalizedStatus) {
+                            case "Accepted":
+                              return (
+                                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                                  Accepted
+                                </span>
+                              );
+                            case "Pending":
+                              return (
+                                <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">
+                                  Pending
+                                </span>
+                              );
+                            case "Declined":
+                              return (
+                                <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">
+                                  Declined
+                                </span>
+                              );
+                            default:
+                              // This should never happen with normalizeStatus, but just in case
+                              return (
+                                <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">
+                                  Pending
+                                </span>
+                              );
+                          }
+                        })()}
                       </td>
-                      <td className="p-3 flex space-x-2">
-                        <button
-                          className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 text-sm font-medium transition-colors duration-200"
-                          onClick={() => handleAccept(request._id)}
-                          disabled={request.status !== "Pending"}
-                        >
-                          Accept
-                        </button>
-                        <button
-                          className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 text-sm font-medium transition-colors duration-200"
-                          onClick={() => handleDecline(request._id)}
-                          disabled={request.status !== "Pending"}
-                        >
-                          Decline
-                        </button>
-                      </td>
+                      {filteredRequests?.some(r => normalizeStatus(r.status) === "Pending") && (
+                        <td className="p-3">
+                          {normalizeStatus(request.status) === "Pending" ? (
+                            <div className="flex space-x-2">
+                              <button
+                                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center ${
+                                  actionLoading[request._id] === 'accepting'
+                                    ? 'bg-green-400 text-white cursor-not-allowed'
+                                    : 'bg-green-600 text-white hover:bg-green-700'
+                                }`}
+                                onClick={() => handleAccept(request._id)}
+                                disabled={actionLoading[request._id] === 'accepting'}
+                              >
+                                {actionLoading[request._id] === 'accepting' ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                                    Accepting...
+                                  </>
+                                ) : (
+                                  'Accept'
+                                )}
+                              </button>
+                              <button
+                                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center ${
+                                  actionLoading[request._id] === 'declining'
+                                    ? 'bg-red-400 text-white cursor-not-allowed'
+                                    : 'bg-red-600 text-white hover:bg-red-700'
+                                }`}
+                                onClick={() => handleDecline(request._id)}
+                                disabled={actionLoading[request._id] === 'declining'}
+                              >
+                                {actionLoading[request._id] === 'declining' ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                                    Declining...
+                                  </>
+                                ) : (
+                                  'Decline'
+                                )}
+                              </button>
+                            </div>
+                          ) : null}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

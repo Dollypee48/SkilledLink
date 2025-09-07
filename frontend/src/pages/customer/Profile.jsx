@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
 import { useAuth } from '../../context/AuthContext'; // Import useAuth hook
-import { User, CheckCircle, XCircle, Clock, RefreshCw, Calendar, Shield, Mail } from 'lucide-react'; // Import icons
+import { User, CheckCircle, Clock, RefreshCw, Calendar, Mail, Shield } from 'lucide-react'; // Import icons
 
 const CustomerProfile = () => {
   const { user, accessToken } = useAuth(); // Get user and accessToken from AuthContext
@@ -9,38 +9,6 @@ const CustomerProfile = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const getKycStatusDisplay = (status) => {
-    switch (status) {
-      case 'approved': 
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Verified
-          </span>
-        );
-      case 'pending': 
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
-            <Clock className="w-4 h-4 mr-2" />
-            Under Review
-          </span>
-        );
-      case 'rejected': 
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800 border border-red-200">
-            <XCircle className="w-4 h-4 mr-2" />
-            Rejected
-          </span>
-        );
-      default: 
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800 border border-gray-200">
-            <Shield className="w-4 h-4 mr-2" />
-            Not Verified
-          </span>
-        );
-    }
-  };
 
   const getEmailVerificationDisplay = (isVerified) => {
     if (isVerified) {
@@ -187,10 +155,6 @@ const CustomerProfile = () => {
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">Occupation</span>
                 <span className="text-base font-semibold mt-1">{user.occupation || 'Not provided'}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-gray-500">KYC Status</span>
-                <span className="mt-1">{getKycStatusDisplay(user.kycStatus)}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-500">Account Status</span>

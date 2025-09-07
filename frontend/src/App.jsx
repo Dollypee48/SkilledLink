@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import RoutesComponent from "./routes";  // ✅ fixed import
-import KYCReminderModal from "./components/KYCReminderModal"; // Import the KYC Reminder Modal
 import ProfileCompletionNotification from "./components/common/ProfileCompletionNotification"; // Import Profile Completion Notification
 import Navbar from './components/common/Navbar';
 import { useAuth } from './context/AuthContext'; // Import useAuth hook
@@ -48,7 +47,6 @@ const App = () => {
         {shouldShowNavbar && <Navbar />} {/* Conditionally render Navbar on specific public pages */}
         <RoutesComponent />  {/* ✅ use renamed component */}
       </div>
-      <KYCReminderModal /> {/* Render the KYC Reminder Modal globally */}
       <ProfileCompletionNotification 
         profileCompletion={profileCompletion} 
         onDismiss={handleDismissProfileNotification}

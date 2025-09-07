@@ -48,3 +48,14 @@ export const getArtisanBookings = async (token) => {
   });
   return res.data;
 };
+
+// Update artisan earnings
+export const updateEarnings = async (token, earnings) => {
+  console.log('updateEarnings called with:', { token: token ? 'Token present' : 'No token', earnings });
+  const res = await axios.put(
+    `${API_URL}/earnings`,
+    { earnings },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
+};

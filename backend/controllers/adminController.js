@@ -127,7 +127,14 @@ exports.deleteUser = async (req, res) => {
 
 exports.verifyKYC = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { kycVerified: true }, { new: true });
+    const user = await User.findByIdAndUpdate(
+      req.params.id, 
+      { 
+        kycVerified: true,
+        kycStatus: 'approved'
+      }, 
+      { new: true }
+    );
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({ message: 'KYC verified', user });
   } catch (err) {
@@ -152,6 +159,67 @@ exports.getAnalytics = async (req, res) => {
     res.json({ usersCount, bookingsCount });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc    Fix KYC status for all users
+// @route   POST /api/admin/fix-kyc-status
+// @access  Private (Admin only)
+exports.fixKYCStatus = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    console.log('Starting KYC status migration...');
+    
+    // Find all users
+    const users = await User.find({});
+    console.log(`Found ${users.length} users to check`);
+    
+    let fixedCount = 0;
+    
+    for (const user of users) {
+      let needsUpdate = false;
+      const updates = {};
+      
+      // Fix customers who should be auto-verified
+      if (user.role === 'customer') {
+        if (user.kycVerified !== true) {
+          updates.kycVerified = true;
+          needsUpdate = true;
+        }
+        if (user.kycStatus !== 'approved') {
+          updates.kycStatus = 'approved';
+          needsUpdate = true;
+        }
+      }
+      
+      // Fix artisans who have kycVerified but wrong status
+      if (user.role === 'artisan' && user.kycVerified === true && user.kycStatus !== 'approved') {
+        updates.kycStatus = 'approved';
+        needsUpdate = true;
+      }
+      
+      // Fix users who have approved status but kycVerified is false
+      if (user.kycStatus === 'approved' && user.kycVerified !== true) {
+        updates.kycVerified = true;
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        await User.findByIdAndUpdate(user._id, updates);
+        console.log(`Fixed user ${user.email} (${user.role}):`, updates);
+        fixedCount++;
+      }
+    }
+    
+    console.log(`Migration completed. Fixed ${fixedCount} users.`);
+    res.json({ message: `KYC status migration completed. Fixed ${fixedCount} users.` });
+    
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({ message: 'Migration failed', error: error.message });
   }
 };
 

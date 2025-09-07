@@ -6,8 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { ReviewService } from '../services/reviewService';
 import BookingModal from '../components/BookingModal';
 import { useBooking } from '../context/BookingContext';
-import KYCRestriction from '../components/KYCRestriction';
-import { isKYCVerified, needsKYC } from '../utils/kycUtils';
 
 const AllArtisans = () => {
   const { user } = useAuth();
@@ -41,17 +39,6 @@ const AllArtisans = () => {
       return;
     }
     
-    // Check KYC verification
-    if (needsKYC(user)) {
-      navigate('/kyc-verification');
-      return;
-    }
-    
-    if (!isKYCVerified(user)) {
-      alert('Please complete your KYC verification to book services.');
-      navigate('/kyc-verification');
-      return;
-    }
     
     // Set the selected artisan and open booking modal
     setSelectedArtisan(artisan);

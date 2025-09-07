@@ -12,7 +12,8 @@ const {
   getAllArtisans, // New
   getAllBookings, // New
   getAllReports,  // New
-  getAllReviews   // New
+  getAllReviews,  // New
+  fixKYCStatus    // New
 } = require('../controllers/adminController');
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
@@ -26,6 +27,7 @@ router.delete("/users/:id", auth, role(["admin"]), deleteUser);
 router.put('/verify/:id', auth, role(['admin']), verifyKYC);
 router.put('/suspend/:id', auth, role(['admin']), suspendUser);
 router.get('/analytics', auth, role(['admin']), getAnalytics);
+router.post('/fix-kyc-status', auth, role(['admin']), fixKYCStatus);
 
 // Admin Dashboard Stats
 router.get("/dashboard-stats", auth, role(["admin"]), getAdminDashboardStats); // Added role middleware

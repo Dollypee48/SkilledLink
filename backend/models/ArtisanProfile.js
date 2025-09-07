@@ -16,6 +16,7 @@ const artisanProfileSchema = new mongoose.Schema(
     rating: { type: Number, min: 0, max: 5, default: 0 },
     totalJobs: { type: Number, default: 0 },
     completedJobs: { type: Number, default: 0 },
+    earnings: { type: Number, default: 0 },
     availability: { type: Boolean, default: true },
     subscription: { type: String, enum: ["free", "premium"], default: "free" },
     portfolio: { type: [String], default: [] },

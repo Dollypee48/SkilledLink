@@ -369,3 +369,43 @@ exports.getArtisanBookings = async (req, res) => {
     res.status(500).json({ message: "Server error while fetching bookings" });
   }
 };
+
+// Update artisan earnings
+exports.updateEarnings = async (req, res) => {
+  try {
+    console.log('Update earnings request received:', { 
+      body: req.body, 
+      user: req.user,
+      headers: req.headers.authorization 
+    });
+    
+    const { earnings } = req.body;
+    const artisanId = req.user.id;
+
+    // Validate earnings input
+    if (typeof earnings !== 'number' || earnings < 0) {
+      return res.status(400).json({ message: "Earnings must be a positive number" });
+    }
+
+    // Find or create artisan profile
+    let artisanProfile = await ArtisanProfile.findOne({ userId: artisanId });
+    
+    if (!artisanProfile) {
+      return res.status(404).json({ message: "Artisan profile not found" });
+    }
+
+    // Update earnings
+    artisanProfile.earnings = earnings;
+    await artisanProfile.save();
+
+    console.log('Earnings updated successfully:', { artisanId, earnings: artisanProfile.earnings });
+
+    res.json({ 
+      message: "Earnings updated successfully", 
+      earnings: artisanProfile.earnings 
+    });
+  } catch (err) {
+    console.error("Update earnings error:", err.message);
+    res.status(500).json({ message: "Server error while updating earnings" });
+  }
+};
