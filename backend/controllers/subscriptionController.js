@@ -45,7 +45,7 @@ exports.getCurrentSubscription = async (req, res) => {
       plan: SUBSCRIPTION_PLANS[user.subscription.plan]
     });
   } catch (error) {
-    // console.error('Error fetching current subscription:', error);
+    console.error('Error fetching current subscription:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching current subscription'
@@ -268,7 +268,7 @@ exports.verifySubscriptionPayment = async (req, res) => {
       });
     }
   } catch (error) {
-    // console.error('Error verifying subscription payment:', error);
+    console.error('Error verifying subscription payment:', error);
     res.status(500).json({
       success: false,
       message: 'Error verifying subscription payment'

@@ -170,10 +170,26 @@ const ChatWindow = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50">
-      <div className="p-4 border-b border-gray-200 bg-white shadow-sm">
+    <div className="flex-1 flex flex-col bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+      <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-800">Chat with {selectedRecipient.name}</h2>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center shadow-sm">
+              {selectedRecipient.profileImageUrl ? (
+                <img 
+                  src={selectedRecipient.profileImageUrl} 
+                  alt={selectedRecipient.name} 
+                  className="w-10 h-10 rounded-full object-cover" 
+                />
+              ) : (
+                <User className="w-5 h-5 text-gray-600" />
+              )}
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">{selectedRecipient.name}</h2>
+              <p className="text-sm text-gray-600">Online</p>
+            </div>
+          </div>
           
           {/* Hamburger Menu */}
           <div className="relative hamburger-menu">
@@ -209,15 +225,36 @@ const ChatWindow = () => {
           </div>
         </div>
       </div>
-      <div className="flex-1 p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+      <div className="flex-1 p-4 overflow-y-auto bg-gray-50" style={{ maxHeight: 'calc(100vh - 180px)' }}>
         {currentConversation.map((message) => (
           <div
-            key={message._id + message.timestamp} // Use a combination of _id and timestamp for uniqueness
+            key={message._id + message.timestamp}
             className={`flex mb-4 ${message.sender._id === user._id ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`rounded-lg p-3 max-w-[70%] relative group ${message.sender._id === user._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+              className={`rounded-lg p-3 max-w-[70%] relative group ${
+                message.sender._id === user._id 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-white text-gray-800 border border-gray-200'
+              }`}
             >
+              <p className="text-sm">{message.content}</p>
+              {message.fileUrl && message.fileType && message.fileType.startsWith('image/') && (
+                <img src={message.fileUrl} alt="Sent file" className="max-w-xs h-auto rounded-lg mt-2" />
+              )}
+              {message.fileUrl && message.fileType && !message.fileType.startsWith('image/') && (
+                <a href={message.fileUrl} target="_blank" rel="noopener noreferrer" className={`underline mt-2 block ${
+                  message.sender._id === user._id ? 'text-blue-100' : 'text-blue-600'
+                }`}>
+                  Download File ({message.fileType})
+                </a>
+              )}
+              <div className={`text-xs mt-2 ${
+                message.sender._id === user._id ? 'text-blue-100' : 'text-gray-500'
+              }`}>
+                {new Date(message.timestamp).toLocaleTimeString()}
+              </div>
+              
               {/* Delete button for user's own messages */}
               {message.sender._id === user._id && (
                 <button
@@ -228,87 +265,47 @@ const ChatWindow = () => {
                   ×
                 </button>
               )}
-              <p className="font-semibold">{message.sender.name}</p>
-              {message.content && <p>{message.content}</p>}
-              {message.fileUrl && message.fileType && message.fileType.startsWith('image/') && (
-                <img src={message.fileUrl} alt="Sent file" className="max-w-xs h-auto rounded-lg mt-2" />
-              )}
-              {message.fileUrl && message.fileType && !message.fileType.startsWith('image/') && (
-                <a href={message.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-200 underline mt-2 block">
-                  Download File ({message.fileType})
-                </a>
-              )}
-              <p className="text-xs mt-1 opacity-75">{new Date(message.timestamp).toLocaleTimeString()}</p>
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
       <div className="p-4 border-t border-gray-200 bg-white">
-        {/* Temporarily disabled file upload functionality
-        {filePreview && (
-            <div className="mb-2 p-2 border rounded-lg flex items-center justify-between bg-gray-100">
-                <div className="flex items-center">
-                    {selectedFile.type.startsWith('image/') ? (
-                        <img src={filePreview} alt="Preview" className="h-10 w-10 object-cover rounded mr-2" />
-                    ) : (
-                        <Paperclip className="h-10 w-10 text-gray-500 mr-2" />
-                    )}
-                    <span className="text-sm text-gray-700">{selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)</span>
-                </div>
-                <button onClick={handleClearFile} className="text-red-500 hover:text-red-700 p-1 rounded-full">
-                    <Trash2 className="h-5 h-5" />
-                </button>
-            </div>
-        )}
-        */}
-        <form onSubmit={handleSendMessage} className="flex items-center">
-            {/* Temporarily disabled file input
-            <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileChange}
-            />
-            <button 
-                type="button"
-                onClick={() => fileInputRef.current.click()}
-                className="p-2 text-gray-500 hover:text-blue-600 rounded-lg"
-                title="Attach File"
-            >
-                <Paperclip className="w-5 h-5" />
-            </button>
-            */}
-            <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mx-2"
-                // disabled={!!selectedFile} // Temporarily disabled file logic
-            />
-            <button 
-                type="button" 
-                onClick={() => setShowEmojiPicker(prev => !prev)} // Toggle emoji picker visibility
-                className="p-2 text-gray-500 hover:text-blue-600 rounded-lg"
-                title="Send Emoji" // Placeholder for emoji functionality
-            >
-                <Smile className="w-5 h-5" />
-            </button>
-            <button
-                type="submit"
-                className="ml-3 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg flex items-center justify-center"
-            >
-                <Send className="w-5 h-5" />
-            </button>
+        <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          
+          <button 
+            type="button" 
+            onClick={() => setShowEmojiPicker(prev => !prev)}
+            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Add Emoji"
+          >
+            <Smile className="w-5 h-5" />
+          </button>
+          
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors"
+          >
+            <Send className="w-5 h-5" />
+          </button>
         </form>
+        
         {showEmojiPicker && (
-            <div className="absolute bottom-20 right-4 z-10">
-                <EmojiPicker onEmojiClick={(emojiObject) => {
-                    setNewMessage(prevMsg => prevMsg + emojiObject.emoji);
-                    setShowEmojiPicker(false); // Close after selecting
-                }} />
+          <div className="absolute bottom-20 right-4 z-10">
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2">
+              <EmojiPicker onEmojiClick={(emojiObject) => {
+                setNewMessage(prevMsg => prevMsg + emojiObject.emoji);
+                setShowEmojiPicker(false);
+              }} />
             </div>
+          </div>
         )}
       </div>
     </div>
