@@ -16,14 +16,14 @@ const SUBSCRIPTION_PLANS = {
   },
   premium: {
     name: 'Premium Plan',
-    price: 5000, // ₦50.00 in kobo
+    price: 3000, // ₦30.00 in kobo
     duration: 30, // 30 days
     features: [
       'Verified badge on profile',
       'Priority in search results',
       'Advanced analytics',
       'Premium customer support',
-      'Unlimited bookings'
+      'Unlimited job acceptances'
     ]
   }
 };

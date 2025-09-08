@@ -82,8 +82,15 @@ const ArtisanRequests = () => {
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error('Error accepting request:', error);
-      setSuccessMessage("Error accepting request. Please try again.");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      
+      // Check if it's a job limit error
+      if (error.response?.data?.limitReached) {
+        setSuccessMessage("Job acceptance limit reached! Upgrade to Premium for unlimited job acceptances.");
+      } else {
+        setSuccessMessage("Error accepting request. Please try again.");
+      }
+      
+      setTimeout(() => setSuccessMessage(""), 5000);
     } finally {
       setActionLoading(prev => ({ ...prev, [id]: null }));
     }

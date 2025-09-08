@@ -52,11 +52,13 @@ export const subscriptionService = {
       throw new Error("Authentication token is required.");
     }
     try {
+      console.log('Verifying payment with reference:', reference);
       const response = await api.post('/subscription/verify', { reference }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log('Payment verification response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error verifying payment:', error);

@@ -54,9 +54,16 @@ const Subscription = () => {
         subscriptionService.getCurrentSubscription(accessToken)
       ]);
       
+      console.log('Fetched subscription data:', subscriptionResponse);
+      console.log('Subscription status:', subscriptionResponse.subscription?.status);
+      console.log('Subscription plan:', subscriptionResponse.subscription?.plan);
+      console.log('Subscription end date:', subscriptionResponse.subscription?.endDate);
+      console.log('IsPremium:', subscriptionResponse.isPremium);
+      
       setPlans(plansResponse.plans);
       setCurrentSubscription(subscriptionResponse);
     } catch (err) {
+      console.error('Error fetching subscription data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -85,8 +92,13 @@ const Subscription = () => {
   const handlePaymentSuccess = async (reference) => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Processing payment success for reference:', reference);
       
       const response = await subscriptionService.verifyPayment(reference, accessToken);
+      
+      console.log('Payment verification response:', response);
       
       // Update current subscription with the response data
       setCurrentSubscription(response);
@@ -96,32 +108,20 @@ const Subscription = () => {
         updateUser(response.user);
       }
       
-      // Show success message
-      setError(null);
+      // Refresh subscription data to get the latest status
+      await fetchData();
       
       // Close payment modal
       setShowPayment(false);
       setPaymentData(null);
       setSelectedPlan(null);
       
-      // Refresh subscription data to get the latest status
-      await fetchData();
-      
       // Show success notification
       alert('🎉 Congratulations! You are now a Premium Artisan! You have access to all premium features including verified badge, priority search, and advanced analytics.');
       
-      // Ensure modal is closed
-      setShowPayment(false);
-      setPaymentData(null);
-      setSelectedPlan(null);
-      
-      // Force page refresh to ensure UI updates
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-      
     } catch (err) {
-      setError(err.message);
+      console.error('Payment success error:', err);
+      setError(err.message || 'Payment verification failed. Please contact support.');
     } finally {
       setLoading(false);
     }
@@ -188,11 +188,20 @@ const Subscription = () => {
 
   return (
     <ArtisanLayout>
-      <div className="p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#151E3D] mb-2">Subscription Management</h1>
-          <p className="text-gray-600">Manage your subscription plan and billing</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+        <div className="p-6">
+          {/* Header Section */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] rounded-full mb-6 shadow-lg">
+              <Crown className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] bg-clip-text text-transparent mb-4">
+              Subscription Management
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Choose the perfect plan for your business needs and unlock premium features
+            </p>
+          </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -203,175 +212,256 @@ const Subscription = () => {
           </div>
         )}
 
-        {/* Success Message for Active Premium Subscription */}
-        {currentSubscription?.subscription?.status === 'active' && currentSubscription?.subscription?.plan === 'premium' && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-              <span className="text-green-700 font-semibold">🎉 Premium Subscription Active!</span>
-            </div>
-            <p className="text-green-600 text-sm mt-1">You now have access to all premium features including verified badge, priority search, and advanced analytics.</p>
-          </div>
-        )}
-
-        {/* Current Subscription Status */}
-        {currentSubscription && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Current Subscription</h2>
-              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(currentSubscription.subscription?.status)}`}>
-                {getStatusIcon(currentSubscription.subscription?.status)}
-                <span className="ml-2 capitalize">{currentSubscription.subscription?.status}</span>
-                {currentSubscription.subscription?.status === 'active' && currentSubscription.subscription?.plan === 'premium' && (
-                  <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                    PREMIUM
-                  </span>
-                )}
+        {/* Current Subscription Status - Enhanced */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-12 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-50 to-pink-50 rounded-full translate-y-12 -translate-x-12"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-4">
+                <div className={`p-3 rounded-xl ${
+                  currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                }`}>
+                  {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' ? (
+                    <Crown className="w-6 h-6 text-white" />
+                  ) : (
+                    <Shield className="w-6 h-6 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">Current Plan</h2>
+                  <p className="text-gray-500">Your active subscription details</p>
+                </div>
+              </div>
+              <div className={`px-6 py-3 rounded-full text-sm font-bold shadow-lg ${
+                currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+              }`}>
+                {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' ? 'PREMIUM' : 'FREEMIUM'}
               </div>
             </div>
             
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Plan</p>
-                <p className="text-lg font-semibold text-gray-800 capitalize">
-                  {currentSubscription.subscription?.plan || 'Free'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Start Date</p>
-                <p className="text-lg font-semibold text-gray-800">
-                  {currentSubscription.subscription?.startDate 
-                    ? new Date(currentSubscription.subscription.startDate).toLocaleDateString()
-                    : 'N/A'
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Plan Type</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-800 capitalize">
+                  {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' 
+                    ? 'Premium' 
+                    : 'Freemium'
                   }
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">End Date</p>
-                <p className="text-lg font-semibold text-gray-800">
-                  {currentSubscription.subscription?.endDate 
+              
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Status</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-800 capitalize">
+                  {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' 
+                    ? 'Active' 
+                    : 'Active (Free)'
+                  }
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">End Date</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-800">
+                  {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' && currentSubscription?.subscription?.endDate
                     ? new Date(currentSubscription.subscription.endDate).toLocaleDateString()
-                    : 'Never (Free Plan)'
+                    : 'Never (Freemium)'
                   }
                 </p>
               </div>
             </div>
 
-            {currentSubscription.subscription?.plan === 'premium' && currentSubscription.subscription?.status === 'active' && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={handleCancelSubscription}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Cancel Subscription
-                </button>
+            {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' && (
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Manage Subscription</h3>
+                    <p className="text-gray-500">Cancel or modify your premium subscription</p>
+                  </div>
+                  <button
+                    onClick={handleCancelSubscription}
+                    className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    Cancel Subscription
+                  </button>
+                </div>
               </div>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Subscription Plans */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Subscription Plans - Enhanced */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Choose Your Plan</h2>
+          <p className="text-center text-gray-600 mb-12">Select the perfect plan for your business needs</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {Object.entries(plans).map(([planKey, plan]) => (
             <div
               key={planKey}
-              className={`bg-white rounded-2xl shadow-lg p-6 border-2 transition-all duration-300 ${
+              className={`relative bg-white rounded-3xl shadow-2xl border-2 transition-all duration-500 hover:scale-105 hover:shadow-3xl ${
                 planKey === 'premium'
-                  ? 'border-[#F59E0B] hover:shadow-xl'
+                  ? 'border-[#F59E0B] shadow-[#F59E0B]/20'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="text-center mb-6">
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
-                  planKey === 'premium' 
-                    ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706]' 
-                    : 'bg-gray-100'
-                }`}>
-                  {planKey === 'premium' ? (
-                    <Crown className="w-8 h-8 text-white" />
+              {/* Popular Badge for Premium */}
+              {planKey === 'premium' && (
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                    MOST POPULAR
+                  </div>
+                </div>
+              )}
+
+              {/* Background Pattern */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full -translate-y-10 translate-x-10"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-purple-50 to-pink-50 rounded-full translate-y-8 -translate-x-8"></div>
+
+              <div className="relative z-10 p-8">
+                {/* Plan Header */}
+                <div className="text-center mb-8">
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 ${
+                    planKey === 'premium' 
+                      ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] shadow-lg' 
+                      : 'bg-gradient-to-r from-gray-400 to-gray-500'
+                  }`}>
+                    {planKey === 'premium' ? (
+                      <Crown className="w-8 h-8 text-white" />
+                    ) : (
+                      <Shield className="w-8 h-8 text-white" />
+                    )}
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{plan.name}</h3>
+                  <div className="text-5xl font-bold bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] bg-clip-text text-transparent mb-2">
+                    ₦{plan.price === 0 ? '0' : (plan.price / 100).toLocaleString()}
+                    {plan.price > 0 && <span className="text-lg text-gray-500">/month</span>}
+                  </div>
+                  <p className="text-gray-500">
+                    {plan.duration === 'unlimited' ? 'No expiration' : `${plan.duration} days`}
+                  </p>
+                </div>
+
+                {/* Features List */}
+                <div className="mb-8">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">What's Included</h4>
+                  <ul className="space-y-4">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-0.5">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        </div>
+                        <span className="text-gray-700 font-medium">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Action Button */}
+                <div className="text-center">
+                  {(planKey === 'free' && (!currentSubscription?.subscription || currentSubscription?.subscription?.plan !== 'premium' || currentSubscription?.subscription?.status !== 'active')) || 
+                   (planKey === 'premium' && currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active') ? (
+                    <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold shadow-lg">
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      Current Plan
+                    </div>
                   ) : (
-                    <Shield className="w-8 h-8 text-gray-600" />
+                    <button
+                      onClick={() => handleSubscribe(planKey)}
+                      disabled={loading || (planKey === 'free' && (!currentSubscription?.subscription || currentSubscription?.subscription?.plan !== 'premium' || currentSubscription?.subscription?.status !== 'active'))}
+                      className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 transform hover:-translate-y-1 ${
+                        planKey === 'premium'
+                          ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#D97706] hover:to-[#B45309] text-white shadow-lg hover:shadow-xl'
+                          : 'bg-gray-100 text-gray-600 cursor-not-allowed'
+                      }`}
+                    >
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                          Processing...
+                        </div>
+                      ) : (
+                        planKey === 'free' ? 'Current Plan' : 'Get Started'
+                      )}
+                    </button>
                   )}
                 </div>
-                
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">{plan.name}</h3>
-                <div className="text-4xl font-bold text-[#151E3D] mb-2">
-                  ₦{plan.price === 0 ? '0' : (plan.price / 100).toLocaleString()}
-                  {plan.price > 0 && <span className="text-lg text-gray-500">/month</span>}
-                </div>
-                <p className="text-gray-600">
-                  {plan.duration === 'unlimited' ? 'No expiration' : `${plan.duration} days`}
-                </p>
-              </div>
-
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-800 mb-3">Features:</h4>
-                <ul className="space-y-2">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center text-gray-600">
-                      <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="text-center">
-                {currentSubscription?.subscription?.plan === planKey && 
-                 currentSubscription?.subscription?.status === 'active' ? (
-                  <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Current Plan
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleSubscribe(planKey)}
-                    disabled={loading || (planKey === 'free' && currentSubscription?.subscription?.plan === 'free')}
-                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${
-                      planKey === 'premium'
-                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#0F172A] text-white hover:shadow-lg transform hover:-translate-y-0.5'
-                        : 'bg-gray-100 text-gray-600 cursor-not-allowed'
-                    }`}
-                  >
-                    {loading ? (
-                      <div className="flex items-center justify-center">
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Processing...
-                      </div>
-                    ) : (
-                      planKey === 'free' ? 'Current Plan' : 'Subscribe Now'
-                    )}
-                  </button>
-                )}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Payment Modal */}
+        {/* Payment Modal - Enhanced */}
         {showPayment && paymentData && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
             onClick={handlePaymentClose}
           >
             <div 
-              className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full"
+              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <PaystackPayment
-                amount={paymentData.amount}
-                email={user.email}
-                publicKey={PAYSTACK_PUBLIC_KEY}
-                reference={paymentData.reference}
-                accessCode={paymentData.accessCode}
-                customerCode={paymentData.customerCode}
-                onSuccess={handlePaymentSuccess}
-                onClose={handlePaymentClose}
-              />
+              <div className="bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] rounded-t-3xl p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Crown className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">Complete Payment</h3>
+                      <p className="text-blue-100 text-sm">Secure payment processing</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handlePaymentClose}
+                    className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <div className="text-3xl font-bold text-gray-800 mb-2">
+                    ₦{(paymentData.amount / 100).toLocaleString()}
+                  </div>
+                  <p className="text-gray-600">Premium Subscription - 30 days</p>
+                </div>
+                
+                <PaystackPayment
+                  amount={paymentData.amount}
+                  email={user.email}
+                  publicKey={PAYSTACK_PUBLIC_KEY}
+                  reference={paymentData.reference}
+                  accessCode={paymentData.accessCode}
+                  customerCode={paymentData.customerCode}
+                  onSuccess={handlePaymentSuccess}
+                  onClose={handlePaymentClose}
+                />
+              </div>
             </div>
           </div>
         )}
+        </div>
       </div>
     </ArtisanLayout>
   );

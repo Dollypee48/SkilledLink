@@ -9,10 +9,10 @@ export const KYC_STATUS = {
 /**
  * Check if user has completed KYC verification
  * @param {Object} user - User object
- * @returns {boolean} - True if user is KYC verified (always true now)
+ * @returns {boolean} - True if user is KYC verified
  */
 export const isKYCVerified = (user) => {
-  return true; // Always return true - KYC verification disabled
+  return user?.kycStatus === KYC_STATUS.APPROVED;
 };
 
 /**
@@ -27,10 +27,10 @@ export const hasKYCSubmitted = (user) => {
 /**
  * Check if user needs to complete KYC
  * @param {Object} user - User object
- * @returns {boolean} - True if user needs to complete KYC (always false now)
+ * @returns {boolean} - True if user needs to complete KYC
  */
 export const needsKYC = (user) => {
-  return false; // Always return false - KYC verification disabled
+  return !isKYCVerified(user) && user?.kycStatus !== KYC_STATUS.PENDING;
 };
 
 /**

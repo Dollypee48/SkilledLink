@@ -209,6 +209,7 @@ exports.verifySubscriptionPayment = async (req, res) => {
     // Check if payment was successful
     if (verification.data.status === 'success') {
       console.log('✅ Payment verification successful, updating user subscription...');
+      console.log('🔍 Verification data:', verification.data);
       
       // Update user subscription
       const endDate = new Date();
@@ -216,6 +217,12 @@ exports.verifySubscriptionPayment = async (req, res) => {
       
       console.log('🔍 Setting end date to:', endDate);
       console.log('🔍 Premium duration:', SUBSCRIPTION_PLANS.premium.duration, 'days');
+      console.log('🔍 User before update:', {
+        id: user._id,
+        email: user.email,
+        subscription: user.subscription,
+        isPremium: user.isPremium
+      });
 
       user.subscription.plan = 'premium';
       user.subscription.status = 'active';
@@ -236,6 +243,9 @@ exports.verifySubscriptionPayment = async (req, res) => {
         featuredListing: true
       };
       
+      // Set unlimited job acceptances for premium users
+      user.jobAcceptance.maxJobs = 999999; // Effectively unlimited
+      
       console.log('🔍 Saving user to database...');
       const savedUser = await user.save();
       console.log('✅ User saved successfully');
@@ -244,6 +254,8 @@ exports.verifySubscriptionPayment = async (req, res) => {
       console.log(`🔍 User isPremium status: ${savedUser.isPremium}`);
       console.log(`🔍 User premiumFeatures:`, savedUser.premiumFeatures);
       console.log(`🔍 User subscription endDate:`, savedUser.subscription.endDate);
+      console.log(`🔍 User subscription status:`, savedUser.subscription.status);
+      console.log(`🔍 User subscription plan:`, savedUser.subscription.plan);
 
       const responseData = {
         success: true,

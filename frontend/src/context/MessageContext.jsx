@@ -39,6 +39,9 @@ const initializeSocket = (accessToken) => {
     timeout: 20000,
     autoConnect: false, // Prevent auto-connection
     forceNew: true, // Force new connection
+    upgrade: true,
+    rememberUpgrade: false,
+    allowEIO3: true
   });
 
   return globalSocketInstance;
@@ -82,6 +85,12 @@ export const MessageProvider = ({ children }) => {
     };
     const onConnectError = (err) => {
       console.error('Socket.IO Connection Error:', err.message || 'websocket error', err.data || err);
+      console.error('Socket.IO Error Details:', {
+        type: err.type,
+        description: err.description,
+        context: err.context,
+        transport: err.transport
+      });
     };
     const onNewMessage = (message) => {
       setConversations(prev => {

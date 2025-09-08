@@ -89,6 +89,12 @@ const userSchema = new mongoose.Schema(
       premiumSupport: { type: Boolean, default: false },
       featuredListing: { type: Boolean, default: false }
     },
+    // Job acceptance tracking for artisans
+    jobAcceptance: {
+      acceptedJobs: { type: Number, default: 0 },
+      maxJobs: { type: Number, default: 3 }, // 3 for free, unlimited for premium
+      resetDate: { type: Date, default: Date.now } // Monthly reset for free accounts
+    },
   },
   { timestamps: true }
 );
@@ -98,6 +104,34 @@ userSchema.virtual('isCurrentlyPremium').get(function() {
   return this.subscription?.plan === 'premium' && 
          this.subscription?.status === 'active' && 
          (!this.subscription?.endDate || this.subscription?.endDate > new Date());
+});
+
+// Virtual field to check if user can accept more jobs
+userSchema.virtual('canAcceptJobs').get(function() {
+  if (this.role !== 'artisan') return false;
+  
+  // Premium users have unlimited job acceptances
+  if (this.isCurrentlyPremium) return true;
+  
+  // Check if it's time to reset job count (monthly for free users)
+  const now = new Date();
+  const resetDate = new Date(this.jobAcceptance.resetDate);
+  const shouldReset = now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear();
+  
+  if (shouldReset) {
+    this.jobAcceptance.acceptedJobs = 0;
+    this.jobAcceptance.resetDate = now;
+    this.save(); // Save the reset
+  }
+  
+  return this.jobAcceptance.acceptedJobs < this.jobAcceptance.maxJobs;
+});
+
+// Virtual field to get remaining job acceptances
+userSchema.virtual('remainingJobs').get(function() {
+  if (this.role !== 'artisan') return 0;
+  if (this.isCurrentlyPremium) return 'Unlimited';
+  return Math.max(0, this.jobAcceptance.maxJobs - this.jobAcceptance.acceptedJobs);
 });
 
 module.exports = mongoose.model("User", userSchema);

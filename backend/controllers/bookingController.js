@@ -112,7 +112,6 @@ exports.updateBookingStatus = async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-
     if (!["Pending", "Accepted", "Declined", "Pending Confirmation", "Completed", "Cancelled"].includes(status)) {
       return res.status(400).json({ message: "Invalid status provided" });
     }
@@ -128,6 +127,28 @@ exports.updateBookingStatus = async (req, res) => {
     // Only the assigned artisan or an admin can update status
     if (booking.artisan._id.toString() !== userId && userRole !== "admin") {
       return res.status(403).json({ message: "Unauthorized to update this booking" });
+    }
+
+    // Check job acceptance limits for artisans when accepting a job
+    if (status === "Accepted" && userRole === "artisan") {
+      const artisan = await User.findById(userId);
+      
+      if (!artisan) {
+        return res.status(404).json({ message: "Artisan not found" });
+      }
+
+      // Check if artisan can accept more jobs
+      if (!artisan.canAcceptJobs) {
+        return res.status(400).json({ 
+          message: "Job acceptance limit reached. Upgrade to premium for unlimited job acceptances.",
+          limitReached: true,
+          remainingJobs: artisan.remainingJobs
+        });
+      }
+
+      // Increment accepted jobs count
+      artisan.jobAcceptance.acceptedJobs += 1;
+      await artisan.save();
     }
 
     booking.status = status;

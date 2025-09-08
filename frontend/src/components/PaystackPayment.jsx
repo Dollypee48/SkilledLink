@@ -30,17 +30,24 @@ const PaystackPayment = ({
 
   const initializePayment = usePaystackPayment(config);
 
-  const onSuccessCallback = (reference) => {
+  const onSuccessCallback = async (reference) => {
     setIsProcessing(true);
     setPaymentStatus('success');
     
-    // Call the success handler
-    onSuccess(reference);
-    
-    // Close the modal after a short delay to show success message
-    setTimeout(() => {
-      onClose();
-    }, 2000);
+    try {
+      // Call the success handler and wait for it to complete
+      await onSuccess(reference);
+      
+      // Close the modal after success is processed
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+    } catch (error) {
+      console.error('Payment success handler failed:', error);
+      setError('Payment verification failed. Please contact support.');
+      setPaymentStatus('error');
+      setIsProcessing(false);
+    }
   };
 
   const onCloseCallback = () => {

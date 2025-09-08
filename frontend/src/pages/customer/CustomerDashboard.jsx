@@ -16,6 +16,8 @@ import {
 import { useBooking } from "../../context/BookingContext";
 import { useAuth } from "../../context/AuthContext";
 import { ArtisanContext } from "../../context/ArtisanContext";
+import KYCNotificationBanner from "../../components/KYCNotificationBanner";
+import { needsKYC } from "../../utils/kycUtils";
 
 export default function CustomerDashboard() {
   // Destructure 'bookings' as 'myBookings' to avoid conflict and use the correct data for customers
@@ -84,6 +86,17 @@ export default function CustomerDashboard() {
         </div>
 
         <div className="px-6 py-8">
+          {/* KYC Notification Banner */}
+          {needsKYC(user) && (
+            <KYCNotificationBanner 
+              user={user} 
+              onDismiss={() => {
+                // You can add logic to temporarily hide the banner
+                console.log('KYC banner dismissed');
+              }}
+            />
+          )}
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Active Bookings */}
