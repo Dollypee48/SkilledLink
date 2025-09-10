@@ -11,7 +11,8 @@ import {
   CheckCircle, 
   Users, 
   ArrowRight,
-  Plus
+  Plus,
+  XCircle
 } from "lucide-react";
 import { useBooking } from "../../context/BookingContext";
 import { useAuth } from "../../context/AuthContext";
@@ -116,12 +117,12 @@ export default function CustomerDashboard() {
                   <CalendarCheck className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
-            </div>
+             </div>
 
             {/* Total Bookings */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
               <div className="flex items-center justify-between">
-                <div>
+             <div>
                   <p className="text-sm font-medium text-gray-600">Total Bookings</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {totalBookings}
@@ -131,8 +132,8 @@ export default function CustomerDashboard() {
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <CheckCircle className="w-6 h-6 text-green-600" />
                 </div>
-              </div>
-            </div>
+             </div>
+           </div>
 
             {/* Completed Bookings */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
@@ -156,7 +157,7 @@ export default function CustomerDashboard() {
             {/* Favorite Artisans */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
               <div className="flex items-center justify-between">
-                <div>
+            <div>
                   <p className="text-sm font-medium text-gray-600">Saved Artisans</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">0</p>
                   <p className="text-xs text-pink-600 mt-1 flex items-center">
@@ -168,8 +169,8 @@ export default function CustomerDashboard() {
                   <Heart className="w-6 h-6 text-pink-600" />
                 </div>
               </div>
-            </div>
           </div>
+        </div>
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -186,12 +187,12 @@ export default function CustomerDashboard() {
                   </div>
                 </div>
                 <div className="p-6">
-                  {loading ? (
+            {loading ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#151E3D]"></div>
                       <span className="ml-3 text-gray-600">Loading bookings...</span>
                     </div>
-                  ) : error ? (
+            ) : error ? (
                     <div className="text-center py-12">
                       <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <XCircle className="w-8 h-8 text-red-600" />
@@ -226,42 +227,42 @@ export default function CustomerDashboard() {
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
-                            {booking.status === "Completed" && (
+                        {booking.status === "Completed" && (
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <CheckCircle className="w-3 h-3 mr-1" />
-                                Completed
-                              </span>
-                            )}
-                            {booking.status === "Pending" && (
+                            Completed
+                          </span>
+                        )}
+                        {booking.status === "Pending" && (
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                 <Clock className="w-3 h-3 mr-1" />
-                                Pending
-                              </span>
-                            )}
-                            {booking.status === "Accepted" && (
+                            Pending
+                          </span>
+                        )}
+                        {booking.status === "Accepted" && (
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 <CheckCircle className="w-3 h-3 mr-1" />
-                                In Progress
-                              </span>
-                            )}
-                            {booking.status === "Pending Confirmation" && (
+                            In Progress
+                          </span>
+                        )}
+                        {booking.status === "Pending Confirmation" && (
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                 <Clock className="w-3 h-3 mr-1" />
-                                Pending Confirmation
-                              </span>
-                            )}
-                            {booking.status === "Declined" && (
+                            Pending Confirmation
+                          </span>
+                        )}
+                        {booking.status === "Declined" && (
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                 <XCircle className="w-3 h-3 mr-1" />
-                                Declined
-                              </span>
-                            )}
-                            {booking.status === "Cancelled" && (
+                            Declined
+                          </span>
+                        )}
+                        {booking.status === "Cancelled" && (
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                 <XCircle className="w-3 h-3 mr-1" />
-                                Cancelled
-                              </span>
-                            )}
+                            Cancelled
+                          </span>
+                        )}
                             <button className="text-gray-400 hover:text-gray-600">
                               <ArrowRight className="w-4 h-4" />
                             </button>
@@ -272,7 +273,7 @@ export default function CustomerDashboard() {
                   )}
                 </div>
               </div>
-            </div>
+          </div>
 
             {/* Suggested Artisans */}
             <div className="space-y-6">
@@ -281,13 +282,13 @@ export default function CustomerDashboard() {
                   <h2 className="text-lg font-semibold text-gray-900">Recommended Artisans</h2>
                 </div>
                 <div className="p-6">
-                  {loading ? (
+            {loading ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#151E3D]"></div>
                     </div>
-                  ) : error ? (
+            ) : error ? (
                     <p className="text-red-600 text-sm">{error}</p>
-                  ) : suggestions?.length === 0 ? (
+            ) : suggestions?.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <Users className="w-6 h-6 text-gray-400" />
@@ -323,16 +324,16 @@ export default function CustomerDashboard() {
                               </div>
                               <span className="text-xs text-gray-600 ml-2">
                                 {artisan.rating ? artisan.rating.toFixed(1) : '0.0'}
-                              </span>
+                    </span>
                             </div>
                           </div>
                           <button className="text-[#151E3D] hover:text-[#1E2A4A] p-1">
                             <ArrowRight className="w-4 h-4" />
                           </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  </div>
+                ))}
+              </div>
+            )}
                 </div>
               </div>
 

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import io from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { messageService } from '../services/messageService';
+import * as authService from '../services/authService';
 
 const MessageContext = createContext(undefined); // Initialize with undefined, not null
 
@@ -22,6 +23,40 @@ const resetGlobalSocket = () => {
     globalSocketInstance.disconnect();
     globalSocketInstance = null;
   }
+};
+
+// Function to refresh token and reconnect socket
+const refreshTokenAndReconnect = async () => {
+  try {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (refreshToken) {
+      const data = await authService.refreshToken(refreshToken);
+      
+      // Update tokens in localStorage
+      localStorage.setItem("accessToken", data.accessToken);
+      if (data.refreshToken) {
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
+
+      // Update socket auth and reconnect
+      if (globalSocketInstance) {
+        globalSocketInstance.auth.token = data.accessToken;
+        if (!globalSocketInstance.connected) {
+          globalSocketInstance.connect();
+        }
+      }
+
+      return data.accessToken;
+    }
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    // Clear tokens and redirect to login
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  }
+  return null;
 };
 
 const initializeSocket = (accessToken) => {
@@ -83,7 +118,7 @@ export const MessageProvider = ({ children }) => {
     const onDisconnect = (reason) => {
       // setSocket(null); // No longer needed
     };
-    const onConnectError = (err) => {
+    const onConnectError = async (err) => {
       console.error('Socket.IO Connection Error:', err.message || 'websocket error', err.data || err);
       console.error('Socket.IO Error Details:', {
         type: err.type,
@@ -91,6 +126,12 @@ export const MessageProvider = ({ children }) => {
         context: err.context,
         transport: err.transport
       });
+
+      // If it's an authentication error, try to refresh the token
+      if (err.message && err.message.includes('Authentication error')) {
+        console.log('Attempting to refresh token and reconnect...');
+        await refreshTokenAndReconnect();
+      }
     };
     const onNewMessage = (message) => {
       setConversations(prev => {

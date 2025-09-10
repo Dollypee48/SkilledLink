@@ -8,11 +8,8 @@ import {
   Briefcase,
   Star,
   User,
-  AlertTriangle,
   LogOut,
-  FileText,
   Power,
-  Home, // New: Added for home icon
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
 
@@ -23,17 +20,14 @@ const ArtisanLayout = ({ children }) => {
 
   // Artisan navigation items
   const navItems = [
-    { name: "Home", path: "/", icon: Home }, // New: Home button
     { name: "Dashboard", path: "/artisan-dashboard", icon: LayoutDashboard },
     { name: "My Jobs", path: "/myJobs", icon: Briefcase },
     { name: "Job Requests", path: "/jobRequest", icon: CalendarCheck },
     { name: "Messages", path: "/messages", icon: MessageSquare }, // New: Point to the new unified messages page
     { name: "My Reviews", path: "/myReview", icon: Star },
-    { name: "KYC Verification", path: "/kyc-verification", icon: FileText }, // New: KYC Verification
     { name: "Profile", path: "/artisan-profile", icon: User },
     { name: "Settings", path: "/artisan-settings", icon: User }, // Using User icon for now, can be changed later
     { name: "Subscription", path: "/subscription", icon: User },
-    { name: "Report Issue", path: "/artisan-report", icon: AlertTriangle },
   ];
 
   const [isOnline, setIsOnline] = useState(true); // default status Online

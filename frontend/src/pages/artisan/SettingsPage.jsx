@@ -406,6 +406,36 @@ const ArtisanSettingsPage = () => {
                     </div>
                     <span className="font-medium">Account Actions</span>
                   </button>
+                  <button
+                    onClick={() => setActiveTab('kyc')}
+                    className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
+                      activeTab === 'kyc'
+                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
+                      activeTab === 'kyc' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                    }`}>
+                      <Shield className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">KYC Verification</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('report')}
+                    className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
+                      activeTab === 'report'
+                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
+                      activeTab === 'report' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                    }`}>
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">Report Issue</span>
+                  </button>
                 </nav>
               </div>
             </div>
@@ -1159,6 +1189,74 @@ const ArtisanSettingsPage = () => {
                             </button>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* KYC Verification Tab */}
+                {activeTab === 'kyc' && (
+                  <div className="p-8">
+                    <div className="flex items-center mb-8">
+                      <div className="w-12 h-12 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] rounded-lg flex items-center justify-center mr-4">
+                        <Shield className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">KYC Verification</h2>
+                        <p className="text-gray-600">Complete your identity verification to access all features</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <Shield className="w-8 h-8 text-orange-600" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">Identity Verification Required</h3>
+                        <p className="text-gray-600 mb-6">
+                          Complete your KYC verification to unlock all platform features and build trust with customers.
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/kyc-verification'}
+                          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white font-semibold rounded-lg hover:from-[#D97706] hover:to-[#B45309] transition-all duration-300 shadow-lg hover:shadow-xl"
+                        >
+                          <Shield className="w-5 h-5 mr-2" />
+                          Start Verification
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Report Issue Tab */}
+                {activeTab === 'report' && (
+                  <div className="p-8">
+                    <div className="flex items-center mb-8">
+                      <div className="w-12 h-12 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] rounded-lg flex items-center justify-center mr-4">
+                        <AlertTriangle className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Report an Issue</h2>
+                        <p className="text-gray-600">Report problems or concerns to our support team</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <AlertTriangle className="w-8 h-8 text-red-600" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">Need Help or Found an Issue?</h3>
+                        <p className="text-gray-600 mb-6">
+                          Report any problems, bugs, or concerns you've encountered on the platform.
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/artisan-report'}
+                          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                        >
+                          <AlertTriangle className="w-5 h-5 mr-2" />
+                          Report Issue
+                        </button>
                       </div>
                     </div>
                   </div>
