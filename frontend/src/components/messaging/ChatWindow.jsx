@@ -36,10 +36,10 @@ const ChatWindow = () => {
 
   // Fetch conversation when selectedRecipient changes
   useEffect(() => {
-    if (selectedRecipient) {
+    if (selectedRecipient && selectedRecipient._id) {
       fetchConversation(selectedRecipient._id);
     }
-  }, [selectedRecipient, fetchConversation]);
+  }, [selectedRecipient?._id, fetchConversation]);
 
   // Scroll to bottom when messages update
   useEffect(() => {
@@ -83,35 +83,17 @@ const ChatWindow = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    if (!selectedRecipient) return; // Must have a recipient
+    if (!selectedRecipient || !selectedRecipient._id) return; // Must have a recipient with valid ID
 
-    if (newMessage.trim() === '') return; // Must have content (file upload temporarily disabled)
+    if (newMessage.trim() === '') return; // Must have content
 
-    // Temporarily disabled file upload logic
-    /*
-    let fileData = null;
-    let fileType = null;
-
-    if (selectedFile) {
-      console.log('handleSendMessage - selectedFile is present:', selectedFile.name);
-      fileData = await fileToBase64(selectedFile);
-      fileType = selectedFile.type;
-      console.log('handleSendMessage - fileData after conversion snippet:', fileData ? fileData.substring(0, 50) + '...' : 'No fileData after conversion');
+    try {
+      await sendNewMessage(selectedRecipient._id, newMessage.trim(), null, null);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      alert('Failed to send message. Please try again.');
     }
-    console.log('Sending message - fileData snippet:', fileData ? fileData.substring(0, 50) + '...' : 'No fileData');
-    console.log('Sending message - fileType:', fileType);
-    */
-    
-    await sendNewMessage(selectedRecipient._id, newMessage.trim(), null, null); // Temporarily pass null for fileData and fileType
-    setNewMessage('');
-    // Temporarily disabled file cleanup
-    /*
-    setSelectedFile(null);
-    setFilePreview(null);
-    if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // Clear file input
-    }
-    */
   };
 
   const handleClearFile = () => {
@@ -123,6 +105,8 @@ const ChatWindow = () => {
   };
 
   const handleClearConversation = async () => {
+    if (!selectedRecipient || !selectedRecipient._id) return;
+    
     if (window.confirm('Are you sure you want to clear all messages in this conversation? This will only clear your view - the other person will still see all messages.')) {
       try {
         // Debug logging - only in development
@@ -149,9 +133,11 @@ const ChatWindow = () => {
 
   // Handle view profile
   const handleViewProfile = () => {
+    if (!selectedRecipient) return;
+    
     // For now, just show an alert with basic info
     // You can expand this to open a modal or navigate to a profile page
-    alert(`Profile: ${selectedRecipient.name}\nRole: ${selectedRecipient.role || 'User'}`);
+    alert(`Profile: ${selectedRecipient.name || 'Unknown'}\nRole: ${selectedRecipient.role || 'User'}`);
     setShowHamburgerMenu(false); // Close menu after action
   };
 
@@ -175,10 +161,10 @@ const ChatWindow = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center shadow-sm">
-              {selectedRecipient.profileImageUrl ? (
+              {selectedRecipient?.profileImageUrl ? (
                 <img 
                   src={selectedRecipient.profileImageUrl} 
-                  alt={selectedRecipient.name} 
+                  alt={selectedRecipient?.name || 'User'} 
                   className="w-10 h-10 rounded-full object-cover" 
                 />
               ) : (
@@ -186,7 +172,7 @@ const ChatWindow = () => {
               )}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">{selectedRecipient.name}</h2>
+              <h2 className="text-lg font-semibold text-gray-800">{selectedRecipient?.name || 'Unknown User'}</h2>
               <p className="text-sm text-gray-600">Online</p>
             </div>
           </div>
@@ -226,48 +212,54 @@ const ChatWindow = () => {
         </div>
       </div>
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50" style={{ maxHeight: 'calc(100vh - 180px)' }}>
-        {currentConversation.map((message) => (
-          <div
-            key={message._id + message.timestamp}
-            className={`flex mb-4 ${message.sender._id === user._id ? 'justify-end' : 'justify-start'}`}
-          >
+        {currentConversation && currentConversation.length > 0 ? (
+          currentConversation.map((message) => (
+            <div
+              key={message._id + (message.timestamp || message.createdAt)}
+              className={`flex mb-4 ${message.sender?._id === user?._id ? 'justify-end' : 'justify-start'}`}
+            >
             <div
               className={`rounded-lg p-3 max-w-[70%] relative group ${
-                message.sender._id === user._id 
+                message?.sender?._id === user?._id 
                   ? 'bg-blue-500 text-white' 
                   : 'bg-white text-gray-800 border border-gray-200'
               }`}
             >
-              <p className="text-sm">{message.content}</p>
-              {message.fileUrl && message.fileType && message.fileType.startsWith('image/') && (
-                <img src={message.fileUrl} alt="Sent file" className="max-w-xs h-auto rounded-lg mt-2" />
-              )}
-              {message.fileUrl && message.fileType && !message.fileType.startsWith('image/') && (
-                <a href={message.fileUrl} target="_blank" rel="noopener noreferrer" className={`underline mt-2 block ${
-                  message.sender._id === user._id ? 'text-blue-100' : 'text-blue-600'
+                <p className="text-sm">{message?.content || ''}</p>
+                {message?.fileUrl && message?.fileType && message.fileType.startsWith('image/') && (
+                  <img src={message.fileUrl} alt="Sent file" className="max-w-xs h-auto rounded-lg mt-2" />
+                )}
+                {message?.fileUrl && message?.fileType && !message.fileType.startsWith('image/') && (
+                  <a href={message.fileUrl} target="_blank" rel="noopener noreferrer" className={`underline mt-2 block ${
+                    message?.sender?._id === user?._id ? 'text-blue-100' : 'text-blue-600'
+                  }`}>
+                    Download File ({message.fileType})
+                  </a>
+                )}
+                <div className={`text-xs mt-2 ${
+                  message?.sender?._id === user?._id ? 'text-blue-100' : 'text-gray-500'
                 }`}>
-                  Download File ({message.fileType})
-                </a>
-              )}
-              <div className={`text-xs mt-2 ${
-                message.sender._id === user._id ? 'text-blue-100' : 'text-gray-500'
-              }`}>
-                {new Date(message.timestamp).toLocaleTimeString()}
+                  {message?.timestamp || message?.createdAt ? new Date(message.timestamp || message.createdAt).toLocaleTimeString() : ''}
+                </div>
+                
+                {/* Delete button for user's own messages */}
+                {message?.sender?._id === user?._id && message?._id && (
+                  <button
+                    onClick={() => handleDeleteMessage(message._id)}
+                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete message"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
-              
-              {/* Delete button for user's own messages */}
-              {message.sender._id === user._id && (
-                <button
-                  onClick={() => handleDeleteMessage(message._id)}
-                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Delete message"
-                >
-                  ×
-                </button>
-              )}
             </div>
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <p>No messages yet. Start the conversation!</p>
           </div>
-        ))}
+        )}
         <div ref={messagesEndRef} />
       </div>
       <div className="p-4 border-t border-gray-200 bg-white">

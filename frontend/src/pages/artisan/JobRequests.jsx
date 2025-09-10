@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useContext } from "react"; // Added useContext
 import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
-import { CalendarCheck, CheckCircle, XCircle } from "lucide-react";
+import { CalendarCheck, CheckCircle, XCircle, Eye } from "lucide-react";
 import { BookingContext } from "../../context/BookingContext"; // Import BookingContext
 import useAuth from "../../hooks/useAuth"; // Import useAuth to ensure user role is checked
+import BookingPreviewModal from "../../components/BookingPreviewModal";
 
 const ArtisanRequests = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [actionLoading, setActionLoading] = useState({}); // Track loading state for individual actions
   const [successMessage, setSuccessMessage] = useState(""); // Track success messages
+  const [selectedBooking, setSelectedBooking] = useState(null); // For booking preview
+  const [showBookingModal, setShowBookingModal] = useState(false); // For booking preview modal
   const { user } = useAuth(); // Get user to check role
   const {
     artisanBookings: requests, // Renamed for clarity, assuming BookingContext provides artisanBookings
     loading,
     error,
     fetchArtisanBookings, // Assuming a function to fetch artisan bookings
-    updateBookingStatus, // Assuming a function to update booking status
+    updateBookingStatus, // Function to update booking status
   } = useContext(BookingContext);
 
   // Validate status values - only Pending, Accepted, Declined
@@ -115,6 +118,7 @@ const ArtisanRequests = () => {
       await fetchArtisanBookings(); // Refresh bookings after update
       setSuccessMessage("Booking request declined successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
+      setShowBookingModal(false); // Close modal after action
     } catch (error) {
       console.error('Error declining request:', error);
       setSuccessMessage("Error declining request. Please try again.");
@@ -122,6 +126,18 @@ const ArtisanRequests = () => {
     } finally {
       setActionLoading(prev => ({ ...prev, [id]: null }));
     }
+  };
+
+  // Handler for viewing booking details
+  const handleViewDetails = (booking) => {
+    setSelectedBooking(booking);
+    setShowBookingModal(true);
+  };
+
+  // Handler for closing booking modal
+  const handleCloseBookingModal = () => {
+    setShowBookingModal(false);
+    setSelectedBooking(null);
   };
 
   return (
@@ -221,9 +237,7 @@ const ArtisanRequests = () => {
                     <th className="p-3 font-medium">Service</th>
                     <th className="p-3 font-medium">Date</th>
                     <th className="p-3 font-medium">Status</th>
-                    {filteredRequests?.some(r => r.status === "Pending") && (
-                      <th className="p-3 font-medium">Actions</th>
-                    )}
+                    <th className="p-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -271,50 +285,15 @@ const ArtisanRequests = () => {
                           }
                         })()}
                       </td>
-                      {filteredRequests?.some(r => normalizeStatus(r.status) === "Pending") && (
-                        <td className="p-3">
-                          {normalizeStatus(request.status) === "Pending" ? (
-                            <div className="flex space-x-2">
-                              <button
-                                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center ${
-                                  actionLoading[request._id] === 'accepting'
-                                    ? 'bg-green-400 text-white cursor-not-allowed'
-                                    : 'bg-green-600 text-white hover:bg-green-700'
-                                }`}
-                                onClick={() => handleAccept(request._id)}
-                                disabled={actionLoading[request._id] === 'accepting'}
-                              >
-                                {actionLoading[request._id] === 'accepting' ? (
-                                  <>
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
-                                    Accepting...
-                                  </>
-                                ) : (
-                                  'Accept'
-                                )}
-                              </button>
-                              <button
-                                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center ${
-                                  actionLoading[request._id] === 'declining'
-                                    ? 'bg-red-400 text-white cursor-not-allowed'
-                                    : 'bg-red-600 text-white hover:bg-red-700'
-                                }`}
-                                onClick={() => handleDecline(request._id)}
-                                disabled={actionLoading[request._id] === 'declining'}
-                              >
-                                {actionLoading[request._id] === 'declining' ? (
-                                  <>
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
-                                    Declining...
-                                  </>
-                                ) : (
-                                  'Decline'
-                                )}
-                              </button>
-                            </div>
-                          ) : null}
-                        </td>
-                      )}
+                      <td className="p-3">
+                        <button
+                          onClick={() => handleViewDetails(request)}
+                          className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -322,6 +301,16 @@ const ArtisanRequests = () => {
             )}
           </div>
         )}
+
+        {/* Booking Preview Modal */}
+        <BookingPreviewModal
+          isOpen={showBookingModal}
+          onClose={handleCloseBookingModal}
+          booking={selectedBooking}
+          onAccept={handleAccept}
+          onDecline={handleDecline}
+          isLoading={selectedBooking ? actionLoading[selectedBooking._id] : false}
+        />
       </div>
     </ArtisanLayout>
   );

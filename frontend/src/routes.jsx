@@ -88,20 +88,20 @@ const RoutesComponent = () => {
       <Route path="/customer-reviews" element={<CustomerReviews />} />
       <Route path="/customer-report" element={<CustomerReport />} />
 
-      {/* New Messages Page Route */}
+      {/* Customer Messages Page Route */}
       <Route
         path="/messages"
         element={
-          <ProtectedRoute requiredRoles={['customer', 'artisan']}>
+          <ProtectedRoute requiredRole="customer">
             <MessagesPage />
           </ProtectedRoute>
         }
       />
-      {/* Dynamic route for individual conversations */}
+      {/* Dynamic route for individual conversations - Customer */}
       <Route
         path="/messages/:otherUserId"
         element={
-          <ProtectedRoute requiredRoles={['customer', 'artisan']}>
+          <ProtectedRoute requiredRole="customer">
             <MessagesPage />
           </ProtectedRoute>
         }
@@ -133,7 +133,16 @@ const RoutesComponent = () => {
         }
       />
       <Route
-        path="/artisan/messages"
+        path="/artisan-messages"
+        element={
+          <ProtectedRoute requiredRole="artisan">
+            <MessagesPage />
+          </ProtectedRoute>
+        }
+      />
+      {/* Dynamic route for individual conversations - Artisan */}
+      <Route
+        path="/artisan-messages/:otherUserId"
         element={
           <ProtectedRoute requiredRole="artisan">
             <MessagesPage />

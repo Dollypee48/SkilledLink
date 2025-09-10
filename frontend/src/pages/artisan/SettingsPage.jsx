@@ -1207,22 +1207,75 @@ const ArtisanSettingsPage = () => {
                       </div>
                     </div>
                     
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                          <Shield className="w-8 h-8 text-orange-600" />
+                    <div className="space-y-6">
+                      {/* KYC Status */}
+                      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Verification Status</h3>
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-3 h-3 rounded-full ${
+                            user?.kycStatus === 'approved' ? 'bg-green-500' : 
+                            user?.kycStatus === 'pending' ? 'bg-yellow-500' : 
+                            user?.kycStatus === 'rejected' ? 'bg-red-500' : 'bg-gray-400'
+                          }`}></div>
+                          <span className="text-gray-700 capitalize">
+                            {user?.kycStatus === 'approved' ? 'Verified' : 
+                             user?.kycStatus === 'pending' ? 'Under Review' : 
+                             user?.kycStatus === 'rejected' ? 'Rejected' : 'Not Submitted'}
+                          </span>
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-4">Identity Verification Required</h3>
-                        <p className="text-gray-600 mb-6">
-                          Complete your KYC verification to unlock all platform features and build trust with customers.
-                        </p>
-                        <button
-                          onClick={() => window.location.href = '/kyc-verification'}
-                          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white font-semibold rounded-lg hover:from-[#D97706] hover:to-[#B45309] transition-all duration-300 shadow-lg hover:shadow-xl"
-                        >
-                          <Shield className="w-5 h-5 mr-2" />
-                          Start Verification
-                        </button>
+                      </div>
+
+                      {/* KYC Form */}
+                      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Submit Documents</h3>
+                        <form className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Government ID
+                            </label>
+                            <input
+                              type="file"
+                              accept="image/*,.pdf"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Proof of Address
+                            </label>
+                            <input
+                              type="file"
+                              accept="image/*,.pdf"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Professional License/Certificate
+                            </label>
+                            <input
+                              type="file"
+                              accept="image/*,.pdf"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Additional Documents (Optional)
+                            </label>
+                            <input
+                              type="file"
+                              accept="image/*,.pdf"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                            />
+                          </div>
+                          <button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white font-semibold py-3 px-4 rounded-lg hover:from-[#D97706] hover:to-[#B45309] transition-all duration-300 shadow-lg hover:shadow-xl"
+                          >
+                            Submit for Verification
+                          </button>
+                        </form>
                       </div>
                     </div>
                   </div>
@@ -1241,23 +1294,73 @@ const ArtisanSettingsPage = () => {
                       </div>
                     </div>
                     
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                          <AlertTriangle className="w-8 h-8 text-red-600" />
+                    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                      <form className="space-y-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Issue Type
+                          </label>
+                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent">
+                            <option value="">Select an issue type</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="payment">Payment Issue</option>
+                            <option value="job">Job Related</option>
+                            <option value="customer">Customer Related</option>
+                            <option value="booking">Booking Problem</option>
+                            <option value="other">Other</option>
+                          </select>
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-4">Need Help or Found an Issue?</h3>
-                        <p className="text-gray-600 mb-6">
-                          Report any problems, bugs, or concerns you've encountered on the platform.
-                        </p>
-                        <button
-                          onClick={() => window.location.href = '/artisan-report'}
-                          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-xl"
-                        >
-                          <AlertTriangle className="w-5 h-5 mr-2" />
-                          Report Issue
-                        </button>
-                      </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Subject
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Brief description of the issue"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                          </label>
+                          <textarea
+                            rows={4}
+                            placeholder="Please provide detailed information about the issue..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                          ></textarea>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Attachments (Optional)
+                          </label>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*,.pdf,.doc,.docx"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                          />
+                        </div>
+                        
+                        <div className="flex justify-end space-x-4">
+                          <button
+                            type="button"
+                            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                          >
+                            Submit Report
+                          </button>
+                        </div>
+                      </form>
                     </div>
                   </div>
                 )}

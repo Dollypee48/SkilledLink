@@ -28,7 +28,7 @@ export const messageService = {
       });
       return response.data;
     } catch (error) {
-      // console.error("Error fetching conversation:", error);
+      console.error("Error fetching conversation:", error);
       throw new Error(error.response?.data?.message || "Failed to fetch conversation");
     }
   },

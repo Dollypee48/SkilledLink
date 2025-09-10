@@ -23,6 +23,8 @@ const setupSocket = (httpServer) => {
 
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
+    console.log('Socket.IO Auth - Token received:', token ? 'Yes' : 'No');
+    
     if (!token) {
       console.log('Socket.IO Auth - No token provided');
       return next(new Error('Authentication error: Token not provided'));

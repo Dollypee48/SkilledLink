@@ -58,12 +58,12 @@ const ConversationList = () => {
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center shadow-sm">
-                    {otherUser.profileImageUrl ? (
+                  {otherUser.profileImageUrl ? (
                       <img src={otherUser.profileImageUrl} alt={otherUser.name} className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
+                  ) : (
                       <User className="w-5 h-5 text-gray-600" />
-                    )}
-                  </div>
+                  )}
+                </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-700 transition-colors">
                       {otherUser.name || 'Unknown User'}
@@ -71,12 +71,12 @@ const ConversationList = () => {
                     <p className="text-xs text-gray-500 truncate mt-1">
                       {conv.content || 'No message content'}
                     </p>
-                  </div>
-                  {conv.unreadCount > 0 && (
+                </div>
+                {conv.unreadCount > 0 && (
                     <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                      {conv.unreadCount}
-                    </span>
-                  )}
+                    {conv.unreadCount}
+                  </span>
+                )}
                 </div>
               </div>
             );

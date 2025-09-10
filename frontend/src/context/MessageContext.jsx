@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import io from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { messageService } from '../services/messageService';
@@ -60,8 +60,12 @@ const refreshTokenAndReconnect = async () => {
 };
 
 const initializeSocket = (accessToken) => {
-  if (globalSocketInstance) {
+  if (globalSocketInstance && globalSocketInstance.connected) {
     return globalSocketInstance;
+  }
+
+  if (globalSocketInstance) {
+    globalSocketInstance.disconnect();
   }
 
   globalSocketInstance = io('http://localhost:5000', {
@@ -120,20 +124,14 @@ export const MessageProvider = ({ children }) => {
     };
     const onConnectError = async (err) => {
       console.error('Socket.IO Connection Error:', err.message || 'websocket error', err.data || err);
-      console.error('Socket.IO Error Details:', {
-        type: err.type,
-        description: err.description,
-        context: err.context,
-        transport: err.transport
-      });
 
       // If it's an authentication error, try to refresh the token
       if (err.message && err.message.includes('Authentication error')) {
-        console.log('Attempting to refresh token and reconnect...');
         await refreshTokenAndReconnect();
       }
     };
     const onNewMessage = (message) => {
+      
       setConversations(prev => {
         const existingConvIndex = prev.findIndex(c => c.conversationId === message.conversationId);
         if (existingConvIndex > -1) {
@@ -144,8 +142,8 @@ export const MessageProvider = ({ children }) => {
                                     message.recipient._id === selectedRecipientRef.current._id);
 
           const newUnreadCount = isForCurrentUser && !isActiveConversation
-                             ? updatedConvs[existingConvIndex].unreadCount + 1
-                             : updatedConvs[existingConvIndex].unreadCount;
+                             ? (updatedConvs[existingConvIndex].unreadCount || 0) + 1
+                             : (updatedConvs[existingConvIndex].unreadCount || 0);
 
           updatedConvs[existingConvIndex] = { ...message, unreadCount: newUnreadCount };
           return updatedConvs;
@@ -155,8 +153,18 @@ export const MessageProvider = ({ children }) => {
         }
       });
 
-      if (selectedRecipientRef.current && (message.sender._id === selectedRecipientRef.current._id || message.recipient._id === selectedRecipientRef.current._id)) {
-        setCurrentConversation(prev => [...prev, message]);
+      // Add message to current conversation if it's the active conversation
+      if (selectedRecipientRef.current && 
+          (message.sender._id === selectedRecipientRef.current._id || 
+           message.recipient._id === selectedRecipientRef.current._id)) {
+        setCurrentConversation(prev => {
+          // Check if message already exists to avoid duplicates
+          const messageExists = prev.some(msg => msg._id === message._id);
+          if (messageExists) {
+            return prev;
+          }
+          return [...prev, message];
+        });
       }
     };
 
@@ -216,6 +224,7 @@ export const MessageProvider = ({ children }) => {
     }
 
     if (user && accessToken) {
+      // Update token if it has changed
       if (currentSocket.auth && currentSocket.auth.token !== accessToken) {
         currentSocket.auth.token = accessToken;
         if (currentSocket.connected) {
@@ -223,6 +232,7 @@ export const MessageProvider = ({ children }) => {
         }
       }
 
+      // Connect if not connected
       if (!currentSocket.connected) {
         currentSocket.connect();
       }
@@ -240,27 +250,35 @@ export const MessageProvider = ({ children }) => {
     if (!accessToken) return;
     try {
       const data = await messageService.getConversations(accessToken);
-      setConversations(data);
+      setConversations(data || []);
     } catch (error) {
       console.error("Failed to fetch conversations:", error);
+      setConversations([]);
     }
-  }, [accessToken, user]);
+  }, [accessToken]);
 
   useEffect(() => {
-    if (globalSocketInstance && globalSocketInstance.connected && user && accessToken) { // Use globalSocketInstance to check connection
+    if (user && accessToken) {
       fetchConversations();
     }
-  }, [user, accessToken, fetchConversations]); // Removed `socket` from dependencies
+  }, [user, accessToken, fetchConversations]);
 
   const fetchConversation = useCallback(async (otherUserId) => {
     if (!accessToken || !otherUserId) return;
     try {
       const data = await messageService.getConversation(otherUserId, accessToken);
-      setCurrentConversation(data);
-      const participant = data.find(msg => msg.sender._id === otherUserId || msg.recipient._id === otherUserId);
-      if (participant) {
-        setSelectedRecipient(participant.sender._id === otherUserId ? participant.sender : participant.recipient);
-      }
+      setCurrentConversation(data || []);
+      
+      // Set selected recipient if not already set
+      setSelectedRecipient(prev => {
+        if (!prev || prev._id !== otherUserId) {
+          const participant = data?.find(msg => msg.sender._id === otherUserId || msg.recipient._id === otherUserId);
+          if (participant) {
+            return participant.sender._id === otherUserId ? participant.sender : participant.recipient;
+          }
+        }
+        return prev;
+      });
     } catch (error) {
       console.error("Failed to fetch conversation:", error);
       setCurrentConversation([]);
@@ -269,11 +287,15 @@ export const MessageProvider = ({ children }) => {
   }, [accessToken]);
 
   const sendNewMessage = useCallback(async (recipientId, content, fileData = null, fileType = null) => {
-    if (!accessToken || !globalSocketInstance || !user) return;
+    if (!accessToken || !user) return;
     try {
-      await messageService.sendMessage(recipientId, content, fileData, fileType, accessToken);
+      const response = await messageService.sendMessage(recipientId, content, fileData, fileType, accessToken);
+      
+      // The message will be added to the conversation via socket.io
+      // No need to manually add it here
     } catch (error) {
       console.error("Failed to send message:", error);
+      throw error; // Re-throw to allow UI to handle the error
     }
   }, [accessToken, user]);
 
@@ -330,7 +352,7 @@ export const MessageProvider = ({ children }) => {
     }
   }, [accessToken, user]);
 
-  const value = {
+  const value = useMemo(() => ({
     socket: globalSocketInstance,
     conversations,
     currentConversation,
@@ -341,7 +363,16 @@ export const MessageProvider = ({ children }) => {
     deleteMessage,
     clearConversation,
     setSelectedRecipient,
-  };
+  }), [
+    conversations,
+    currentConversation,
+    selectedRecipient,
+    fetchConversations,
+    fetchConversation,
+    sendNewMessage,
+    deleteMessage,
+    clearConversation,
+  ]);
 
   return <MessageContext.Provider value={value}>{children}</MessageContext.Provider>;
 };

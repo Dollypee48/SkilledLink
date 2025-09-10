@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react"; // Added useContext and useEffect
-import { CalendarCheck, CheckCircle, Clock, RefreshCw, Eye, Check, X, MapPin, Phone, Calendar, Clock as ClockIcon, FileText, MessageCircle } from "lucide-react";
+import { CalendarCheck, CheckCircle, Clock, RefreshCw, Eye, MapPin, Phone, Calendar, Clock as ClockIcon, FileText, MessageCircle, X, Check } from "lucide-react";
 import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
 import { ArtisanContext } from "../../context/ArtisanContext"; // Import ArtisanContext
 import useAuth from "../../hooks/useAuth"; // Import useAuth to potentially refresh data
@@ -119,87 +119,6 @@ const MyJobs = () => {
     }
   };
 
-  // Function to accept a job (change status to Accepted/In Progress)
-  const handleAcceptJob = async (bookingId) => {
-    const isConfirmed = window.confirm('Are you sure you want to accept this job? This will change the status to "In Progress".');
-    
-    if (!isConfirmed) {
-      return;
-    }
-
-    try {
-      setUpdatingJob(bookingId);
-      const token = localStorage.getItem('accessToken');
-      
-      if (!token) {
-        alert('Authentication token not found. Please login again.');
-        return;
-      }
-
-      await BookingService.updateBookingStatus(bookingId, 'Accepted', token);
-      
-      // Refresh the bookings to show updated status
-      if (fetchBookings) {
-        fetchBookings();
-      }
-      
-      // Notify about job status change
-      const booking = bookings.find(b => b._id === bookingId);
-      if (booking) {
-        notifyJobStatusChange(booking, 'Accepted', 'artisan');
-      }
-      
-      setSuccessMessage('Job accepted successfully! Status changed to "In Progress".');
-      // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(''), 5000);
-    } catch (error) {
-      console.error('Error accepting job:', error);
-      alert(error.message || 'Failed to accept job');
-    } finally {
-      setUpdatingJob(null);
-    }
-  };
-
-  // Function to decline a job
-  const handleDeclineJob = async (bookingId) => {
-    const isConfirmed = window.confirm('Are you sure you want to decline this job? This action cannot be undone.');
-    
-    if (!isConfirmed) {
-      return;
-    }
-
-    try {
-      setUpdatingJob(bookingId);
-      const token = localStorage.getItem('accessToken');
-      
-      if (!token) {
-        alert('Authentication token not found. Please login again.');
-        return;
-      }
-
-      await BookingService.updateBookingStatus(bookingId, 'Declined', token);
-      
-      // Refresh the bookings to show updated status
-      if (fetchBookings) {
-        fetchBookings();
-      }
-      
-      // Notify about job status change
-      const booking = bookings.find(b => b._id === bookingId);
-      if (booking) {
-        notifyJobStatusChange(booking, 'Declined', 'artisan');
-      }
-      
-      setSuccessMessage('Job declined successfully.');
-      // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(''), 5000);
-    } catch (error) {
-      console.error('Error declining job:', error);
-      alert(error.message || 'Failed to decline job');
-    } finally {
-      setUpdatingJob(null);
-    }
-  };
 
   // Function to view booking details
   const handleViewBooking = (booking) => {
@@ -434,52 +353,6 @@ const MyJobs = () => {
                           >
                             <Eye className="w-4 h-4" /> View
                           </button>
-                          
-                          {/* Show Accept/Decline buttons for pending jobs */}
-                          {booking.status === "Pending" && (
-                            <>
-                              <button
-                                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                                  updatingJob === booking._id
-                                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                                    : 'bg-green-600 text-white hover:bg-green-700'
-                                }`}
-                                onClick={() => handleAcceptJob(booking._id)}
-                                disabled={updatingJob === booking._id}
-                              >
-                                {updatingJob === booking._id ? (
-                                  <>
-                                    <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Check className="w-4 h-4" /> Accept
-                                  </>
-                                )}
-                              </button>
-                              
-                              <button
-                                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                                  updatingJob === booking._id
-                                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                                    : 'bg-red-600 text-white hover:bg-red-700'
-                                }`}
-                                onClick={() => handleDeclineJob(booking._id)}
-                                disabled={updatingJob === booking._id}
-                              >
-                                {updatingJob === booking._id ? (
-                                  <>
-                                    <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
-                                  </>
-                                ) : (
-                                  <>
-                                    <X className="w-4 h-4" /> Decline
-                                  </>
-                                )}
-                              </button>
-                            </>
-                                                    )}
-
                           {/* Show "Confirm Completion" button for pending confirmation jobs */}
                           {booking.status === "Pending Confirmation" && (
                             <button
@@ -681,54 +554,6 @@ const MyJobs = () => {
                   Close
                 </button>
                 
-                {/* Show Accept/Decline buttons for pending jobs */}
-                {selectedBooking.status === "Pending" && (
-                  <>
-                    <button
-                      className={`px-6 py-2 rounded-lg text-white font-medium transition-colors duration-200 ${
-                        updatingJob === selectedBooking._id
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-green-600 hover:bg-green-700'
-                      }`}
-                      onClick={() => handleAcceptJob(selectedBooking._id)}
-                      disabled={updatingJob === selectedBooking._id}
-                    >
-                      {updatingJob === selectedBooking._id ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 inline mr-2 animate-spin" />
-                          Updating...
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-4 h-4 inline mr-2" />
-                          Accept Job
-                        </>
-                      )}
-                    </button>
-                    
-                    <button
-                      className={`px-6 py-2 rounded-lg text-white font-medium transition-colors duration-200 ${
-                        updatingJob === selectedBooking._id
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-red-600 hover:bg-red-700'
-                      }`}
-                      onClick={() => handleDeclineJob(selectedBooking._id)}
-                      disabled={updatingJob === selectedBooking._id}
-                    >
-                      {updatingJob === selectedBooking._id ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 inline mr-2 animate-spin" />
-                          Updating...
-                        </>
-                      ) : (
-                        <>
-                          <X className="w-4 h-4 inline mr-2" />
-                          Decline Job
-                        </>
-                      )}
-                    </button>
-                  </>
-                )}
                 
                 {/* Show Complete button for accepted jobs */}
                 {selectedBooking.status === "Accepted" && (

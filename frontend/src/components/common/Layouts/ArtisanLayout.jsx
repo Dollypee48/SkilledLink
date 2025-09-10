@@ -23,7 +23,7 @@ const ArtisanLayout = ({ children }) => {
     { name: "Dashboard", path: "/artisan-dashboard", icon: LayoutDashboard },
     { name: "My Jobs", path: "/myJobs", icon: Briefcase },
     { name: "Job Requests", path: "/jobRequest", icon: CalendarCheck },
-    { name: "Messages", path: "/messages", icon: MessageSquare }, // New: Point to the new unified messages page
+    { name: "Messages", path: "/artisan-messages", icon: MessageSquare }, // New: Point to the artisan-specific messages page
     { name: "My Reviews", path: "/myReview", icon: Star },
     { name: "Profile", path: "/artisan-profile", icon: User },
     { name: "Settings", path: "/artisan-settings", icon: User }, // Using User icon for now, can be changed later

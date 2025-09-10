@@ -82,8 +82,12 @@ exports.sendMessage = async (req, res) => {
     // Emit real-time message to both sender and recipient via Socket.IO
     const io = getIo(); 
     if (io) {
+        console.log('Emitting newMessage to sender:', senderId);
+        console.log('Emitting newMessage to recipient:', recipientId);
         io.to(senderId).emit('newMessage', populatedMessage);
         io.to(recipientId).emit('newMessage', populatedMessage);
+    } else {
+        console.log('Socket.IO not available for message emission');
     } 
     
     // Send notification to recipient
