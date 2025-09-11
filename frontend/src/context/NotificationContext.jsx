@@ -325,6 +325,21 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [accessToken, fetchNotifications]);
 
+  // Listen for Socket.IO notifications via custom events from MessageContext
+  useEffect(() => {
+    const handleNewNotification = (event) => {
+      const notification = event.detail;
+      console.log('NotificationContext received notification:', notification);
+      addNotification(notification);
+    };
+
+    window.addEventListener('newNotification', handleNewNotification);
+
+    return () => {
+      window.removeEventListener('newNotification', handleNewNotification);
+    };
+  }, [addNotification]);
+
   // Auto-clear old notifications (older than 7 days)
   useEffect(() => {
     const interval = setInterval(() => {

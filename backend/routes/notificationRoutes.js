@@ -18,6 +18,25 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Notification routes are working', user: req.user?.id });
 });
 
+// Test endpoint to create a notification
+router.post('/test', async (req, res) => {
+  try {
+    const NotificationService = require('../services/notificationService');
+    const notification = await NotificationService.createNotification({
+      recipient: req.user.id,
+      title: 'Test Notification',
+      message: 'This is a test notification to verify the system is working.',
+      type: 'info',
+      category: 'system',
+      important: true
+    });
+    res.json({ message: 'Test notification created', notification });
+  } catch (error) {
+    console.error('Error creating test notification:', error);
+    res.status(500).json({ message: 'Error creating test notification', error: error.message });
+  }
+});
+
 // Get user's notifications
 router.get('/', getUserNotifications);
 

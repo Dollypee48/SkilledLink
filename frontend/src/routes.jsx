@@ -44,7 +44,6 @@ import ManageBookings from './pages/admin/ManageBookings';
 import ManageReviews from './pages/admin/ManageReviews';
 import ManageReports from './pages/admin/ManageReports';
 import KYCVerification from './pages/admin/KYCVerification'; // New: Import KYCVerification
-import KYCPage from './pages/KYCPage'; // Import the new KYCPage
 
 // Protected Route Component
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -246,15 +245,6 @@ const RoutesComponent = () => {
         }
       />
 
-      {/* New KYC Page Route */}
-      <Route
-        path="/kyc-verification"
-        element={
-          <ProtectedRoute requiredRoles={['customer', 'artisan']}>
-            <KYCPage />
-          </ProtectedRoute>
-        }
-      />
     </Routes>
   );
 };

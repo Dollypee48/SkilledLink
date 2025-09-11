@@ -183,17 +183,8 @@ exports.fixKYCStatus = async (req, res) => {
       let needsUpdate = false;
       const updates = {};
       
-      // Fix customers who should be auto-verified
-      if (user.role === 'customer') {
-        if (user.kycVerified !== true) {
-          updates.kycVerified = true;
-          needsUpdate = true;
-        }
-        if (user.kycStatus !== 'approved') {
-          updates.kycStatus = 'approved';
-          needsUpdate = true;
-        }
-      }
+      // All users now require admin verification - no auto-verification
+      // Customers are no longer automatically verified
       
       // Fix artisans who have kycVerified but wrong status
       if (user.role === 'artisan' && user.kycVerified === true && user.kycStatus !== 'approved') {

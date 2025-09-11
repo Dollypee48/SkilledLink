@@ -42,9 +42,9 @@ const KYCNotificationBanner = ({ user, onDismiss }) => {
 
   const handleAction = () => {
     if (kycStatus === 'rejected') {
-      navigate('/kyc-verification');
+      navigate(user?.role === 'customer' ? '/customer-settings' : '/artisan-settings');
     } else if (!kycStatus || kycStatus === 'not_submitted') {
-      navigate('/kyc-verification');
+      navigate(user?.role === 'customer' ? '/customer-settings' : '/artisan-settings');
     }
   };
 
@@ -117,7 +117,7 @@ const KYCNotificationBanner = ({ user, onDismiss }) => {
                 
                 {statusInfo.text === 'Under Review' && (
                   <button
-                    onClick={() => navigate('/kyc-verification')}
+                    onClick={() => navigate(user?.role === 'customer' ? '/customer-settings' : '/artisan-settings')}
                     className="text-sm font-medium underline hover:no-underline"
                   >
                     View Details

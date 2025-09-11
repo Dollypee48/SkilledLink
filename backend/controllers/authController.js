@@ -71,7 +71,7 @@ exports.register = async (req, res) => {
       nationality: '', // Will be filled in profile settings
       state: '', // Will be filled in profile settings
       address: '', // Will be filled in profile settings
-      kycVerified: role === "customer", // auto verify customers
+      kycVerified: false, // No automatic verification - admin must verify all users
       isVerified: false, // Email verification required
       verificationCode,
       verificationCodeExpires,

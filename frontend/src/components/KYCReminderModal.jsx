@@ -25,7 +25,7 @@ const KYCReminderModal = () => {
   }, []);
 
   useEffect(() => {
-    const allowedRoles = ["artisan"]; // Only show for artisans since KYC is disabled for customers
+    const allowedRoles = ["artisan", "customer"]; // Show for both artisans and customers - all users need KYC verification
     if (user && allowedRoles.includes(user.role) && user.kycStatus !== 'approved' && !user.kycVerified) {
       setIsOpen(true); // Open immediately if not approved and is an allowed role
       startTimer(); // Start timer for subsequent pop-ups
@@ -46,7 +46,7 @@ const KYCReminderModal = () => {
   const handleVerifyClick = () => {
     setIsOpen(false);
     stopTimer();
-    navigate('/kyc-verification'); // Navigate to the dedicated KYC page
+    navigate(user?.role === 'customer' ? '/customer-settings' : '/artisan-settings'); // Navigate to settings page
   };
 
   if (!isOpen) return null;

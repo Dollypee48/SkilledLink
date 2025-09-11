@@ -7,7 +7,10 @@ import {
   Info, 
   X, 
   ArrowRight,
-  Settings
+  Settings,
+  Shield,
+  Clock,
+  XCircle
 } from 'lucide-react';
 
 const ProfileCompletionNotification = ({ profileCompletion, onDismiss }) => {
@@ -32,7 +35,7 @@ const ProfileCompletionNotification = ({ profileCompletion, onDismiss }) => {
     return null;
   }
 
-  const { message, completionPercentage } = profileCompletion;
+  const { message, completionPercentage, kycStatus, isKYCVerified, needsKYC } = profileCompletion;
   const { type, title, message: notificationMessage, actionText, actionUrl } = message;
 
   const getIcon = () => {
@@ -71,6 +74,37 @@ const ProfileCompletionNotification = ({ profileCompletion, onDismiss }) => {
         return 'text-blue-800';
       default:
         return 'text-gray-800';
+    }
+  };
+
+  const getKYCStatusInfo = () => {
+    if (!kycStatus) return null;
+    
+    switch (kycStatus) {
+      case 'approved':
+        return {
+          icon: <CheckCircle className="w-4 h-4 text-green-500" />,
+          text: 'KYC Verified',
+          color: 'text-green-600'
+        };
+      case 'pending':
+        return {
+          icon: <Clock className="w-4 h-4 text-yellow-500" />,
+          text: 'KYC Under Review',
+          color: 'text-yellow-600'
+        };
+      case 'rejected':
+        return {
+          icon: <XCircle className="w-4 h-4 text-red-500" />,
+          text: 'KYC Rejected',
+          color: 'text-red-600'
+        };
+      default:
+        return {
+          icon: <Shield className="w-4 h-4 text-gray-500" />,
+          text: 'KYC Required',
+          color: 'text-gray-600'
+        };
     }
   };
 
@@ -113,6 +147,18 @@ const ProfileCompletionNotification = ({ profileCompletion, onDismiss }) => {
                   }`}
                   style={{ width: `${completionPercentage}%` }}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* KYC Status */}
+          {kycStatus && (
+            <div className="mt-3 p-2 bg-white bg-opacity-50 rounded-md">
+              <div className="flex items-center space-x-2">
+                {getKYCStatusInfo()?.icon}
+                <span className={`text-xs font-medium ${getKYCStatusInfo()?.color}`}>
+                  {getKYCStatusInfo()?.text}
+                </span>
               </div>
             </div>
           )}

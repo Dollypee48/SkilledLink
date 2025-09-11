@@ -25,6 +25,20 @@ exports.createBooking = async (req, res) => {
       });
     }
 
+    // Check if customer has verified KYC
+    const customer = await User.findById(req.user.id);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    if (!customer.kycVerified || customer.kycStatus !== 'approved') {
+      return res.status(403).json({ 
+        message: "KYC verification required to book services. Please complete your identity verification first.",
+        kycRequired: true,
+        kycStatus: customer.kycStatus
+      });
+    }
+
     const booking = await Booking.create({
       customer: req.user.id, // Use 'customer' field
       artisan,
@@ -135,6 +149,15 @@ exports.updateBookingStatus = async (req, res) => {
       
       if (!artisan) {
         return res.status(404).json({ message: "Artisan not found" });
+      }
+
+      // Check if artisan has verified KYC
+      if (!artisan.kycVerified || artisan.kycStatus !== 'approved') {
+        return res.status(403).json({ 
+          message: "KYC verification required to accept jobs. Please complete your identity verification first.",
+          kycRequired: true,
+          kycStatus: artisan.kycStatus
+        });
       }
 
       // Check if artisan can accept more jobs

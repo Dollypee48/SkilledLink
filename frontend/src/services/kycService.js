@@ -1,6 +1,16 @@
 import api from '../utils/api';
 
 export const kycService = {
+  getKYCTypes: async () => {
+    try {
+      const response = await api.get('/kyc/types');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching KYC types:", error);
+      throw new Error(error.response?.data?.message || "Failed to fetch KYC types");
+    }
+  },
+
   submitKYC: async (kycData, token) => {
     if (!token) {
       throw new Error("Authentication token is required.");

@@ -99,6 +99,8 @@ export const MessageProvider = ({ children }) => {
   const [conversations, setConversations] = useState([]);
   const [currentConversation, setCurrentConversation] = useState([]);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
 
   const selectedRecipientRef = useRef(selectedRecipient);
 
@@ -201,12 +203,20 @@ export const MessageProvider = ({ children }) => {
       // as the messages still exist in the database for other users
     };
 
+    const onNewNotification = (notification) => {
+      // Handle new notification event
+      console.log('Received notification via Socket.IO:', notification);
+      // We'll emit a custom event that NotificationContext can listen to
+      window.dispatchEvent(new CustomEvent('newNotification', { detail: notification }));
+    };
+
     currentSocket.on('connect', onConnect);
     currentSocket.on('disconnect', onDisconnect);
     currentSocket.on('connect_error', onConnectError);
     currentSocket.on('newMessage', onNewMessage);
     currentSocket.on('messageDeleted', onMessageDeleted);
     currentSocket.on('conversationCleared', onConversationCleared);
+    currentSocket.on('newNotification', onNewNotification);
 
     return () => {
       currentSocket.off('connect', onConnect);
@@ -215,6 +225,7 @@ export const MessageProvider = ({ children }) => {
       currentSocket.off('newMessage', onNewMessage);
       currentSocket.off('messageDeleted', onMessageDeleted);
       currentSocket.off('conversationCleared', onConversationCleared);
+      currentSocket.off('newNotification', onNewNotification);
       
       // Disconnect the socket if it's connected
       if (currentSocket.connected) {
@@ -250,24 +261,48 @@ export const MessageProvider = ({ children }) => {
   }, [user, accessToken]);
 
   const fetchConversations = useCallback(async () => {
-    if (!accessToken) return;
+    if (!accessToken || isLoadingConversations) return;
+    
+    setIsLoadingConversations(true);
     try {
       const data = await messageService.getConversations(accessToken);
       setConversations(data || []);
     } catch (error) {
       console.error("Failed to fetch conversations:", error);
       setConversations([]);
+    } finally {
+      setIsLoadingConversations(false);
     }
-  }, [accessToken]);
+  }, [accessToken, isLoadingConversations]);
+
+  // Debounced version to prevent rapid successive calls
+  const debouncedFetchConversations = useCallback(() => {
+    const timeoutId = setTimeout(() => {
+      fetchConversations();
+    }, 300); // 300ms debounce
+    
+    return () => clearTimeout(timeoutId);
+  }, [fetchConversations]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      // Clear any pending timeouts
+      const timeouts = document.querySelectorAll('[data-timeout]');
+      timeouts.forEach(timeout => clearTimeout(timeout.dataset.timeout));
+    };
+  }, []);
 
   useEffect(() => {
     if (user && accessToken) {
       fetchConversations();
     }
-  }, [user, accessToken, fetchConversations]);
+  }, [user, accessToken]); // Remove fetchConversations from dependencies to prevent infinite loop
 
   const fetchConversation = useCallback(async (otherUserId) => {
-    if (!accessToken || !otherUserId) return;
+    if (!accessToken || !otherUserId || isLoadingConversation) return;
+    
+    setIsLoadingConversation(true);
     try {
       const data = await messageService.getConversation(otherUserId, accessToken);
       setCurrentConversation(data || []);
@@ -288,8 +323,10 @@ export const MessageProvider = ({ children }) => {
       console.error("Failed to fetch conversation:", error);
       setCurrentConversation([]);
       setSelectedRecipient(null);
+    } finally {
+      setIsLoadingConversation(false);
     }
-  }, [accessToken]);
+  }, [accessToken, isLoadingConversation]);
 
   const sendNewMessage = useCallback(async (recipientId, content, fileData = null, fileType = null) => {
     if (!accessToken || !user) return;
@@ -362,6 +399,8 @@ export const MessageProvider = ({ children }) => {
     conversations,
     currentConversation,
     selectedRecipient,
+    isLoadingConversations,
+    isLoadingConversation,
     fetchConversations,
     fetchConversation,
     sendNewMessage,
@@ -372,6 +411,8 @@ export const MessageProvider = ({ children }) => {
     conversations,
     currentConversation,
     selectedRecipient,
+    isLoadingConversations,
+    isLoadingConversation,
     fetchConversations,
     fetchConversation,
     sendNewMessage,

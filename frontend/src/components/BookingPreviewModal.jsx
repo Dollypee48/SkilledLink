@@ -241,8 +241,13 @@ const BookingPreviewModal = ({
               </button>
               <button
                 onClick={() => onAccept(booking._id)}
-                disabled={isLoading}
-                className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold shadow-md hover:shadow-lg"
+                disabled={isLoading || (!user?.kycVerified || user?.kycStatus !== 'approved')}
+                className={`px-8 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold shadow-md hover:shadow-lg ${
+                  (!user?.kycVerified || user?.kycStatus !== 'approved') 
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+                title={(!user?.kycVerified || user?.kycStatus !== 'approved') ? 'KYC verification required to accept jobs' : ''}
               >
                 {isLoading ? (
                   <>

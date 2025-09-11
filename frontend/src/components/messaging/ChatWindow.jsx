@@ -39,7 +39,7 @@ const ChatWindow = () => {
     if (selectedRecipient && selectedRecipient._id) {
       fetchConversation(selectedRecipient._id);
     }
-  }, [selectedRecipient?._id, fetchConversation]);
+  }, [selectedRecipient?._id]); // Remove fetchConversation from dependencies to prevent infinite loop
 
   // Scroll to bottom when messages update
   useEffect(() => {

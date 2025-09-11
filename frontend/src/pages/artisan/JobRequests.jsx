@@ -67,6 +67,13 @@ const ArtisanRequests = () => {
   // Accept request
   const handleAccept = async (id) => {
     try {
+      // Check KYC verification status before accepting
+      if (!user?.kycVerified || user?.kycStatus !== 'approved') {
+        setSuccessMessage("KYC verification required to accept jobs. Please complete your identity verification first.");
+        setTimeout(() => setSuccessMessage(""), 5000);
+        return;
+      }
+
       setActionLoading(prev => ({ ...prev, [id]: 'accepting' }));
       
       const newStatus = "Accepted";
@@ -86,8 +93,12 @@ const ArtisanRequests = () => {
     } catch (error) {
       console.error('Error accepting request:', error);
       
+      // Check if it's a KYC error
+      if (error.response?.data?.kycRequired) {
+        setSuccessMessage("KYC verification required to accept jobs. Please complete your identity verification first.");
+      }
       // Check if it's a job limit error
-      if (error.response?.data?.limitReached) {
+      else if (error.response?.data?.limitReached) {
         setSuccessMessage("Job acceptance limit reached! Upgrade to Premium for unlimited job acceptances.");
       } else {
         setSuccessMessage("Error accepting request. Please try again.");
@@ -165,6 +176,36 @@ const ArtisanRequests = () => {
             </button>
           </div>
         </div>
+
+        {/* KYC Verification Warning */}
+        {(!user?.kycVerified || user?.kycStatus !== 'approved') && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-amber-800 mb-1">
+                  KYC Verification Required
+                </h3>
+                <p className="text-sm text-amber-700 mb-3">
+                  You need to complete your identity verification before you can accept job requests.
+                </p>
+                <button
+                  onClick={() => window.location.href = '/artisan-settings'}
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-md transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  Complete KYC Verification
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Loading and Error States */}
         {loading && <p className="text-gray-600">Loading requests...</p>}

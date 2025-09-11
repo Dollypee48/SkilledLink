@@ -22,28 +22,53 @@ const userSchema = new mongoose.Schema(
       enum: ["customer", "artisan", "admin"],
       default: "customer",
     },
+    gender: { 
+      type: String, 
+      enum: ['male', 'female', 'other'], 
+      required: false 
+    },
     nationality: { type: String, required: false, trim: true },
     state: { type: String, required: false, trim: true },
     address: { type: String, required: false, trim: true },
     occupation: { type: String, required: false, trim: true },
     kycVerified: {
       type: Boolean,
-      default: function () {
-        return this.role === "customer"; // auto verified if customer
-      },
+      default: false, // No automatic verification - admin must verify all users
     },
     kycStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],
-      default: function () {
-        return this.kycVerified ? "approved" : "pending";
-      },
+      default: null, // No status until KYC documents are submitted
     },
     kycDocuments: {
-      idProof: { type: String },
+      // Government ID documents
+      governmentIdType: { 
+        type: String, 
+        enum: ['national_id', 'passport', 'drivers_license', 'voters_card', 'military_id', 'student_id'],
+        required: false 
+      },
+      governmentIdFront: { type: String },
+      governmentIdBack: { type: String },
+      
+      // Address proof documents
+      addressProofType: { 
+        type: String, 
+        enum: ['utility_bill', 'bank_statement', 'rental_agreement', 'property_deed', 'government_letter'],
+        required: false 
+      },
       addressProof: { type: String },
-      credentials: { type: String }, // For artisans only
-      faceImage: { type: String }, // New: For face recognition
+      
+      // Professional credentials (for artisans only)
+      credentials: { type: String },
+      
+      // Portfolio (for artisans only)
+      portfolio: { type: String },
+      
+      // Face recognition image
+      faceImage: { type: String },
+      
+      // Legacy fields for backward compatibility
+      idProof: { type: String },
     },
     isSuspended: { type: Boolean, default: false },
     artisanProfile: { type: mongoose.Schema.Types.ObjectId, ref: "ArtisanProfile", default: null },

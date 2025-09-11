@@ -3,6 +3,7 @@ import CustomerLayout from '../../components/common/Layouts/CustomerLayout';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { User, Lock, Eye, EyeOff, Camera, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle } from 'lucide-react';
+import KYCForm from '../../components/KYCForm';
 
 const SettingsPage = () => {
   const { user, updateProfile, changePassword } = useAuth();
@@ -1127,47 +1128,7 @@ const SettingsPage = () => {
                       </div>
 
                       {/* KYC Form */}
-                      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Submit Documents</h3>
-                        <form className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Government ID
-                            </label>
-                            <input
-                              type="file"
-                              accept="image/*,.pdf"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Proof of Address
-                            </label>
-                            <input
-                              type="file"
-                              accept="image/*,.pdf"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Additional Documents (Optional)
-                            </label>
-                            <input
-                              type="file"
-                              accept="image/*,.pdf"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
-                            />
-                          </div>
-                          <button
-                            type="submit"
-                            className="w-full bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white font-semibold py-3 px-4 rounded-lg hover:from-[#1E2A4A] hover:to-[#151E3D] transition-all duration-300 shadow-lg hover:shadow-xl"
-                          >
-                            Submit for Verification
-                          </button>
-                        </form>
-                      </div>
+                      <KYCForm />
                     </div>
                   </div>
                 )}

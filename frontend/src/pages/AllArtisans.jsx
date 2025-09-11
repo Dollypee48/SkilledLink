@@ -38,7 +38,13 @@ const AllArtisans = () => {
       alert('Only customers can book services. Please log in as a customer.');
       return;
     }
-    
+
+    // Check KYC verification status
+    if (!user.kycVerified || user.kycStatus !== 'approved') {
+      alert('KYC verification required to book services. Please complete your identity verification first.');
+      navigate('/customer-settings');
+      return;
+    }
     
     // Set the selected artisan and open booking modal
     setSelectedArtisan(artisan);

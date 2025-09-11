@@ -9,7 +9,7 @@ const ConversationList = () => {
 
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
+  }, []); // Remove fetchConversations from dependencies to prevent infinite loop
 
   const handleConversationClick = (otherUser) => {
     setSelectedRecipient(otherUser);

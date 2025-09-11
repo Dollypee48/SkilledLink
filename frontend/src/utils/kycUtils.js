@@ -30,7 +30,7 @@ export const hasKYCSubmitted = (user) => {
  * @returns {boolean} - True if user needs to complete KYC
  */
 export const needsKYC = (user) => {
-  return !isKYCVerified(user) && user?.kycStatus !== KYC_STATUS.PENDING;
+  return !isKYCVerified(user) && (user?.kycStatus === null || user?.kycStatus === KYC_STATUS.REJECTED);
 };
 
 /**

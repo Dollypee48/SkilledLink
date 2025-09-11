@@ -4,6 +4,11 @@ const auth = require('../middleware/auth');
 const role = require('../middleware/role');
 const kycController = require('../controllers/kycController');
 
+// @route   GET /api/kyc/types
+// @desc    Get available government ID types and address proof types
+// @access  Public
+router.get('/types', kycController.getKYCTypes);
+
 // @route   POST /api/kyc/submit
 // @desc    Submit KYC documents (ID Proof, Address Proof, optional Credentials)
 // @access  Private

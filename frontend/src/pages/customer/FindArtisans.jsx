@@ -4,18 +4,21 @@ import { Search, Eye, Star, Crown } from "lucide-react";
 import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
 import { ArtisanContext } from "../../context/ArtisanContext";
 import { useContext } from "react";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { BookingContext } from '../../context/BookingContext'; // Import BookingContext
 import { ReviewContext } from '../../context/ReviewContext'; // Import ReviewContext
 import { ReviewService } from '../../services/reviewService'; // Import ReviewService
 import BookingModal from '../../components/BookingModal'; // Import BookingModal
 import PremiumBadge from '../../components/PremiumBadge';
+import { useAuth } from '../../context/AuthContext';
 
 const FindArtisans = () => {
   const { artisans, searchArtisans } = useContext(ArtisanContext); // ✅ use context directly
   const { openBookingModal, setSelectedArtisan } = useContext(BookingContext); // Use BookingContext
   const { getArtisanReviews } = useContext(ReviewContext); // Use ReviewContext
+  const { user } = useAuth(); // Get user from AuthContext
   const locationHook = useLocation();
+  const navigate = useNavigate();
   const query = new URLSearchParams(locationHook.search);
 
   const [searchTerm, setSearchTerm] = useState(query.get('search') || "");
@@ -50,6 +53,14 @@ const FindArtisans = () => {
     if (!artisan || !artisan._id) {
       return;
     }
+
+    // Check KYC verification status
+    if (!user?.kycVerified || user?.kycStatus !== 'approved') {
+      alert('KYC verification required to book services. Please complete your identity verification first.');
+      navigate('/customer-settings');
+      return;
+    }
+
     setSelectedArtisan(artisan);
     openBookingModal();
   };

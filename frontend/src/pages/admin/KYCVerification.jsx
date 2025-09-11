@@ -97,9 +97,11 @@ const KYCVerification = () => {
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Name</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Email</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Role</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">ID Proof</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Government ID</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Address Proof</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Face Image</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Credentials</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Portfolio</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Status</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Actions</th>
                 </tr>
@@ -111,13 +113,111 @@ const KYCVerification = () => {
                     <td className="py-3 px-4 text-sm text-gray-800">{user.email}</td>
                     <td className="py-3 px-4 text-sm text-gray-800 capitalize">{user.role}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">
-                      {renderDocumentLink(user.kycDocuments?.idProof, 'ID Proof')}
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-900">
+                          {user.kycDocuments?.governmentIdType ? 
+                            user.kycDocuments.governmentIdType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                            'Not specified'
+                          }
+                        </div>
+                        <div className="flex space-x-2">
+                          {user.kycDocuments?.governmentIdFront && (
+                            <a
+                              href={user.kycDocuments.governmentIdFront}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-xs"
+                            >
+                              Front
+                            </a>
+                          )}
+                          {user.kycDocuments?.governmentIdBack && (
+                            <a
+                              href={user.kycDocuments.governmentIdBack}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-xs"
+                            >
+                              Back
+                            </a>
+                          )}
+                          {!user.kycDocuments?.governmentIdFront && !user.kycDocuments?.governmentIdBack && (
+                            <span className="text-gray-400 text-xs">No documents</span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-800">
-                      {renderDocumentLink(user.kycDocuments?.addressProof, 'Address Proof')}
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-900">
+                          {user.kycDocuments?.addressProofType ? 
+                            user.kycDocuments.addressProofType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                            'Not specified'
+                          }
+                        </div>
+                        {user.kycDocuments?.addressProof ? (
+                          <a
+                            href={user.kycDocuments.addressProof}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-xs"
+                          >
+                            View Document
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No document</span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-800">
-                      {user.role === 'artisan' ? renderDocumentLink(user.kycDocuments?.credentials, 'Credentials') : 'N/A'}
+                      {user.kycDocuments?.faceImage ? (
+                        <a
+                          href={user.kycDocuments.faceImage}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-xs"
+                        >
+                          View Image
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-xs">No image</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-800">
+                      {user.role === 'artisan' ? (
+                        user.kycDocuments?.credentials ? (
+                          <a
+                            href={user.kycDocuments.credentials}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-xs"
+                          >
+                            View Credentials
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No credentials</span>
+                        )
+                      ) : (
+                        <span className="text-gray-400 text-xs">N/A</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-800">
+                      {user.role === 'artisan' ? (
+                        user.kycDocuments?.portfolio ? (
+                          <a
+                            href={user.kycDocuments.portfolio}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-xs"
+                          >
+                            View Portfolio
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No portfolio</span>
+                        )
+                      ) : (
+                        <span className="text-gray-400 text-xs">N/A</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-800 capitalize">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

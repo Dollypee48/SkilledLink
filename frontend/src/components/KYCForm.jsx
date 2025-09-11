@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'; // Added useRef, useCallback
 import { useAuth } from '../context/AuthContext';
 import { kycService } from '../services/kycService';
-import { CheckCircle, XCircle, Loader2, UploadCloud, ArrowLeft, ArrowRight, Camera, ShieldAlert } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, UploadCloud, ArrowLeft, ArrowRight, Camera, ShieldAlert, FileText, CreditCard, Car, Vote } from 'lucide-react';
 import FileInput from './FileInput';
 import ProfilePictureUpload from './ProfilePictureUpload';
 import { userService } from '../services/userService';
 import Webcam from 'react-webcam'; // Import Webcam component
+
+// Government ID types
+const GOVERNMENT_ID_TYPES = [
+  { id: 'national_id', name: 'National ID Card', icon: <FileText className="w-5 h-5" /> },
+  { id: 'passport', name: 'Passport', icon: <FileText className="w-5 h-5" /> },
+  { id: 'drivers_license', name: 'Driver\'s License', icon: <Car className="w-5 h-5" /> },
+  { id: 'voters_card', name: 'Voter\'s Card', icon: <Vote className="w-5 h-5" /> }
+];
 
 // Helper function to convert File to Base64
 const fileToBase64 = (file) => {
@@ -24,14 +32,17 @@ const KYCForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [personalInfo, setPersonalInfo] = useState({
     fullName: user?.name || '',
-    dateOfBirth: '',
+    gender: '',
     phoneNumber: user?.phone || '',
     address: user?.address || '',
   });
   const [documentInfo, setDocumentInfo] = useState({
-    idProof: null,
+    governmentIdType: '',
+    governmentIdFront: null,
+    governmentIdBack: null,
     addressProof: null,
     credentials: null, // For artisans
+    portfolio: null, // For artisans
   });
   const [faceRecognitionInfo, setFaceRecognitionInfo] = useState(null); // To store face recognition data (base64 image)
 
@@ -49,10 +60,12 @@ const KYCForm = () => {
   // Webcam references and capture logic
   const webcamRef = useRef(null);
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    setFaceRecognitionInfo(imageSrc); // Store the base64 image
-    if (validationErrors.faceImage) {
-      setValidationErrors(prev => ({ ...prev, faceImage: null }));
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      setFaceRecognitionInfo(imageSrc); // Store the base64 image
+      if (validationErrors.faceImage) {
+        setValidationErrors(prev => ({ ...prev, faceImage: null }));
+      }
     }
   }, [webcamRef, validationErrors.faceImage]);
 
@@ -66,18 +79,8 @@ const KYCForm = () => {
       errors.fullName = 'Full name must be at least 2 characters';
     }
     
-    if (!personalInfo.dateOfBirth) {
-      errors.dateOfBirth = 'Date of birth is required';
-    } else {
-      const birthDate = new Date(personalInfo.dateOfBirth);
-      const today = new Date();
-      const age = today.getFullYear() - birthDate.getFullYear();
-      if (age < 18) {
-        errors.dateOfBirth = 'You must be at least 18 years old';
-      }
-      if (age > 120) {
-        errors.dateOfBirth = 'Please enter a valid date of birth';
-      }
+    if (!personalInfo.gender) {
+      errors.gender = 'Gender is required';
     }
     
     if (!personalInfo.phoneNumber?.trim()) {
@@ -98,8 +101,16 @@ const KYCForm = () => {
   const validateDocuments = () => {
     const errors = {};
     
-    if (!documentInfo.idProof) {
-      errors.idProof = 'Government-issued ID is required';
+    if (!documentInfo.governmentIdType) {
+      errors.governmentIdType = 'Please select a government ID type';
+    }
+    
+    if (!documentInfo.governmentIdFront) {
+      errors.governmentIdFront = 'Front image of government ID is required';
+    }
+    
+    if (!documentInfo.governmentIdBack) {
+      errors.governmentIdBack = 'Back image of government ID is required';
     }
     
     if (!documentInfo.addressProof) {
@@ -107,7 +118,11 @@ const KYCForm = () => {
     }
     
     if (user?.role === 'artisan' && !documentInfo.credentials) {
-      errors.credentials = 'Professional credentials are required for artisans';
+      errors.credentials = 'Professional credentials (certificate) are required for artisans';
+    }
+    
+    if (user?.role === 'artisan' && !documentInfo.portfolio) {
+      errors.portfolio = 'Portfolio is required for artisans';
     }
     
     return errors;
@@ -206,16 +221,25 @@ const KYCForm = () => {
 
     const kycData = {
       personalInfo: personalInfo,
+      governmentIdType: documentInfo.governmentIdType,
+      addressProofType: 'utility_bill', // Default address proof type
+      userRole: user?.role, // Add user role for validation
     };
 
-    if (documentInfo.idProof && documentInfo.idProof.name !== "Existing ID Proof") {
-      kycData.idProof = await fileToBase64(documentInfo.idProof);
+    if (documentInfo.governmentIdFront && documentInfo.governmentIdFront.name !== "Existing Front ID") {
+      kycData.governmentIdFront = await fileToBase64(documentInfo.governmentIdFront);
+    }
+    if (documentInfo.governmentIdBack && documentInfo.governmentIdBack.name !== "Existing Back ID") {
+      kycData.governmentIdBack = await fileToBase64(documentInfo.governmentIdBack);
     }
     if (documentInfo.addressProof && documentInfo.addressProof.name !== "Existing Address Proof") {
       kycData.addressProof = await fileToBase64(documentInfo.addressProof);
     }
     if (user?.role === 'artisan' && documentInfo.credentials && documentInfo.credentials.name !== "Existing Credentials") {
       kycData.credentials = await fileToBase64(documentInfo.credentials);
+    }
+    if (user?.role === 'artisan' && documentInfo.portfolio && documentInfo.portfolio.name !== "Existing Portfolio") {
+      kycData.portfolio = await fileToBase64(documentInfo.portfolio);
     }
 
     if (faceRecognitionInfo) {
@@ -396,31 +420,35 @@ const KYCForm = () => {
               </div>
                 
               <div>
-                  <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Date of Birth *
+                  <label htmlFor="gender" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Gender *
                   </label>
-                <input
-                  type="date"
-                  id="dateOfBirth"
+                <select
+                  id="gender"
                     className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 transition-all duration-300 ${
-                      validationErrors.dateOfBirth 
+                      validationErrors.gender 
                         ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' 
                         : 'border-gray-200 focus:border-[#151E3D] focus:ring-[#151E3D]/20'
                     }`}
-                  value={personalInfo.dateOfBirth}
+                  value={personalInfo.gender}
                     onChange={(e) => {
-                      setPersonalInfo({ ...personalInfo, dateOfBirth: e.target.value });
-                      if (validationErrors.dateOfBirth) {
-                        setValidationErrors(prev => ({ ...prev, dateOfBirth: null }));
+                      setPersonalInfo({ ...personalInfo, gender: e.target.value });
+                      if (validationErrors.gender) {
+                        setValidationErrors(prev => ({ ...prev, gender: null }));
                       }
                     }}
                   disabled={loading}
                     required
-                  />
-                  {validationErrors.dateOfBirth && (
+                >
+                  <option value="">Select your gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+                  {validationErrors.gender && (
                     <p className="text-red-500 text-sm mt-1 flex items-center">
                       <XCircle className="w-4 h-4 mr-1" />
-                      {validationErrors.dateOfBirth}
+                      {validationErrors.gender}
                     </p>
                   )}
               </div>
@@ -500,51 +528,128 @@ const KYCForm = () => {
                 <p className="text-gray-600">Upload clear images of your verification documents</p>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                {/* Government ID Type Selection */}
                 <div className={`bg-white rounded-xl p-6 border-2 transition-all duration-300 ${
-                  validationErrors.idProof 
-                    ? 'border-red-300 hover:border-red-400' 
-                    : 'border-gray-200 hover:border-[#151E3D]'
+                  validationErrors.governmentIdType 
+                    ? 'border-red-300' 
+                    : 'border-gray-200'
                 }`}>
-                <FileInput
-                    label="Government-Issued ID"
-                    subtitle="Passport, Driver's License, or National ID"
-                  name="idProof"
-                  file={documentInfo.idProof}
-                    setFile={(file) => {
-                      setDocumentInfo({ ...documentInfo, idProof: file });
-                      if (validationErrors.idProof) {
-                        setValidationErrors(prev => ({ ...prev, idProof: null }));
-                      }
-                    }}
-                  disabled={loading}
-                />
-                  {validationErrors.idProof && (
-                    <p className="text-red-500 text-sm mt-2 flex items-center">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Government ID Type</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {GOVERNMENT_ID_TYPES.map((idType) => (
+                      <label
+                        key={idType.id}
+                        className={`relative flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
+                          documentInfo.governmentIdType === idType.id
+                            ? 'border-[#151E3D] bg-[#151E3D]/5'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="governmentIdType"
+                          value={idType.id}
+                          checked={documentInfo.governmentIdType === idType.id}
+                          onChange={(e) => setDocumentInfo({ ...documentInfo, governmentIdType: e.target.value })}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center space-x-3">
+                          <div className="text-gray-600">{idType.icon}</div>
+                          <span className="font-medium text-gray-900">{idType.name}</span>
+                        </div>
+                        {documentInfo.governmentIdType === idType.id && (
+                          <div className="absolute top-2 right-2">
+                            <CheckCircle className="w-5 h-5 text-[#151E3D]" />
+                          </div>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                  {validationErrors.governmentIdType && (
+                    <p className="text-red-500 text-sm mt-3 flex items-center">
                       <XCircle className="w-4 h-4 mr-1" />
-                      {validationErrors.idProof}
+                      {validationErrors.governmentIdType}
                     </p>
                   )}
                 </div>
-                
+
+                {/* Government ID Front and Back Upload */}
+                {documentInfo.governmentIdType && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className={`bg-white rounded-xl p-6 border-2 transition-all duration-300 ${
+                      validationErrors.governmentIdFront 
+                        ? 'border-red-300 hover:border-red-400' 
+                        : 'border-gray-200 hover:border-[#151E3D]'
+                    }`}>
+                      <FileInput
+                        label={`Front of ${GOVERNMENT_ID_TYPES.find(t => t.id === documentInfo.governmentIdType)?.name}`}
+                        subtitle="Upload the front side of your ID"
+                        name="governmentIdFront"
+                        file={documentInfo.governmentIdFront}
+                        setFile={(file) => {
+                          setDocumentInfo({ ...documentInfo, governmentIdFront: file });
+                          if (validationErrors.governmentIdFront) {
+                            setValidationErrors(prev => ({ ...prev, governmentIdFront: null }));
+                          }
+                        }}
+                        disabled={loading}
+                      />
+                      {validationErrors.governmentIdFront && (
+                        <p className="text-red-500 text-sm mt-2 flex items-center">
+                          <XCircle className="w-4 h-4 mr-1" />
+                          {validationErrors.governmentIdFront}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className={`bg-white rounded-xl p-6 border-2 transition-all duration-300 ${
+                      validationErrors.governmentIdBack 
+                        ? 'border-red-300 hover:border-red-400' 
+                        : 'border-gray-200 hover:border-[#151E3D]'
+                    }`}>
+                      <FileInput
+                        label={`Back of ${GOVERNMENT_ID_TYPES.find(t => t.id === documentInfo.governmentIdType)?.name}`}
+                        subtitle="Upload the back side of your ID"
+                        name="governmentIdBack"
+                        file={documentInfo.governmentIdBack}
+                        setFile={(file) => {
+                          setDocumentInfo({ ...documentInfo, governmentIdBack: file });
+                          if (validationErrors.governmentIdBack) {
+                            setValidationErrors(prev => ({ ...prev, governmentIdBack: null }));
+                          }
+                        }}
+                        disabled={loading}
+                      />
+                      {validationErrors.governmentIdBack && (
+                        <p className="text-red-500 text-sm mt-2 flex items-center">
+                          <XCircle className="w-4 h-4 mr-1" />
+                          {validationErrors.governmentIdBack}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Address Proof */}
                 <div className={`bg-white rounded-xl p-6 border-2 transition-all duration-300 ${
                   validationErrors.addressProof 
                     ? 'border-red-300 hover:border-red-400' 
                     : 'border-gray-200 hover:border-[#151E3D]'
                 }`}>
-                <FileInput
+                  <FileInput
                     label="Proof of Address"
                     subtitle="Utility bill, Bank statement, or Government letter"
-                  name="addressProof"
-                  file={documentInfo.addressProof}
+                    name="addressProof"
+                    file={documentInfo.addressProof}
                     setFile={(file) => {
                       setDocumentInfo({ ...documentInfo, addressProof: file });
                       if (validationErrors.addressProof) {
                         setValidationErrors(prev => ({ ...prev, addressProof: null }));
                       }
                     }}
-                  disabled={loading}
-                />
+                    disabled={loading}
+                  />
                   {validationErrors.addressProof && (
                     <p className="text-red-500 text-sm mt-2 flex items-center">
                       <XCircle className="w-4 h-4 mr-1" />
@@ -554,30 +659,60 @@ const KYCForm = () => {
                 </div>
 
                 {user?.role === 'artisan' && (
-                  <div className={`lg:col-span-2 bg-white rounded-xl p-6 border-2 transition-all duration-300 ${
-                    validationErrors.credentials 
-                      ? 'border-red-300 hover:border-red-400' 
-                      : 'border-gray-200 hover:border-[#151E3D]'
-                  }`}>
-                  <FileInput
-                      label="Professional Credentials"
-                      subtitle="Trade license, Certification, or Professional qualification"
-                    name="credentials"
-                    file={documentInfo.credentials}
-                      setFile={(file) => {
-                        setDocumentInfo({ ...documentInfo, credentials: file });
-                        if (validationErrors.credentials) {
-                          setValidationErrors(prev => ({ ...prev, credentials: null }));
-                        }
-                      }}
-                    disabled={loading}
-                  />
-                    {validationErrors.credentials && (
-                      <p className="text-red-500 text-sm mt-2 flex items-center">
-                        <XCircle className="w-4 h-4 mr-1" />
-                        {validationErrors.credentials}
-                      </p>
-                    )}
+                  <div className="space-y-6">
+                    {/* Professional Credentials */}
+                    <div className={`bg-white rounded-xl p-6 border-2 transition-all duration-300 ${
+                      validationErrors.credentials 
+                        ? 'border-red-300 hover:border-red-400' 
+                        : 'border-gray-200 hover:border-[#151E3D]'
+                    }`}>
+                      <FileInput
+                        label="Professional Credentials (Certificate)"
+                        subtitle="Trade license, Certification, or Professional qualification"
+                        name="credentials"
+                        file={documentInfo.credentials}
+                        setFile={(file) => {
+                          setDocumentInfo({ ...documentInfo, credentials: file });
+                          if (validationErrors.credentials) {
+                            setValidationErrors(prev => ({ ...prev, credentials: null }));
+                          }
+                        }}
+                        disabled={loading}
+                      />
+                      {validationErrors.credentials && (
+                        <p className="text-red-500 text-sm mt-2 flex items-center">
+                          <XCircle className="w-4 h-4 mr-1" />
+                          {validationErrors.credentials}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Portfolio Upload */}
+                    <div className={`bg-white rounded-xl p-6 border-2 transition-all duration-300 ${
+                      validationErrors.portfolio 
+                        ? 'border-red-300 hover:border-red-400' 
+                        : 'border-gray-200 hover:border-[#151E3D]'
+                    }`}>
+                      <FileInput
+                        label="Portfolio"
+                        subtitle="Upload your work portfolio, project photos, or sample work"
+                        name="portfolio"
+                        file={documentInfo.portfolio}
+                        setFile={(file) => {
+                          setDocumentInfo({ ...documentInfo, portfolio: file });
+                          if (validationErrors.portfolio) {
+                            setValidationErrors(prev => ({ ...prev, portfolio: null }));
+                          }
+                        }}
+                        disabled={loading}
+                      />
+                      {validationErrors.portfolio && (
+                        <p className="text-red-500 text-sm mt-2 flex items-center">
+                          <XCircle className="w-4 h-4 mr-1" />
+                          {validationErrors.portfolio}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

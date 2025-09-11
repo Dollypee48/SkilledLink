@@ -5,6 +5,7 @@ class NotificationService {
   // Create and send a notification
   static async createNotification(notificationData) {
     try {
+      console.log('Creating notification:', notificationData);
       const notification = await Notification.create(notificationData);
       
       // Populate sender and recipient details
@@ -13,12 +14,14 @@ class NotificationService {
         { path: 'recipient', select: 'name profileImageUrl' }
       ]);
 
+      console.log('Notification created and populated:', populatedNotification._id);
+      
       // Send real-time notification via Socket.IO
       this.sendRealTimeNotification(populatedNotification);
 
       return populatedNotification;
     } catch (error) {
-      // console.error('Error creating notification:', error);
+      console.error('Error creating notification:', error);
       throw error;
     }
   }
@@ -28,10 +31,14 @@ class NotificationService {
     try {
       const io = getIo();
       if (io) {
+        console.log('Sending notification via Socket.IO to user:', notification.recipient._id);
         io.to(notification.recipient._id.toString()).emit('newNotification', notification);
+        console.log('Notification sent successfully');
+      } else {
+        console.log('Socket.IO not available');
       }
     } catch (error) {
-      // console.error('Error sending real-time notification:', error);
+      console.error('Error sending real-time notification:', error);
     }
   }
 

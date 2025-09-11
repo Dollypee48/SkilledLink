@@ -33,7 +33,7 @@ const KYCRestriction = ({
             
             <div className="space-y-3">
               <button
-                onClick={() => navigate('/kyc-verification')}
+                onClick={() => navigate(feature?.user?.role === 'customer' ? '/customer-settings' : '/artisan-settings')}
                 className="w-full bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#0F172A] text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center"
               >
                 <Shield className="w-5 h-5 mr-2" />
@@ -86,7 +86,7 @@ const KYCRestriction = ({
                 Your verification was rejected. Please resubmit your documents to access all features.
               </p>
               <button
-                onClick={() => navigate('/kyc-verification')}
+                onClick={() => navigate(feature?.user?.role === 'customer' ? '/customer-settings' : '/artisan-settings')}
                 className="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
               >
                 Resubmit Documents
