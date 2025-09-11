@@ -7,17 +7,25 @@ import ReviewRatingsModal from './ReviewRatingsModal';
 
 const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
   const navigate = useNavigate();
-  const { setSelectedRecipient } = useMessage();
+  const { selectRecipient } = useMessage();
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   if (!isOpen || !booking) return null;
 
   const handleChatWithArtisan = () => {
     if (booking.artisan) {
-      setSelectedRecipient({
+      // Store recipient data in sessionStorage for the messages page to pick up
+      const recipientData = {
         _id: booking.artisan._id,
         name: booking.artisan.name,
-      });
+      };
+      
+      // Try to set recipient in context if available
+      selectRecipient(recipientData);
+      
+      // Also store in sessionStorage as backup
+      sessionStorage.setItem('selectedRecipient', JSON.stringify(recipientData));
+      
       onClose(); // Close the booking details modal
       navigate('/messages'); // Navigate to the messages page
     }

@@ -13,25 +13,37 @@ const BookingPreviewModal = ({
   isLoading 
 }) => {
   const { user } = useAuth();
-  const { setSelectedRecipient } = useMessage();
+  const { selectRecipient } = useMessage();
   const navigate = useNavigate();
 
 
   const handleChatWithCustomer = () => {
     if (booking?.customer) {
-      // Set the selected recipient for the chat
-      setSelectedRecipient({
+      console.log('Chat with customer clicked:', booking.customer);
+      
+      // Store recipient data in sessionStorage for the messages page to pick up
+      const recipientData = {
         _id: booking.customer._id,
         name: booking.customer.name || 'Customer'
-      });
+      };
+      
+      // Try to set recipient in context if available
+      selectRecipient(recipientData);
+      
+      // Also store in sessionStorage as backup
+      sessionStorage.setItem('selectedRecipient', JSON.stringify(recipientData));
+      
+      console.log('Selected recipient set:', recipientData);
       
       // Close the modal
       onClose();
       
       // Navigate to messages page
       if (user?.role === 'artisan') {
+        console.log('Navigating to artisan-messages');
         navigate('/artisan-messages');
       } else {
+        console.log('Navigating to messages');
         navigate('/messages');
       }
     }

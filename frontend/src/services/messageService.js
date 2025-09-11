@@ -5,12 +5,8 @@ export const messageService = {
     try {
       const response = await api.post(
         '/messages',
-        { recipientId, content, fileData, fileType }, // Include fileData and fileType
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { recipientId, content, fileData, fileType } // Include fileData and fileType
+        // Token is automatically added by API interceptor
       );
       return response.data;
     } catch (error) {
@@ -21,11 +17,8 @@ export const messageService = {
 
   getConversation: async (otherUserId, token) => {
     try {
-      const response = await api.get(`/messages/${otherUserId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`/messages/${otherUserId}`);
+      // Token is automatically added by API interceptor
       return response.data;
     } catch (error) {
       console.error("Error fetching conversation:", error);
@@ -35,11 +28,8 @@ export const messageService = {
 
   getConversations: async (token) => {
     try {
-      const response = await api.get('/messages/conversations', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get('/messages/conversations');
+      // Token is automatically added by API interceptor
       return response.data;
     } catch (error) {
       // console.error("Error fetching conversations list:", error);
@@ -50,11 +40,8 @@ export const messageService = {
   // Delete a specific message
   deleteMessage: async (messageId, token) => {
     try {
-      const response = await api.delete(`/messages/${messageId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.delete(`/messages/${messageId}`);
+      // Token is automatically added by API interceptor
       return response.data;
     } catch (error) {
       // console.error("Error deleting message:", error);
@@ -65,21 +52,8 @@ export const messageService = {
   // Clear all messages in a conversation
   clearConversation: async (otherUserId, token) => {
     try {
-      // Debug logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        // Clearing conversation for user
-      }
-      
-      const response = await api.delete(`/messages/conversation/${otherUserId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      // Debug logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        // Clear conversation successful
-      }
+      const response = await api.delete(`/messages/conversation/${otherUserId}`);
+      // Token is automatically added by API interceptor
       return response.data;
     } catch (error) {
       // console.error("Error clearing conversation:", error);

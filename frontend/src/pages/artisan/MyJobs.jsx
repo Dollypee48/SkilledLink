@@ -18,7 +18,7 @@ const MyJobs = () => {
   const { user } = useAuth(); // Use useAuth to get user info
   const { bookings, loading, error, fetchBookings } = useContext(ArtisanContext); // Get real data from ArtisanContext
   const { notifyJobStatusChange, showNotification } = useNotification(); // Get notification functions
-  const { setSelectedRecipient } = useMessage(); // Get setSelectedRecipient for chat functionality
+  const { selectRecipient } = useMessage(); // Get selectRecipient for chat functionality
   const navigate = useNavigate(); // Get navigate for navigation
 
   useEffect(() => {
@@ -31,12 +31,20 @@ const MyJobs = () => {
   // Function to handle chat with customer
   const handleChatWithCustomer = (booking) => {
     if (booking.customer && booking.customer._id) {
-      setSelectedRecipient({
+      // Store recipient data in sessionStorage for the messages page to pick up
+      const recipientData = {
         _id: booking.customer._id,
         name: booking.customer.name || 'Customer'
-      });
+      };
+      
+      // Try to set recipient in context if available
+      selectRecipient(recipientData);
+      
+      // Also store in sessionStorage as backup
+      sessionStorage.setItem('selectedRecipient', JSON.stringify(recipientData));
+      
       closeModal(); // Close the modal
-      navigate('/messages'); // Navigate to messages page
+      navigate('/artisan-messages'); // Navigate to artisan messages page
     } else {
       showNotification('error', 'Customer information not available for chat');
     }
@@ -332,10 +340,7 @@ const MyJobs = () => {
                 </thead>
                 <tbody>
                   {filteredBookings.map((booking) => (
-                    <tr
-                      key={booking._id} // Use _id from MongoDB
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                    >
+                    <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-gray-600">{booking._id}</td>
                       <td className="p-3 text-gray-600">{booking.customer?.name || "N/A"}</td> {/* Access customer name */}
                       <td className="p-3 text-gray-600">{booking.service}</td>

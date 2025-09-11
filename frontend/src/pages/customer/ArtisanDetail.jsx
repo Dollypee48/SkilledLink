@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom'; // New: Import useNavigate
 const ArtisanDetail = () => {
   const { id } = useParams();
   const { user, accessToken } = useAuth(); // Get user and accessToken from AuthContext
-  const { setSelectedRecipient } = useMessage(); // New: Get setSelectedRecipient from MessageContext
+  const { selectRecipient } = useMessage(); // New: Get selectRecipient from MessageContext
   const navigate = useNavigate(); // New: Get navigate hook
   const [artisan, setArtisan] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,7 +86,18 @@ const ArtisanDetail = () => {
 
   const handleMessageArtisan = () => {
     if (artisan && artisan.userId) {
-      setSelectedRecipient(artisan.userId); // Set the artisan as the selected recipient
+      // Store recipient data in sessionStorage for the messages page to pick up
+      const recipientData = {
+        _id: artisan.userId,
+        name: artisan.name || 'Artisan'
+      };
+      
+      // Try to set recipient in context if available
+      selectRecipient(recipientData);
+      
+      // Also store in sessionStorage as backup
+      sessionStorage.setItem('selectedRecipient', JSON.stringify(recipientData));
+      
       navigate('/messages'); // Navigate to the messages page
     }
   };

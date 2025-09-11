@@ -1,13 +1,12 @@
 const Message = require('../models/Message');
 const User = require('../models/User');
-const { getIo } = require('../config/socket'); // Import the getIo function
-const mongoose = require('mongoose'); // Import mongoose to use ObjectId
-const { uploadFile } = require('../utils/cloudinary'); // Import Cloudinary upload helper
-const NotificationService = require('../services/notificationService'); // Import notification service
+const mongoose = require('mongoose');
+const { uploadFile } = require('../utils/cloudinary');
+const { getIo } = require('../utils/socket');
+const NotificationService = require('../services/notificationService');
 
-// Helper to create a consistent conversationId from two user IDs
+// Helper function to create consistent conversation ID
 const getConversationId = (userId1, userId2) => {
-  // Sort IDs to ensure a consistent conversationId regardless of sender/recipient order
   const sortedIds = [userId1.toString(), userId2.toString()].sort();
   return sortedIds.join('_');
 };
@@ -17,25 +16,24 @@ const getConversationId = (userId1, userId2) => {
 // @access  Private
 exports.sendMessage = async (req, res) => {
   try {
-    const { recipientId, content, fileData, fileType } = req.body; // Added fileData and fileType
-    const senderId = req.user.id; // Authenticated user ID
+    const { recipientId, content, fileData, fileType } = req.body;
+    const senderId = req.user.id;
     
-    // Validate that either content or fileData (but not both empty) is provided
+    // Validate input
     if (!content && !fileData) {
       return res.status(400).json({ message: 'Message content or file is required' });
     }
+    
     if (content && fileData) {
-        return res.status(400).json({ message: 'Cannot send both text content and a file in the same message' });
+      return res.status(400).json({ message: 'Cannot send both text content and a file in the same message' });
     }
 
-    // Basic validation for recipient
     if (!recipientId) {
       return res.status(400).json({ message: 'Recipient ID is required' });
     }
 
-    // Validate recipientId as a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(recipientId)) {
-        return res.status(400).json({ message: 'Invalid recipient ID format' });
+      return res.status(400).json({ message: 'Invalid recipient ID format' });
     }
 
     // Check if recipient exists
@@ -44,170 +42,151 @@ exports.sendMessage = async (req, res) => {
       return res.status(404).json({ message: 'Recipient user not found' });
     }
 
+    // Handle file upload if present
     let uploadedFileUrl = null;
-    // Temporarily disabled file upload processing
     if (fileData && fileData !== null) {
-        if (!fileType) {
-            return res.status(400).json({ message: 'File type is required when sending a file' });
-        }
-        // Upload file to Cloudinary
-        try {
-            const uploadResult = await uploadFile(fileData, fileType, `messages/${senderId}`);
-            uploadedFileUrl = uploadResult.secure_url;
-        } catch (uploadErr) {
-            console.error('Cloudinary upload error:', uploadErr); // Log the full error object
-            return res.status(500).json({ message: 'Failed to upload file', error: uploadErr.message });
-        }
+      if (!fileType) {
+        return res.status(400).json({ message: 'File type is required when sending a file' });
+      }
+      
+      try {
+        const uploadResult = await uploadFile(fileData, fileType, `messages/${senderId}`);
+        uploadedFileUrl = uploadResult.secure_url;
+      } catch (uploadErr) {
+        console.error('Cloudinary upload error:', uploadErr);
+        return res.status(500).json({ message: 'Failed to upload file', error: uploadErr.message });
+      }
     }
 
-    // Create a consistent conversation ID
+    // Create conversation ID
     const conversationId = getConversationId(senderId, recipientId);
 
-    // Create and save the new message
+    // Create and save the message
     const message = await Message.create({
       sender: senderId,
       recipient: recipientId,
       conversationId,
-      content: content || null, // Store content as null if file is sent
+      content: content || null,
       fileUrl: uploadedFileUrl,
       fileType: fileType,
     });
 
-    // Populate sender and recipient details for real-time updates on frontend
+    // Populate sender and recipient details
     const populatedMessage = await message.populate([
       { path: 'sender', select: 'name profileImageUrl' },
       { path: 'recipient', select: 'name profileImageUrl' }
     ]);
 
-    // Emit real-time message to both sender and recipient via Socket.IO
-    const io = getIo(); 
+    // Emit real-time message via Socket.IO
+    const io = getIo();
     if (io) {
-        console.log('Emitting newMessage to sender:', senderId);
-        console.log('Emitting newMessage to recipient:', recipientId);
-        io.to(senderId).emit('newMessage', populatedMessage);
-        io.to(recipientId).emit('newMessage', populatedMessage);
-    } else {
-        console.log('Socket.IO not available for message emission');
-    } 
+      // Emit to conversation room for real-time updates
+      io.to(conversationId).emit('newMessage', populatedMessage);
+    }
     
-    // Send notification to recipient
+    // Send notification ONLY to recipient (not sender)
     try {
-        await NotificationService.notifyNewMessage(populatedMessage, recipientId);
+      await NotificationService.notifyNewMessage(populatedMessage, recipientId);
     } catch (notificationError) {
-        console.error('Error sending notification:', notificationError);
-        // Don't fail the message send if notification fails
+      console.error('Error sending notification:', notificationError);
     }
     
     res.status(201).json(populatedMessage);
   } catch (err) {
-    console.error('sendMessage error: Caught an exception:', err.message, err.stack);
+    console.error('sendMessage error:', err.message);
     res.status(500).json({ message: 'Server error sending message', error: err.message });
   }
 };
 
 // @desc    Get all messages in a specific conversation
-// @route   GET /api/messages/conversation/:otherUserId
+// @route   GET /api/messages/:otherUserId
 // @access  Private
 exports.getConversation = async (req, res) => {
   try {
     const currentUserId = req.user.id;
     const { otherUserId } = req.params;
 
-    console.log('getConversation - currentUserId:', currentUserId);
-    console.log('getConversation - otherUserId from params:', otherUserId);
-
     if (!otherUserId) {
       return res.status(400).json({ message: 'Other user ID is required' });
     }
 
     if (!mongoose.Types.ObjectId.isValid(otherUserId)) {
-        return res.status(400).json({ message: 'Invalid other user ID format' });
+      return res.status(400).json({ message: 'Invalid other user ID format' });
     }
 
     const conversationId = getConversationId(currentUserId, otherUserId);
-    console.log('getConversation - Generated conversationId:', conversationId);
 
     // Fetch messages sorted by timestamp
     const messages = await Message.find({ conversationId })
       .sort('timestamp')
-      .populate([ // Populate both sender and recipient
+      .populate([
         { path: 'sender', select: 'name profileImageUrl' },
         { path: 'recipient', select: 'name profileImageUrl' }
       ]);
-    console.log('getConversation - Fetched messages count:', messages.length);
 
-    // Mark messages as read for the current user where they are the recipient
-    const updateResult = await Message.updateMany(
+    // Mark messages as read for the current user
+    await Message.updateMany(
       { conversationId, recipient: currentUserId, read: false },
       { $set: { read: true } }
     );
-    console.log('getConversation - Messages marked as read:', updateResult.modifiedCount);
 
     res.json(messages);
   } catch (err) {
-    console.error('getConversation error: Caught an exception:', err.message, err.stack);
+    console.error('getConversation error:', err.message);
     res.status(500).json({ message: 'Server error fetching conversation', error: err.message });
   }
 };
 
-// @desc    Get all conversations for the logged-in user (list of last messages)
+// @desc    Get all conversations for the logged-in user
 // @route   GET /api/messages/conversations
 // @access  Private
 exports.getConversations = async (req, res) => {
   try {
-    const userId = req.user.id; // Authenticated user ID
+    const currentUserId = req.user.id;
 
-    const conversations = await Message.aggregate([
-      { '$match': {
-          '$or': [
-            { 'sender': new mongoose.Types.ObjectId(userId) },
-            { 'recipient': new mongoose.Types.ObjectId(userId) }
-          ]
-        }
-      },
-      { '$sort': { 'timestamp': -1 } },
-      { '$group': {
-          '_id': '$conversationId', // Group by conversation ID
-          'lastMessage': { '$first': '$$\ROOT' }, // Get the entire last message document
-          'unreadCount': { '$sum': {
-            '$cond': [
-              { '$and': [ // Condition to check if message is unread and for current user
-                { '$eq': ['$recipient', new mongoose.Types.ObjectId(userId)] },
-                { '$eq': ['$read', false] }
-              ]},
-              1, // If true, add 1 to count
-              0  // If false, add 0
-            ]
-          }}
-        }
-      },
-      { '$replaceRoot': { 'newRoot': '$lastMessage' } }, // Replace root with the last message document
-      { '$addFields': { 'unreadCount': '$unreadCount' } }, // Add unreadCount back to the root
-      { '$sort': { 'timestamp': -1 } }, // Sort again by last message timestamp
-      { '$limit': 100 } // Limit to 100 most recent conversations
+    // Get all messages where the current user is either sender or recipient
+    const messages = await Message.find({
+      $or: [
+        { sender: currentUserId },
+        { recipient: currentUserId }
+      ]
+    })
+    .sort('-timestamp')
+    .populate([
+      { path: 'sender', select: 'name profileImageUrl' },
+      { path: 'recipient', select: 'name profileImageUrl' }
     ]);
 
-    // Populate sender and recipient details for each last message in the conversations array
-    await User.populate(conversations, { path: 'sender', select: 'name profileImageUrl' });
-    await User.populate(conversations, { path: 'recipient', select: 'name profileImageUrl' });
+    // Group messages by conversationId and get the latest message for each
+    const conversationMap = new Map();
+    
+    messages.forEach(message => {
+      const conversationId = message.conversationId;
+      if (!conversationMap.has(conversationId) || 
+          new Date(message.timestamp) > new Date(conversationMap.get(conversationId).timestamp)) {
+        conversationMap.set(conversationId, message);
+      }
+    });
+
+    // Convert map to array and sort by timestamp
+    const conversations = Array.from(conversationMap.values())
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     res.json(conversations);
   } catch (err) {
-    console.error('getConversations error: Caught an exception:', err.message, err.stack);
+    console.error('getConversations error:', err.message);
     res.status(500).json({ message: 'Server error fetching conversations', error: err.message });
   }
 };
 
 // @desc    Delete a specific message
 // @route   DELETE /api/messages/:messageId
-// @access  Private (sender or admin only)
+// @access  Private
 exports.deleteMessage = async (req, res) => {
   try {
-    const messageId = req.params.messageId;
+    const { messageId } = req.params;
     const currentUserId = req.user.id;
-    const currentUserRole = req.user.role;
 
-    // Validate messageId as a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(messageId)) {
       return res.status(400).json({ message: 'Invalid message ID format' });
     }
@@ -218,69 +197,71 @@ exports.deleteMessage = async (req, res) => {
       return res.status(404).json({ message: 'Message not found' });
     }
 
-    // Check if user can delete this message (sender or admin)
-    if (message.sender.toString() !== currentUserId && currentUserRole !== 'admin') {
+    // Check if user is the sender
+    if (message.sender.toString() !== currentUserId) {
       return res.status(403).json({ message: 'You can only delete your own messages' });
     }
 
     // Delete the message
     await Message.findByIdAndDelete(messageId);
 
-    // Emit real-time update to both sender and recipient via Socket.IO
+    // Emit deletion event via Socket.IO
     const io = getIo();
     if (io) {
-      io.to(message.sender.toString()).emit('messageDeleted', { messageId, conversationId: message.conversationId });
-      io.to(message.recipient.toString()).emit('messageDeleted', { messageId, conversationId: message.conversationId });
+      io.to(message.sender.toString()).emit('messageDeleted', {
+        messageId: messageId,
+        conversationId: message.conversationId
+      });
+      io.to(message.recipient.toString()).emit('messageDeleted', {
+        messageId: messageId,
+        conversationId: message.conversationId
+      });
     }
 
     res.json({ message: 'Message deleted successfully' });
   } catch (err) {
-    console.error('deleteMessage error: Caught an exception:', err.message, err.stack);
+    console.error('deleteMessage error:', err.message);
     res.status(500).json({ message: 'Server error deleting message', error: err.message });
   }
 };
 
-// @desc    Clear all messages in a conversation (for current user only)
+// @desc    Clear all messages in a conversation
 // @route   DELETE /api/messages/conversation/:otherUserId
 // @access  Private
 exports.clearConversation = async (req, res) => {
   try {
-    console.log('clearConversation: Request received');
-    const { otherUserId } = req.params;
     const currentUserId = req.user.id;
-    
-    console.log('clearConversation: otherUserId:', otherUserId);
-    console.log('clearConversation: currentUserId:', currentUserId);
+    const { otherUserId } = req.params;
 
-    // Validate otherUserId as a valid ObjectId
+    if (!otherUserId) {
+      return res.status(400).json({ message: 'Other user ID is required' });
+    }
+
     if (!mongoose.Types.ObjectId.isValid(otherUserId)) {
-      console.log('clearConversation: Invalid otherUserId format');
       return res.status(400).json({ message: 'Invalid other user ID format' });
     }
 
-    // Note: We don't actually delete messages from the database
-    // This is just a signal to the frontend to clear the current user's view
-    // Each user maintains their own conversation state
+    const conversationId = getConversationId(currentUserId, otherUserId);
 
-    // Emit real-time update only to the current user via Socket.IO
+    // Delete all messages in the conversation
+    await Message.deleteMany({ conversationId });
+
+    // Emit clear event via Socket.IO
     const io = getIo();
     if (io) {
-      console.log('clearConversation: Emitting conversationCleared event to user:', currentUserId);
-      io.to(currentUserId).emit('conversationCleared', { 
-        otherUserId,
-        message: 'Conversation cleared for current user only'
+      io.to(currentUserId).emit('conversationCleared', {
+        conversationId: conversationId,
+        otherUserId: otherUserId
       });
-    } else {
-      console.log('clearConversation: Socket.IO not available');
+      io.to(otherUserId).emit('conversationCleared', {
+        conversationId: conversationId,
+        otherUserId: currentUserId
+      });
     }
 
-    console.log('clearConversation: Success - sending response');
-    res.json({ 
-      message: 'Conversation cleared successfully for current user', 
-      note: 'Messages are preserved for other users'
-    });
+    res.json({ message: 'Conversation cleared successfully' });
   } catch (err) {
-    console.error('clearConversation error: Caught an exception:', err.message, err.stack);
+    console.error('clearConversation error:', err.message);
     res.status(500).json({ message: 'Server error clearing conversation', error: err.message });
   }
 };

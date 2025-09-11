@@ -23,11 +23,6 @@ const NotificationDropdown = () => {
   }, []);
 
   const handleNotificationClick = (notification) => {
-    // Debug logging - only in development
-    if (process.env.NODE_ENV === 'development') {
-      // Notification clicked
-    }
-    
     // Don't mark offline notifications as read
     if (notification.id === 'offline-notification') {
       setIsOpen(false);
@@ -75,10 +70,6 @@ const NotificationDropdown = () => {
       {/* Notification Bell Button - Only Icon */}
       <button
         onClick={() => {
-          // Debug logging - only in development
-          if (process.env.NODE_ENV === 'development') {
-            // Bell button clicked
-          }
           setIsOpen(!isOpen);
         }}
         className={`relative flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors focus:outline-none ${

@@ -1,424 +1,317 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import io from 'socket.io-client';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { messageService } from '../services/messageService';
-import * as authService from '../services/authService';
+import { io } from 'socket.io-client';
+import { useAuth } from './AuthContext';
 
-const MessageContext = createContext(undefined); // Initialize with undefined, not null
+const MessageContext = createContext();
 
-export const useMessage = () => {
-  const context = useContext(MessageContext);
-  if (context === undefined) {
-    throw new Error('useMessage must be used within a MessageProvider');
-  }
-  return context;
-};
-
-// --- Global Socket.IO Instance (outside React's lifecycle) ---
+// Global socket instance
 let globalSocketInstance = null;
 
-// Function to reset the global socket instance
-const resetGlobalSocket = () => {
+// Initialize socket connection
+const initializeSocket = (token) => {
   if (globalSocketInstance) {
-    globalSocketInstance.disconnect();
-    globalSocketInstance = null;
-  }
-};
-
-// Function to refresh token and reconnect socket
-const refreshTokenAndReconnect = async () => {
-  try {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (refreshToken) {
-      const data = await authService.refreshToken(refreshToken);
-      
-      // Update tokens in localStorage
-      localStorage.setItem("accessToken", data.accessToken);
-      if (data.refreshToken) {
-        localStorage.setItem("refreshToken", data.refreshToken);
-      }
-
-      // Update socket auth and reconnect
-      if (globalSocketInstance) {
-        globalSocketInstance.auth.token = data.accessToken;
-        if (!globalSocketInstance.connected) {
-          globalSocketInstance.connect();
-        }
-      }
-
-      return data.accessToken;
-    }
-  } catch (error) {
-    console.error('Token refresh failed:', error);
-    // Clear tokens and redirect to login
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
-    window.location.href = "/login";
-  }
-  return null;
-};
-
-const initializeSocket = (accessToken) => {
-  // If socket exists and is connected with same token, return it
-  if (globalSocketInstance && globalSocketInstance.connected && 
-      globalSocketInstance.auth?.token === accessToken) {
     return globalSocketInstance;
   }
 
-  // If socket exists but token changed or disconnected, clean it up
-  if (globalSocketInstance) {
-    globalSocketInstance.removeAllListeners();
-    globalSocketInstance.disconnect();
-    globalSocketInstance = null;
-  }
-
-  // Create new socket instance
-  globalSocketInstance = io('http://localhost:5000', {
-    auth: { token: accessToken || null },
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionAttempts: 3, // Reduce reconnection attempts
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    timeout: 10000,
-    autoConnect: true, // Allow auto-connection
-    forceNew: true,
-    upgrade: true,
-    rememberUpgrade: false,
-    allowEIO3: true
+  globalSocketInstance = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+    auth: {
+      token: token
+    },
+    transports: ['websocket', 'polling']
   });
 
   return globalSocketInstance;
 };
 
 export const MessageProvider = ({ children }) => {
-  const authContext = useAuth();
-  const { user, accessToken } = authContext || {};
-  // const [socket, setSocket] = useState(null); // No longer needed, manage globalSocketInstance directly
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [currentConversation, setCurrentConversation] = useState([]);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
-  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
-  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const selectedRecipientRef = useRef(selectedRecipient);
+  // Refs to prevent infinite loops
+  const selectedRecipientRef = useRef(null);
+  const isFetchingConversationRef = useRef(false);
 
+  // Update ref when selectedRecipient changes
   useEffect(() => {
     selectedRecipientRef.current = selectedRecipient;
   }, [selectedRecipient]);
 
-  // Effect to reset socket when user logs out
+  // Initialize socket connection
   useEffect(() => {
-    if (!user) {
-      resetGlobalSocket();
-      return;
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      const newSocket = initializeSocket(token);
+      setSocket(newSocket);
     }
-  }, [user]);
+  }, []);
 
-  // Effect to manage the global socket instance and its listeners
+  // Socket event handlers
   useEffect(() => {
-    if (!accessToken || !user) {
-      return; // Don't initialize socket if no access token or user
-    }
-    
-    const currentSocket = initializeSocket(accessToken);
+    if (!socket) return;
 
-    const onConnect = () => {
-      console.log('Socket.IO - Connected successfully');
+    const handleConnect = () => {
+      console.log('Socket connected');
+      setIsConnected(true);
     };
-    
-    const onDisconnect = (reason) => {
-      console.log('Socket.IO - Disconnected:', reason);
-    };
-    
-    const onConnectError = async (err) => {
-      console.error('Socket.IO Connection Error:', err.message || 'websocket error', err.data || err);
 
-      // If it's an authentication error, try to refresh the token
-      if (err.message && err.message.includes('Authentication error')) {
-        await refreshTokenAndReconnect();
-      }
+    const handleDisconnect = () => {
+      console.log('Socket disconnected');
+      setIsConnected(false);
     };
-    const onNewMessage = (message) => {
+
+    const handleNewMessage = (message) => {
+      console.log('New message received:', message);
       
+      // Update conversations list
       setConversations(prev => {
-        const existingConvIndex = prev.findIndex(c => c.conversationId === message.conversationId);
-        if (existingConvIndex > -1) {
-          const updatedConvs = [...prev];
-          const isForCurrentUser = message.recipient._id === user?._id;
-          const isActiveConversation = selectedRecipientRef.current &&
-                                   (message.sender._id === selectedRecipientRef.current._id ||
-                                    message.recipient._id === selectedRecipientRef.current._id);
-
-          const newUnreadCount = isForCurrentUser && !isActiveConversation
-                             ? (updatedConvs[existingConvIndex].unreadCount || 0) + 1
-                             : (updatedConvs[existingConvIndex].unreadCount || 0);
-
-          updatedConvs[existingConvIndex] = { ...message, unreadCount: newUnreadCount };
-          return updatedConvs;
+        const existingIndex = prev.findIndex(conv => conv.conversationId === message.conversationId);
+        if (existingIndex > -1) {
+          const updated = [...prev];
+          updated[existingIndex] = { ...message, unreadCount: (updated[existingIndex].unreadCount || 0) + 1 };
+          return updated;
         } else {
-          const newUnreadCount = message.recipient._id === user?._id ? 1 : 0;
-          return [{...message, unreadCount: newUnreadCount }, ...prev];
+          return [{ ...message, unreadCount: 1 }, ...prev];
         }
       });
 
-      // Add message to current conversation if it's the active conversation
+      // Update current conversation if it's the active one
       if (selectedRecipientRef.current && 
           (message.sender._id === selectedRecipientRef.current._id || 
            message.recipient._id === selectedRecipientRef.current._id)) {
         setCurrentConversation(prev => {
-          // Check if message already exists to avoid duplicates
-          const messageExists = prev.some(msg => msg._id === message._id);
-          if (messageExists) {
-            return prev;
-          }
+          const exists = prev.some(msg => msg._id === message._id);
+          if (exists) return prev;
           return [...prev, message];
         });
       }
-    };
-
-    const onMessageDeleted = (data) => {
-      // Remove deleted message from current conversation
-      setCurrentConversation(prev => prev.filter(msg => msg._id !== data.messageId));
       
-      // Update conversations list if needed
-      setConversations(prev => prev.map(conv => {
-        if (conv.conversationId === data.conversationId && conv._id === data.messageId) {
-          // Find the next message in the conversation to replace the deleted one
-          return null; // This will be filtered out
+      // Also check if this message belongs to the current conversation by conversationId
+      if (selectedRecipientRef.current && user) {
+        const currentConversationId = [user._id, selectedRecipientRef.current._id].sort().join('_');
+        if (message.conversationId === currentConversationId) {
+          setCurrentConversation(prev => {
+            const exists = prev.some(msg => msg._id === message._id);
+            if (exists) return prev;
+            return [...prev, message];
+          });
         }
-        return conv;
-      }).filter(Boolean));
+      }
     };
 
-    const onConversationCleared = (data) => {
-      // Clear current conversation view only for the current user
-      // This doesn't affect the other user's messages
+    const handleMessageDeleted = (data) => {
+      setCurrentConversation(prev => prev.filter(msg => msg._id !== data.messageId));
+    };
+
+    const handleConversationCleared = (data) => {
       if (selectedRecipientRef.current && selectedRecipientRef.current._id === data.otherUserId) {
         setCurrentConversation([]);
       }
-      
-      // Note: We don't remove the conversation from the conversations list
-      // as the messages still exist in the database for other users
     };
 
-    const onNewNotification = (notification) => {
-      // Handle new notification event
-      console.log('Received notification via Socket.IO:', notification);
-      // We'll emit a custom event that NotificationContext can listen to
+    const handleNewNotification = (notification) => {
       window.dispatchEvent(new CustomEvent('newNotification', { detail: notification }));
     };
 
-    currentSocket.on('connect', onConnect);
-    currentSocket.on('disconnect', onDisconnect);
-    currentSocket.on('connect_error', onConnectError);
-    currentSocket.on('newMessage', onNewMessage);
-    currentSocket.on('messageDeleted', onMessageDeleted);
-    currentSocket.on('conversationCleared', onConversationCleared);
-    currentSocket.on('newNotification', onNewNotification);
+    // Add event listeners
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('newMessage', handleNewMessage);
+    socket.on('messageDeleted', handleMessageDeleted);
+    socket.on('conversationCleared', handleConversationCleared);
+    socket.on('newNotification', handleNewNotification);
 
+    // Cleanup
     return () => {
-      currentSocket.off('connect', onConnect);
-      currentSocket.off('disconnect', onDisconnect);
-      currentSocket.off('connect_error', onConnectError);
-      currentSocket.off('newMessage', onNewMessage);
-      currentSocket.off('messageDeleted', onMessageDeleted);
-      currentSocket.off('conversationCleared', onConversationCleared);
-      currentSocket.off('newNotification', onNewNotification);
-      
-      // Disconnect the socket if it's connected
-      if (currentSocket.connected) {
-        currentSocket.disconnect();
-      }
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('newMessage', handleNewMessage);
+      socket.off('messageDeleted', handleMessageDeleted);
+      socket.off('conversationCleared', handleConversationCleared);
+      socket.off('newNotification', handleNewNotification);
     };
-  }, [user, accessToken]);
+  }, [socket]);
 
-  // Effect to manage connection state and token updates
-  useEffect(() => {
-    const currentSocket = globalSocketInstance;
-
-    if (!currentSocket) {
-      return;
-    }
-
-    if (user && accessToken) {
-      // Update token if it has changed
-      if (currentSocket.auth && currentSocket.auth.token !== accessToken) {
-        currentSocket.auth.token = accessToken;
-        // Don't disconnect immediately, let the socket handle reconnection
-      }
-
-      // Connect if not connected
-      if (!currentSocket.connected) {
-        currentSocket.connect();
-      }
-    } else {
-      if (currentSocket.connected) {
-        currentSocket.disconnect();
-      }
-    }
-  }, [user, accessToken]);
-
+  // Fetch conversations list
   const fetchConversations = useCallback(async () => {
-    if (!accessToken || isLoadingConversations) return;
-    
-    setIsLoadingConversations(true);
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    setLoading(true);
     try {
-      const data = await messageService.getConversations(accessToken);
+      const data = await messageService.getConversations(token);
       setConversations(data || []);
     } catch (error) {
-      console.error("Failed to fetch conversations:", error);
-      setConversations([]);
+      console.error('Failed to fetch conversations:', error);
+      setError('Failed to load conversations');
     } finally {
-      setIsLoadingConversations(false);
+      setLoading(false);
     }
-  }, [accessToken, isLoadingConversations]);
-
-  // Debounced version to prevent rapid successive calls
-  const debouncedFetchConversations = useCallback(() => {
-    const timeoutId = setTimeout(() => {
-      fetchConversations();
-    }, 300); // 300ms debounce
-    
-    return () => clearTimeout(timeoutId);
-  }, [fetchConversations]);
-
-  // Cleanup timeouts on unmount
-  useEffect(() => {
-    return () => {
-      // Clear any pending timeouts
-      const timeouts = document.querySelectorAll('[data-timeout]');
-      timeouts.forEach(timeout => clearTimeout(timeout.dataset.timeout));
-    };
   }, []);
 
-  useEffect(() => {
-    if (user && accessToken) {
-      fetchConversations();
-    }
-  }, [user, accessToken]); // Remove fetchConversations from dependencies to prevent infinite loop
-
+  // Fetch specific conversation
   const fetchConversation = useCallback(async (otherUserId) => {
-    if (!accessToken || !otherUserId || isLoadingConversation) return;
+    const token = localStorage.getItem('accessToken');
+    if (!token || !otherUserId || isFetchingConversationRef.current) return;
+
+    isFetchingConversationRef.current = true;
+    setLoading(true);
     
-    setIsLoadingConversation(true);
     try {
-      const data = await messageService.getConversation(otherUserId, accessToken);
+      const data = await messageService.getConversation(otherUserId, token);
       setCurrentConversation(data || []);
-      
-      // Only set selected recipient if it's different from current
-      setSelectedRecipient(prev => {
-        if (prev && prev._id === otherUserId) {
-          return prev; // No change needed
-        }
-        
-        const participant = data?.find(msg => msg.sender._id === otherUserId || msg.recipient._id === otherUserId);
-        if (participant) {
-          return participant.sender._id === otherUserId ? participant.sender : participant.recipient;
-        }
-        return prev;
-      });
     } catch (error) {
-      console.error("Failed to fetch conversation:", error);
+      console.error('Failed to fetch conversation:', error);
+      setError('Failed to load conversation');
       setCurrentConversation([]);
-      setSelectedRecipient(null);
     } finally {
-      setIsLoadingConversation(false);
+      setLoading(false);
+      isFetchingConversationRef.current = false;
     }
-  }, [accessToken, isLoadingConversation]);
+  }, []);
 
+  // Send new message
   const sendNewMessage = useCallback(async (recipientId, content, fileData = null, fileType = null) => {
-    if (!accessToken || !user) return;
-    try {
-      const response = await messageService.sendMessage(recipientId, content, fileData, fileType, accessToken);
-      
-      // The message will be added to the conversation via socket.io
-      // No need to manually add it here
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      throw error; // Re-throw to allow UI to handle the error
-    }
-  }, [accessToken, user]);
+    const token = localStorage.getItem('accessToken');
+    if (!token) throw new Error('No authentication token');
 
-  // Helper function to create conversation ID (same as backend)
-  const getConversationId = (userId1, userId2) => {
-    const sortedIds = [userId1.toString(), userId2.toString()].sort();
-    return sortedIds.join('_');
+    try {
+      const response = await messageService.sendMessage(recipientId, content, fileData, fileType, token);
+      return response;
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      throw error;
+    }
+  }, []);
+
+  // Delete message
+  const deleteMessage = useCallback(async (messageId) => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) throw new Error('No authentication token');
+
+    try {
+      await messageService.deleteMessage(messageId, token);
+      setCurrentConversation(prev => prev.filter(msg => msg._id !== messageId));
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      throw error;
+    }
+  }, []);
+
+  // Clear conversation
+  const clearConversation = useCallback(async (otherUserId) => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) throw new Error('No authentication token');
+
+    try {
+      await messageService.clearConversation(otherUserId, token);
+      setCurrentConversation([]);
+    } catch (error) {
+      console.error('Failed to clear conversation:', error);
+      throw error;
+    }
+  }, []);
+
+  // Set selected recipient
+  const selectRecipient = useCallback((recipient) => {
+    console.log('MessageContext - selectRecipient called with:', recipient);
+    
+    // Leave previous conversation room if exists
+    if (socket && user && selectedRecipientRef.current) {
+      const prevConversationId = [user._id, selectedRecipientRef.current._id].sort().join('_');
+      console.log('Leaving previous conversation room:', prevConversationId);
+      socket.emit('leaveConversation', prevConversationId);
+    }
+    
+    setSelectedRecipient(recipient);
+    if (recipient && recipient._id) {
+      console.log('MessageContext - fetching conversation for:', recipient._id);
+      fetchConversation(recipient._id);
+      
+      // Join conversation room for real-time updates
+      if (socket && user) {
+        const conversationId = [user._id, recipient._id].sort().join('_');
+        console.log('Joining conversation room:', conversationId);
+        socket.emit('joinConversation', conversationId);
+      }
+    }
+  }, [fetchConversation, socket, user]);
+
+  // Load conversations on mount
+  useEffect(() => {
+    fetchConversations();
+    
+    // Check for stored recipient data from other pages
+    const storedRecipient = sessionStorage.getItem('selectedRecipient');
+    if (storedRecipient) {
+      try {
+        const recipientData = JSON.parse(storedRecipient);
+        console.log('MessageContext - Found stored recipient:', recipientData);
+        setSelectedRecipient(recipientData);
+        fetchConversation(recipientData._id);
+        // Clear the stored data after using it
+        sessionStorage.removeItem('selectedRecipient');
+      } catch (error) {
+        console.error('Error parsing stored recipient data:', error);
+        sessionStorage.removeItem('selectedRecipient');
+      }
+    }
+  }, [fetchConversations, fetchConversation]);
+
+  const value = {
+    // State
+    conversations,
+    currentConversation,
+    selectedRecipient,
+    loading,
+    error,
+    socket,
+    isConnected,
+    
+    // Actions
+    fetchConversations,
+    fetchConversation,
+    sendNewMessage,
+    deleteMessage,
+    clearConversation,
+    selectRecipient,
+    setError
   };
 
-  // Delete a specific message
-  const deleteMessage = useCallback(async (messageId) => {
-    if (!accessToken) return;
-    try {
-      await messageService.deleteMessage(messageId, accessToken);
-    } catch (error) {
-      console.error("Failed to delete message:", error);
-      throw error;
-    }
-  }, [accessToken]);
+  return (
+    <MessageContext.Provider value={value}>
+      {children}
+    </MessageContext.Provider>
+  );
+};
 
-  // Clear all messages in a conversation (for current user only)
-  const clearConversation = useCallback(async (otherUserId) => {
-    if (!accessToken) {
-      console.error("No access token available for clearConversation");
-      throw new Error("No access token available");
-    }
-    
-    if (!otherUserId) {
-      console.error("No otherUserId provided for clearConversation");
-      throw new Error("No user ID provided");
-    }
-    
-    try {
-      // Debug logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        // Attempting to clear conversation
-      }
-      
-      const result = await messageService.clearConversation(otherUserId, accessToken);
-      
-      // Clear the current conversation view immediately
-      setCurrentConversation([]);
-      
-      // Debug logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        // Clear conversation successful
-      }
-      
-      // Note: This only clears the current user's view
-      // The other user's messages remain unchanged
-    } catch (error) {
-      console.error("Failed to clear conversation:", error);
-      throw error;
-    }
-  }, [accessToken, user]);
-
-  const value = useMemo(() => ({
-    socket: globalSocketInstance,
-    conversations,
-    currentConversation,
-    selectedRecipient,
-    isLoadingConversations,
-    isLoadingConversation,
-    fetchConversations,
-    fetchConversation,
-    sendNewMessage,
-    deleteMessage,
-    clearConversation,
-    setSelectedRecipient,
-  }), [
-    conversations,
-    currentConversation,
-    selectedRecipient,
-    isLoadingConversations,
-    isLoadingConversation,
-    fetchConversations,
-    fetchConversation,
-    sendNewMessage,
-    deleteMessage,
-    clearConversation,
-  ]);
-
-  return <MessageContext.Provider value={value}>{children}</MessageContext.Provider>;
+export const useMessage = () => {
+  const context = useContext(MessageContext);
+  if (!context) {
+    // Return a default context with no-op functions when used outside provider
+    return {
+      conversations: [],
+      currentConversation: [],
+      selectedRecipient: null,
+      newMessage: '',
+      isLoadingConversations: false,
+      isLoadingConversation: false,
+      isSendingMessage: false,
+      fetchConversations: () => {},
+      fetchConversation: () => {},
+      sendMessage: () => {},
+      selectRecipient: () => {},
+      setNewMessage: () => {},
+      clearConversation: () => {},
+      deleteMessage: () => {},
+      clearAllMessages: () => {}
+    };
+  }
+  return context;
 };

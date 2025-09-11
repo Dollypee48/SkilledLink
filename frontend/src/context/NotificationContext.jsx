@@ -69,10 +69,6 @@ export const NotificationProvider = ({ children }) => {
       );
       
       if (isDuplicate) {
-        // Debug logging - only in development
-        if (process.env.NODE_ENV === 'development') {
-          // Duplicate notification prevented
-        }
         return prev;
       }
       
@@ -242,10 +238,6 @@ export const NotificationProvider = ({ children }) => {
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
     if (!accessToken) {
-      // Debug logging - only in development
-      if (process.env.NODE_ENV === 'development') {
-        // No access token available for notifications
-      }
       return;
     }
     
@@ -323,7 +315,7 @@ export const NotificationProvider = ({ children }) => {
     if (accessToken) {
       fetchNotifications();
     }
-  }, [accessToken, fetchNotifications]);
+  }, [accessToken]); // Remove fetchNotifications from dependencies to prevent infinite loop
 
   // Listen for Socket.IO notifications via custom events from MessageContext
   useEffect(() => {

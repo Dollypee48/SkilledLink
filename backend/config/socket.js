@@ -78,8 +78,17 @@ const setupSocket = (httpServer) => {
       }
     });
 
-    // You can add more socket event handlers here, e.g., for sending messages
-    // For now, messages will be emitted from the messageController after DB save.
+    // Handle conversation room joining
+    socket.on('joinConversation', (conversationId) => {
+      console.log('Socket.IO - User joining conversation:', socket.userId, conversationId);
+      socket.join(conversationId);
+    });
+
+    // Handle conversation room leaving
+    socket.on('leaveConversation', (conversationId) => {
+      console.log('Socket.IO - User leaving conversation:', socket.userId, conversationId);
+      socket.leave(conversationId);
+    });
   });
 
   return io;

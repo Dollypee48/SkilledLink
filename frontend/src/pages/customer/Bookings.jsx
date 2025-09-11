@@ -115,10 +115,7 @@ const Bookings = () => {
                 </thead>
                 <tbody>
                   {sortedBookings.map((booking) => (
-                    <tr
-                      key={booking._id}
-                      className="border-b hover:bg-gray-50 transition-colors"
-                    >
+                    <tr key={booking._id} className="border-b hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-sm text-gray-600">
                         {booking.artisan?.name || "N/A"}
                       </td>

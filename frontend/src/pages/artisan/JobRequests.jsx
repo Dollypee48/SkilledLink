@@ -283,20 +283,16 @@ const ArtisanRequests = () => {
                 </thead>
                 <tbody>
                   {filteredRequests?.map((request) => (
-                    <tr
-                      key={request._id} // Use _id from MongoDB
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                    >
+                    <tr key={request._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-gray-600">{request._id}</td>
-                      <td className="p-3 text-gray-600">{request.customer?.name || `Customer ${request._id}`}</td> {/* Access customer name */}
+                      <td className="p-3 text-gray-600">{request.customer?.name || `Customer ${request._id}`}</td>
                       <td className="p-3 text-gray-600">{request.service}</td>
-                      <td className="p-3 text-gray-600">{new Date(request.date).toLocaleDateString()}</td> {/* Format date */}
+                      <td className="p-3 text-gray-600">{new Date(request.date).toLocaleDateString()}</td>
                       <td className="p-3">
                         {(() => {
                           const originalStatus = request.status;
                           const normalizedStatus = normalizeStatus(originalStatus);
                           
-                          // Only handle Pending, Accepted, Declined
                           switch (normalizedStatus) {
                             case "Accepted":
                               return (
@@ -317,7 +313,6 @@ const ArtisanRequests = () => {
                                 </span>
                               );
                             default:
-                              // This should never happen with normalizeStatus, but just in case
                               return (
                                 <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">
                                   Pending
