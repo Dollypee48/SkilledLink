@@ -199,7 +199,6 @@ const BookingPreviewModal = ({
                 </div>
               </div>
             </div>
-          )}
         </div>
 
         {/* Actions Footer */}

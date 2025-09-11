@@ -16,7 +16,8 @@ import {
   Mail,
   MapPin,
   Edit3,
-  Plus
+  Plus,
+  Home
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import KYCNotificationBanner from '../../components/KYCNotificationBanner';
@@ -94,13 +95,23 @@ const ArtisanDashboard = () => {
         {/* Header Section */}
         <div className="bg-white shadow-sm border-b border-gray-200">
           <div className="px-6 py-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {currentArtisan?.name || user?.name || 'Artisan'}!
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Manage your bookings and grow your business
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Welcome back, {currentArtisan?.name || user?.name || 'Artisan'}!
+                </h1>
+                <p className="text-gray-600 mt-2">
+                  Manage your bookings and grow your business
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                title="Go to Homepage"
+              >
+                <Home className="w-4 h-4" />
+                <span className="text-sm font-medium">Home</span>
+              </button>
             </div>
           </div>
         </div>
@@ -411,7 +422,7 @@ const ArtisanDashboard = () => {
                     <div className="space-y-3">
                       <div className="flex items-center text-sm text-gray-600">
                         <MapPin className="w-4 h-4 mr-3 text-gray-400" />
-                        <span>{currentArtisan.location || 'Location not set'}</span>
+                        <span>{currentArtisan.artisanProfile?.location?.state || currentArtisan.state || 'State not set'}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Phone className="w-4 h-4 mr-3 text-gray-400" />

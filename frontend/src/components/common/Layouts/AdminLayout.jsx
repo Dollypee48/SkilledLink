@@ -11,6 +11,7 @@ import {
   Star, // Added for Manage Reviews
   LogOut,
   FileCheck, // New: Added for KYC Verification
+  Home,
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
 
@@ -39,7 +40,7 @@ const AdminLayout = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#151E3D] text-white flex flex-col justify-between sticky top-0 h-screen">
+      <aside className="w-64 bg-[#151E3D] text-white flex flex-col sticky top-0 h-screen">
         <div>
           <h1 className="text-2xl font-bold p-6 text-white">SkilledLink Admin</h1>
           <nav className="flex flex-col space-y-1 px-4">
@@ -62,15 +63,15 @@ const AdminLayout = ({ children }) => {
               );
             })}
           </nav>
+          
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-3 p-4 hover:text-white transition-colors mt-4"
+          >
+            <LogOut className="w-5 h-5" />
+            Logout
+          </button>
         </div>
-
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-3 p-4 hover:text-white transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          Logout
-        </button>
       </aside>
 
       {/* Main Content */}
@@ -84,6 +85,15 @@ const AdminLayout = ({ children }) => {
             <p className="text-sm text-gray-500">Welcome to the admin panel</p>
           </div>
           <div className="flex items-center gap-6">
+            {/* Home Button */}
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+              title="Go to Homepage"
+            >
+              <Home className="w-4 h-4" />
+              <span className="text-sm font-medium">Home</span>
+            </button>
             <NotificationDropdown />
             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shadow">
               <Users className="w-5 h-5 text-gray-600" />

@@ -60,24 +60,30 @@ const refreshTokenAndReconnect = async () => {
 };
 
 const initializeSocket = (accessToken) => {
-  if (globalSocketInstance && globalSocketInstance.connected) {
+  // If socket exists and is connected with same token, return it
+  if (globalSocketInstance && globalSocketInstance.connected && 
+      globalSocketInstance.auth?.token === accessToken) {
     return globalSocketInstance;
   }
 
+  // If socket exists but token changed or disconnected, clean it up
   if (globalSocketInstance) {
+    globalSocketInstance.removeAllListeners();
     globalSocketInstance.disconnect();
+    globalSocketInstance = null;
   }
 
+  // Create new socket instance
   globalSocketInstance = io('http://localhost:5000', {
     auth: { token: accessToken || null },
     transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionAttempts: 5, // Limit reconnection attempts
-    reconnectionDelay: 2000,
-    reconnectionDelayMax: 10000,
-    timeout: 20000,
-    autoConnect: false, // Prevent auto-connection
-    forceNew: true, // Force new connection
+    reconnectionAttempts: 3, // Reduce reconnection attempts
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 10000,
+    autoConnect: true, // Allow auto-connection
+    forceNew: true,
     upgrade: true,
     rememberUpgrade: false,
     allowEIO3: true
@@ -117,11 +123,13 @@ export const MessageProvider = ({ children }) => {
     const currentSocket = initializeSocket(accessToken);
 
     const onConnect = () => {
-      // setSocket(currentSocket); // No longer needed
+      console.log('Socket.IO - Connected successfully');
     };
+    
     const onDisconnect = (reason) => {
-      // setSocket(null); // No longer needed
+      console.log('Socket.IO - Disconnected:', reason);
     };
+    
     const onConnectError = async (err) => {
       console.error('Socket.IO Connection Error:', err.message || 'websocket error', err.data || err);
 
@@ -227,9 +235,7 @@ export const MessageProvider = ({ children }) => {
       // Update token if it has changed
       if (currentSocket.auth && currentSocket.auth.token !== accessToken) {
         currentSocket.auth.token = accessToken;
-        if (currentSocket.connected) {
-          currentSocket.disconnect();
-        }
+        // Don't disconnect immediately, let the socket handle reconnection
       }
 
       // Connect if not connected
@@ -241,9 +247,6 @@ export const MessageProvider = ({ children }) => {
         currentSocket.disconnect();
       }
     }
-
-    return () => {
-    };
   }, [user, accessToken]);
 
   const fetchConversations = useCallback(async () => {
@@ -269,13 +272,15 @@ export const MessageProvider = ({ children }) => {
       const data = await messageService.getConversation(otherUserId, accessToken);
       setCurrentConversation(data || []);
       
-      // Set selected recipient if not already set
+      // Only set selected recipient if it's different from current
       setSelectedRecipient(prev => {
-        if (!prev || prev._id !== otherUserId) {
-          const participant = data?.find(msg => msg.sender._id === otherUserId || msg.recipient._id === otherUserId);
-          if (participant) {
-            return participant.sender._id === otherUserId ? participant.sender : participant.recipient;
-          }
+        if (prev && prev._id === otherUserId) {
+          return prev; // No change needed
+        }
+        
+        const participant = data?.find(msg => msg.sender._id === otherUserId || msg.recipient._id === otherUserId);
+        if (participant) {
+          return participant.sender._id === otherUserId ? participant.sender : participant.recipient;
         }
         return prev;
       });

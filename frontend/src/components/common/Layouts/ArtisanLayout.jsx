@@ -48,7 +48,7 @@ const ArtisanLayout = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#151E3D] text-white flex flex-col justify-between sticky top-0 h-screen z-10">
+      <aside className="w-64 bg-[#151E3D] text-white flex flex-col sticky top-0 h-screen z-10">
           <div>
             <h1 className="text-2xl font-bold p-6 text-white">SkilledLink</h1>
             <nav className="flex flex-col space-y-1 px-4">
@@ -71,15 +71,15 @@ const ArtisanLayout = ({ children }) => {
                 );
               })}
             </nav>
+            
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-3 p-4 hover:text-white transition-colors mt-4"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
           </div>
-
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 p-4 hover:text-white transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button>
         </aside>
 
       {/* Main Content */}

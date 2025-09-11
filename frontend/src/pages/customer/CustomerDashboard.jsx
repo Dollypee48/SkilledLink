@@ -1,5 +1,6 @@
 // frontend/src/pages/customer/CustomerDashboard.jsx
 import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
 import { 
   CalendarCheck, 
@@ -12,7 +13,8 @@ import {
   Users, 
   ArrowRight,
   Plus,
-  XCircle
+  XCircle,
+  Home
 } from "lucide-react";
 import { useBooking } from "../../context/BookingContext";
 import { useAuth } from "../../context/AuthContext";
@@ -21,6 +23,8 @@ import KYCNotificationBanner from "../../components/KYCNotificationBanner";
 import { needsKYC } from "../../utils/kycUtils";
 
 export default function CustomerDashboard() {
+  const navigate = useNavigate();
+  
   // Destructure 'bookings' as 'myBookings' to avoid conflict and use the correct data for customers
   const { customerBookings, loading: bookingsLoading, error: bookingsError, getBookings } = useBooking();
 
@@ -75,13 +79,23 @@ export default function CustomerDashboard() {
         {/* Header Section */}
         <div className="bg-white shadow-sm border-b border-gray-200">
           <div className="px-6 py-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {user?.name || 'Customer'}!
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Here's what's happening with your bookings today
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Welcome back, {user?.name || 'Customer'}!
+                </h1>
+                <p className="text-gray-600 mt-2">
+                  Here's what's happening with your bookings today
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                title="Go to Homepage"
+              >
+                <Home className="w-4 h-4" />
+                <span className="text-sm font-medium">Home</span>
+              </button>
             </div>
           </div>
         </div>

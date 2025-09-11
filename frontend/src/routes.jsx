@@ -20,7 +20,6 @@ import CustomerDashboard from './pages/customer/CustomerDashboard';
 import CustomerBookings from './pages/customer/Bookings';
 import CustomerProfile from './pages/customer/Profile';
 import CustomerReport from './pages/customer/ReportIssue';
-import CustomerReviews from './pages/customer/ReviewsAndRatings'; 
 import Services from './pages/Services'; // New: Import Services page
 import HowItWorks from './pages/HowItWorks'; // New: Import HowItWorks page
 import AboutUs from './pages/AboutUs'; // New: Import AboutUs page
@@ -85,7 +84,6 @@ const RoutesComponent = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/customer-reviews" element={<CustomerReviews />} />
       <Route path="/customer-report" element={<CustomerReport />} />
 
       {/* Customer Messages Page Route */}

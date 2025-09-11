@@ -6,12 +6,8 @@ import {
   MessageSquare,
   Search,
   CalendarCheck,
-  Star,
   User,
-  AlertTriangle,
   LogOut,
-  Home, // New: Added for home icon
-  FileText, // Added for KYC Verification
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
 
@@ -23,16 +19,12 @@ const CustomerLayout = ({ children }) => {
   // Debug logging removed for production
 
   const navItems = [
-    { name: "Home", path: "/", icon: Home }, // New: Home button
     { name: "Dashboard", path: "/customer-dashboard", icon: LayoutDashboard },
     { name: "Messages", path: "/messages", icon: MessageSquare }, // New: Point to the new unified messages page
     { name: "Find Artisans", path: "/artisans", icon: Search },
     { name: "My Bookings", path: "/customer-bookings", icon: CalendarCheck },
-    { name: "Review/Ratings", path: "/customer-reviews", icon: Star },
-    { name: "KYC Verification", path: "/kyc-verification", icon: FileText }, // New: KYC Verification
     { name: "Profile", path: "/customer-profile", icon: User },
     { name: "Settings", path: "/customer-settings", icon: User }, // Using User icon for now, can be changed later
-    { name: "Report issue", path: "/customer-report", icon: AlertTriangle },
   ];
 
   const onLogout = () => {  // ✅ optional renaming for clarity
@@ -46,7 +38,7 @@ const CustomerLayout = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] relative"> {/* Added 'relative' */}
       {/* Sidebar */}
-      <aside className="w-64 bg-[#151E3D] text-white flex flex-col justify-between sticky top-0 h-screen">
+      <aside className="w-64 bg-[#151E3D] text-white flex flex-col sticky top-0 h-screen">
           <div>
             <h1 className="text-2xl font-bold p-6 text-white">SkilledLink</h1>
             <nav className="flex flex-col space-y-1 px-4">
@@ -69,15 +61,15 @@ const CustomerLayout = ({ children }) => {
                 );
               })}
             </nav>
+            
+            <button
+              onClick={onLogout}  // ✅ use the corrected function
+              className="flex items-center gap-3 p-4 hover:text-white transition-colors mt-4"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
           </div>
-
-          <button
-            onClick={onLogout}  // ✅ use the corrected function
-            className="flex items-center gap-3 p-4 hover:text-white transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button>
         </aside>
 
       {/* Main Content */}

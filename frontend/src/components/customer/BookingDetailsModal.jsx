@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useMessage } from '../../context/MessageContext'; // Assuming you have a MessageContext
-import { XCircle } from 'lucide-react';
+import { XCircle, Star } from 'lucide-react';
+import ReviewRatingsModal from './ReviewRatingsModal';
 
 const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
   const navigate = useNavigate();
   const { setSelectedRecipient } = useMessage();
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   if (!isOpen || !booking) return null;
 
@@ -19,6 +21,14 @@ const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
       onClose(); // Close the booking details modal
       navigate('/messages'); // Navigate to the messages page
     }
+  };
+
+  const handleReviewAndRating = () => {
+    setIsReviewModalOpen(true); // Open the review modal
+  };
+
+  const handleCloseReviewModal = () => {
+    setIsReviewModalOpen(false);
   };
 
   const getStatusColor = (status) => {
@@ -48,7 +58,6 @@ const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
           <p><span className="font-semibold">Service:</span> {booking.service}</p>
           <p><span className="font-semibold">Date:</span> {new Date(booking.date).toLocaleDateString()}</p>
           <p><span className="font-semibold">Time:</span> {booking.time}</p>
-          <p><span className="font-semibold">Price:</span> N{booking.price?.toFixed(2) || '0.00'}</p>
           <p>
             <span className="font-semibold">Status:</span>
             <span className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
@@ -68,6 +77,13 @@ const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
             </button>
           )}
           <button
+            onClick={handleReviewAndRating}
+            className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2"
+          >
+            <Star className="w-4 h-4" />
+            Review & Ratings
+          </button>
+          <button
             onClick={onClose}
             className="px-4 py-2 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
@@ -75,6 +91,13 @@ const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
           </button>
         </div>
       </div>
+      
+      {/* Review & Ratings Modal */}
+      <ReviewRatingsModal
+        isOpen={isReviewModalOpen}
+        onClose={handleCloseReviewModal}
+        booking={booking}
+      />
     </div>,
     document.body
   );

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from './AuthContext';
-import { useMessage } from './MessageContext';
 import { notificationService } from '../services/notificationService';
 
 const NotificationContext = createContext(undefined);
@@ -14,20 +13,8 @@ export const useNotification = () => {
   return context;
 };
 
-// Custom hook to safely get socket from MessageContext
-const useSocket = () => {
-  try {
-    const { socket } = useMessage();
-    return socket;
-  } catch (error) {
-    // MessageProvider not available yet, return null
-    return null;
-  }
-};
-
 export const NotificationProvider = ({ children }) => {
   const { user, accessToken } = useAuth();
-  const socket = useSocket();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   
@@ -250,19 +237,7 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [addNotification]);
 
-  // Message notifications
-  const notifyNewMessage = useCallback((message, isFromCurrentUser) => {
-    if (!isFromCurrentUser) {
-      addNotification({
-        type: 'info',
-        title: 'New Message',
-        message: `New message from ${message.sender.name}: ${message.content?.substring(0, 50)}${message.content?.length > 50 ? '...' : ''}`,
-        category: 'message',
-        important: false,
-        data: { messageId: message._id, conversationId: message.conversationId }
-      });
-    }
-  }, [addNotification]);
+  // Message notifications - will be handled by MessageContext to avoid circular dependencies
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -340,49 +315,8 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [accessToken]);
 
-  // Listen for new messages from MessageContext
-  useEffect(() => {
-    if (socket && user) {
-      const handleNewMessage = (message) => {
-        // Socket.IO message received
-        // Only notify if the message is for the current user
-        if (message.recipient._id === user._id) {
-          notifyNewMessage(message, false);
-        }
-      };
-
-      socket.on('newMessage', handleNewMessage);
-
-      return () => {
-        socket.off('newMessage', handleNewMessage);
-      };
-    }
-  }, [socket, user, notifyNewMessage]);
-
-  // Listen for new notifications from Socket.IO
-  useEffect(() => {
-    if (socket && user) {
-      const handleNewNotification = (notification) => {
-        // Socket.IO notification received
-        addNotification({
-          _id: notification._id,
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          category: notification.category,
-          important: notification.important,
-          data: notification.data,
-          timestamp: new Date(notification.createdAt)
-        });
-      };
-
-      socket.on('newNotification', handleNewNotification);
-
-      return () => {
-        socket.off('newNotification', handleNewNotification);
-      };
-    }
-  }, [socket, user, addNotification]);
+  // Note: Socket.IO message and notification handling will be moved to MessageContext
+  // to avoid circular dependencies
 
   // Fetch notifications when component mounts or token changes
   useEffect(() => {
@@ -411,7 +345,6 @@ export const NotificationProvider = ({ children }) => {
     markAllAsRead,
     clearNotifications,
     notifyJobStatusChange,
-    notifyNewMessage,
     showNotification,
     fetchNotifications
   };
