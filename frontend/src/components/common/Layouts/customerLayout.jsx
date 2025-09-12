@@ -10,6 +10,7 @@ import {
   LogOut,
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
+import ProfileDropdown from "../ProfileDropdown"; // Import ProfileDropdown
 
 const CustomerLayout = ({ children }) => {
   const { user, handleLogout } = useAuth(); // ✅ Corrected here
@@ -75,7 +76,6 @@ const CustomerLayout = ({ children }) => {
       {/* Main Content */}
       <main className={`flex-1 flex flex-col ${isDashboard ? "ml-0" : "ml-auto"}`}>
         {/* Header */}
-        {!isHomepage && (
         <header className="flex justify-between items-center p-4 bg-white shadow">
           <div>
             <h2 className="text-lg font-semibold text-[#151E3D]">
@@ -85,16 +85,9 @@ const CustomerLayout = ({ children }) => {
           </div>
           <div className="flex items-center gap-6">
             <NotificationDropdown />
-            {user?.profileImageUrl ? (
-              <img src={user.profileImageUrl} alt="Profile" className="w-10 h-10 rounded-full object-cover shadow" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shadow">
-                <User className="w-5 h-5 text-gray-600" />
-              </div>
-            )}
+            <ProfileDropdown />
           </div>
         </header>
-        )}
         {/* Page Content */}
         <div className="p-6">{children}</div>
       </main>

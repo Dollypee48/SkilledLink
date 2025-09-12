@@ -120,6 +120,30 @@ const userSchema = new mongoose.Schema(
       maxJobs: { type: Number, default: 3 }, // 3 for free, unlimited for premium
       resetDate: { type: Date, default: Date.now } // Monthly reset for free accounts
     },
+    // Notification preferences
+    notificationPreferences: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: true },
+      push: { type: Boolean, default: true },
+      jobUpdates: { type: Boolean, default: true },
+      messages: { type: Boolean, default: true },
+      reviews: { type: Boolean, default: true },
+      earnings: { type: Boolean, default: true }, // For artisans
+      jobRequests: { type: Boolean, default: true } // For artisans
+    },
+    // Privacy settings
+    privacySettings: {
+      profileVisibility: { 
+        type: String, 
+        enum: ['public', 'private', 'contacts'], 
+        default: 'public' 
+      },
+      showPhone: { type: Boolean, default: true },
+      showEmail: { type: Boolean, default: false },
+      showLocation: { type: Boolean, default: true },
+      allowMessages: { type: Boolean, default: true },
+      showOnlineStatus: { type: Boolean, default: true }
+    },
   },
   { timestamps: true }
 );

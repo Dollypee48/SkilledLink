@@ -9,9 +9,9 @@ import {
   Star,
   User,
   LogOut,
-  Power,
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
+import ProfileDropdown from "../ProfileDropdown"; // Import ProfileDropdown
 
 const ArtisanLayout = ({ children }) => {
   const { user, handleLogout } = useAuth();
@@ -30,12 +30,6 @@ const ArtisanLayout = ({ children }) => {
     { name: "Subscription", path: "/subscription", icon: User },
   ];
 
-  const [isOnline, setIsOnline] = useState(true); // default status Online
-
-  const toggleStatus = () => {
-    setIsOnline((prev) => !prev);
-    // Later you can sync this with backend
-  };
 
   const onLogout = () => {  // ✅ optional renaming for clarity
     handleLogout();         // ✅ call the correct function
@@ -85,7 +79,6 @@ const ArtisanLayout = ({ children }) => {
       {/* Main Content */}
       <main className={`flex-1 flex flex-col ${isDashboard ? "ml-0" : "ml-0"}`}>
         {/* Header */}
-        {!isHomepage && (
         <header className="flex justify-between items-center p-4 bg-white shadow">
           <div>
             <h2 className="text-lg font-semibold text-[#151E3D]">
@@ -99,30 +92,10 @@ const ArtisanLayout = ({ children }) => {
             {/* Notifications */}
             <NotificationDropdown />
 
-            {/* Availability Status */}
-            <button
-              onClick={toggleStatus}
-              className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium shadow transition-colors ${
-                isOnline
-                  ? "bg-green-100 text-green-700 hover:bg-green-200"
-                  : "bg-red-100 text-red-700 hover:bg-red-200"
-              }`}
-            >
-              <Power className="w-4 h-4" />
-              {isOnline ? "Online" : "Offline"}
-            </button>
-
-            {/* User Avatar */}
-            {user?.profileImageUrl ? (
-              <img src={user.profileImageUrl} alt="Profile" className="w-10 h-10 rounded-full object-cover shadow" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shadow">
-                <User className="w-5 h-5 text-gray-600" />
-              </div>
-            )}
+            {/* User Profile Dropdown */}
+            <ProfileDropdown />
           </div>
         </header>
-        )}
         {/* Page Content */}
         <div className="p-6">{children}</div>
       </main>

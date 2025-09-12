@@ -14,6 +14,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const kycRoutes = require('./routes/kycRoutes'); // New: Import KYC routes
 const notificationRoutes = require('./routes/notificationRoutes'); // Import notification routes
 const subscriptionRoutes = require('./routes/subscriptionRoutes'); // Import subscription routes
+const settingsRoutes = require('./routes/settingsRoutes'); // Import settings routes
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/kyc', kycRoutes); // New: Use KYC routes
 app.use('/api/notifications', notificationRoutes); // Use notification routes
 app.use('/api/subscription', subscriptionRoutes); // Use subscription routes
+app.use('/api/settings', settingsRoutes); // Use settings routes
 
 // Error Handler
 app.use(errorHandler);

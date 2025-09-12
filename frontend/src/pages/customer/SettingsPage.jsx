@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { User, Lock, Eye, EyeOff, Camera, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle } from 'lucide-react';
 import KYCForm from '../../components/KYCForm';
+import { getSettings, updateNotificationPreferences, updatePrivacySettings, deactivateAccount, logoutAllDevices } from '../../services/settingsService';
 
 const SettingsPage = () => {
   const { user, updateProfile, changePassword } = useAuth();
@@ -77,8 +78,26 @@ const SettingsPage = () => {
         email: user.email || '',
       });
       setProfileImagePreview(user.profileImageUrl || '');
+      
+      // Load user settings
+      loadSettings();
     }
   }, [user]);
+
+  const loadSettings = async () => {
+    try {
+      const settings = await getSettings();
+      if (settings.notificationPreferences) {
+        setNotificationPrefs(settings.notificationPreferences);
+      }
+      if (settings.privacySettings) {
+        setPrivacySettings(settings.privacySettings);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      // Use default settings if loading fails
+    }
+  };
 
   const handleProfileChange = (e) => {
     setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
@@ -229,11 +248,11 @@ const SettingsPage = () => {
   const handleNotificationSave = async () => {
     setNotificationLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updateNotificationPreferences(notificationPrefs);
       toast.success('Notification preferences updated successfully!');
     } catch (error) {
-      toast.error('Failed to update notification preferences');
+      console.error('Error updating notification preferences:', error);
+      toast.error(error.response?.data?.message || 'Failed to update notification preferences');
     } finally {
       setNotificationLoading(false);
     }
@@ -242,25 +261,39 @@ const SettingsPage = () => {
   const handlePrivacySave = async () => {
     setPrivacyLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updatePrivacySettings(privacySettings);
       toast.success('Privacy settings updated successfully!');
     } catch (error) {
-      toast.error('Failed to update privacy settings');
+      console.error('Error updating privacy settings:', error);
+      toast.error(error.response?.data?.message || 'Failed to update privacy settings');
     } finally {
       setPrivacyLoading(false);
     }
   };
 
-  const handleDeactivateAccount = () => {
+  const handleDeactivateAccount = async () => {
     if (window.confirm('Are you sure you want to deactivate your account? This action can be reversed by contacting support.')) {
-      toast.info('Account deactivation feature coming soon');
+      try {
+        await deactivateAccount();
+        toast.success('Account deactivated successfully');
+        // Optionally redirect to login or show a message
+      } catch (error) {
+        console.error('Error deactivating account:', error);
+        toast.error(error.response?.data?.message || 'Failed to deactivate account');
+      }
     }
   };
 
-  const handleLogoutAllDevices = () => {
+  const handleLogoutAllDevices = async () => {
     if (window.confirm('This will log you out of all devices. Are you sure?')) {
-      toast.info('Logout all devices feature coming soon');
+      try {
+        await logoutAllDevices();
+        toast.success('Logged out from all devices successfully');
+        // Optionally redirect to login
+      } catch (error) {
+        console.error('Error logging out all devices:', error);
+        toast.error(error.response?.data?.message || 'Failed to logout from all devices');
+      }
     }
   };
 
