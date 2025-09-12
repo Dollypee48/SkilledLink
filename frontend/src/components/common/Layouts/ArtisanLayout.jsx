@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
 import ProfileDropdown from "../ProfileDropdown"; // Import ProfileDropdown
+import PremiumBadge from "../PremiumBadge"; // Import PremiumBadge
 
 const ArtisanLayout = ({ children }) => {
   const { user, handleLogout } = useAuth();

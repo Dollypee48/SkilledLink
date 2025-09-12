@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, LogOut, Settings, ChevronDown, Eye } from 'lucide-react';
+import PremiumBadge from './PremiumBadge';
 
 const ProfileDropdown = ({ variant = 'header' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const { user, handleLogout } = useAuth();
+  const { user, handleLogout, isPremium } = useAuth();
   const navigate = useNavigate();
 
   // Close dropdown when clicking outside
@@ -93,7 +94,10 @@ const ProfileDropdown = ({ variant = 'header' }) => {
         }`}>
           {/* User Info */}
           <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+              <PremiumBadge isPremium={isPremium} size="xs" />
+            </div>
             <p className="text-xs text-gray-500">{user?.email || ''}</p>
             <p className="text-xs text-[#151E3D] font-medium capitalize">{user?.role || ''}</p>
           </div>

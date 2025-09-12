@@ -152,8 +152,47 @@ const userSchema = new mongoose.Schema(
 userSchema.virtual('isCurrentlyPremium').get(function() {
   return this.subscription?.plan === 'premium' && 
          this.subscription?.status === 'active' && 
-         (!this.subscription?.endDate || this.subscription?.endDate > new Date());
+         (!this.subscription?.endDate || new Date(this.subscription.endDate) > new Date());
 });
+
+// Method to check and update subscription status
+userSchema.methods.checkSubscriptionStatus = async function() {
+  const now = new Date();
+  
+  // Check if subscription has expired
+  if (this.subscription?.plan === 'premium' && 
+      this.subscription?.status === 'active' && 
+      this.subscription?.endDate && 
+      new Date(this.subscription.endDate) <= now) {
+    
+    console.log(`🔄 Subscription expired for user: ${this.email}, downgrading to free...`);
+    
+    // Downgrade to free
+    this.subscription.status = 'expired';
+    this.isPremium = false;
+    
+    // Disable premium features
+    this.premiumFeatures = {
+      verifiedBadge: false,
+      prioritySearch: false,
+      advancedAnalytics: false,
+      unlimitedBookings: false,
+      premiumSupport: false,
+      featuredListing: false
+    };
+    
+    // Reset job acceptance limits
+    this.jobAcceptance.maxJobs = 3; // Free tier limit
+    this.jobAcceptance.acceptedJobs = 0; // Reset counter
+    
+    await this.save();
+    console.log(`✅ User ${this.email} downgraded to free tier`);
+    
+    return false; // No longer premium
+  }
+  
+  return this.isCurrentlyPremium;
+};
 
 // Virtual field to check if user can accept more jobs
 userSchema.virtual('canAcceptJobs').get(function() {

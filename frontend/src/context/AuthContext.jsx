@@ -17,6 +17,11 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!user && !!accessToken;
   const role = user ? user.role : null;
+  
+  // Premium status helpers
+  const isPremium = user?.isPremium || false;
+  const premiumFeatures = user?.premiumFeatures || {};
+  const subscription = user?.subscription || {};
 
   const updateUser = useCallback((newUserData) => {
     setUser(newUserData);
@@ -108,7 +113,23 @@ export const AuthProvider = ({ children }) => {
   }, [handleLogout]);
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, isAuthenticated, role, handleLogin, handleRegister, handleLogout, updateUser, updateProfile, changePassword, profileCompletion, setProfileCompletion }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      accessToken, 
+      isAuthenticated, 
+      role, 
+      isPremium, 
+      premiumFeatures, 
+      subscription,
+      handleLogin, 
+      handleRegister, 
+      handleLogout, 
+      updateUser, 
+      updateProfile, 
+      changePassword, 
+      profileCompletion, 
+      setProfileCompletion 
+    }}>
       {children}
     </AuthContext.Provider>
   );

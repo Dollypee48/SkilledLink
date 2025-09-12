@@ -151,6 +151,9 @@ exports.updateBookingStatus = async (req, res) => {
         return res.status(404).json({ message: "Artisan not found" });
       }
 
+      // Check and update subscription status
+      await artisan.checkSubscriptionStatus();
+
       // Check if artisan has verified KYC
       if (!artisan.kycVerified || artisan.kycStatus !== 'approved') {
         return res.status(403).json({ 
@@ -165,7 +168,8 @@ exports.updateBookingStatus = async (req, res) => {
         return res.status(400).json({ 
           message: "Job acceptance limit reached. Upgrade to premium for unlimited job acceptances.",
           limitReached: true,
-          remainingJobs: artisan.remainingJobs
+          remainingJobs: artisan.remainingJobs,
+          isPremium: artisan.isPremium
         });
       }
 

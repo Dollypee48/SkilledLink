@@ -26,6 +26,7 @@ const Subscription = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const PAYSTACK_PUBLIC_KEY = PAYSTACK_CONFIG.publicKey;
 
@@ -59,6 +60,9 @@ const Subscription = () => {
       console.log('Subscription plan:', subscriptionResponse.subscription?.plan);
       console.log('Subscription end date:', subscriptionResponse.subscription?.endDate);
       console.log('IsPremium:', subscriptionResponse.isPremium);
+      console.log('PremiumFeatures:', subscriptionResponse.premiumFeatures);
+      console.log('CanAcceptJobs:', subscriptionResponse.canAcceptJobs);
+      console.log('RemainingJobs:', subscriptionResponse.remainingJobs);
       
       setPlans(plansResponse.plans);
       setCurrentSubscription(subscriptionResponse);
@@ -91,7 +95,7 @@ const Subscription = () => {
 
   const handlePaymentSuccess = async (reference) => {
     try {
-      setLoading(true);
+      setIsUpdating(true);
       setError(null);
       
       console.log('Processing payment success for reference:', reference);
@@ -100,18 +104,15 @@ const Subscription = () => {
       
       console.log('Payment verification response:', response);
       
-      // Update current subscription with the response data
-      setCurrentSubscription(response);
-      
-      // Update user context with premium status
+      // Update user context with premium status immediately
       if (response.user) {
         updateUser(response.user);
       }
       
-      // Refresh subscription data to get the latest status
-      await fetchData();
+      // Update current subscription with the response data immediately
+      setCurrentSubscription(response);
       
-      // Close payment modal
+      // Close payment modal immediately
       setShowPayment(false);
       setPaymentData(null);
       setSelectedPlan(null);
@@ -119,11 +120,21 @@ const Subscription = () => {
       // Show success notification
       alert('🎉 Congratulations! You are now a Premium Artisan! You have access to all premium features including verified badge, priority search, and advanced analytics.');
       
+      // Refresh subscription data in background to ensure consistency
+      setTimeout(async () => {
+        try {
+          await fetchData();
+        } catch (err) {
+          console.error('Background refresh error:', err);
+        } finally {
+          setIsUpdating(false);
+        }
+      }, 1000);
+      
     } catch (err) {
       console.error('Payment success error:', err);
       setError(err.message || 'Payment verification failed. Please contact support.');
-    } finally {
-      setLoading(false);
+      setIsUpdating(false);
     }
   };
 
@@ -218,6 +229,16 @@ const Subscription = () => {
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full -translate-y-12 translate-x-12"></div>
           <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-purple-50 to-pink-50 rounded-full translate-y-8 -translate-x-8"></div>
           
+          {/* Updating Indicator */}
+          {isUpdating && (
+            <div className="absolute inset-0 bg-blue-50 bg-opacity-75 flex items-center justify-center z-20 rounded-xl">
+              <div className="flex items-center space-x-2 text-blue-600">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="font-medium">Updating subscription...</span>
+              </div>
+            </div>
+          )}
+          
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
@@ -246,7 +267,7 @@ const Subscription = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -285,7 +306,21 @@ const Subscription = () => {
                   }
                 </p>
               </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <div className="flex items-center space-x-2 mb-1">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Job Limit</p>
+                </div>
+                <p className="text-lg font-bold text-gray-800">
+                  {currentSubscription?.remainingJobs === 'Unlimited' || currentSubscription?.isPremium
+                    ? 'Unlimited'
+                    : `${currentSubscription?.remainingJobs || 0} remaining`
+                  }
+                </p>
+              </div>
             </div>
+
 
             {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' && (
               <div className="mt-6 pt-4 border-t border-gray-200">

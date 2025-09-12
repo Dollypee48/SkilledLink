@@ -5,6 +5,7 @@ const {
   getCurrentSubscription,
   initializeSubscription,
   verifySubscriptionPayment,
+  activatePremiumSubscription,
   cancelSubscription,
   handleWebhook
 } = require('../controllers/subscriptionController');
@@ -18,6 +19,7 @@ router.post('/webhook', handleWebhook);
 router.get('/current', auth, getCurrentSubscription);
 router.post('/initialize', auth, initializeSubscription);
 router.post('/verify', auth, verifySubscriptionPayment);
+router.post('/activate', auth, activatePremiumSubscription);
 router.post('/cancel', auth, cancelSubscription);
 
 module.exports = router;

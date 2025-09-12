@@ -23,7 +23,7 @@ exports.getSubscriptionPlans = async (req, res) => {
 // @access  Private
 exports.getCurrentSubscription = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('subscription isPremium premiumFeatures');
+    const user = await User.findById(req.user.id).select('subscription isPremium premiumFeatures jobAcceptance');
     
     if (!user) {
       return res.status(404).json({
@@ -32,16 +32,56 @@ exports.getCurrentSubscription = async (req, res) => {
       });
     }
 
+    // Check and update subscription status
+    await user.checkSubscriptionStatus();
+
+    // Fix inconsistent subscription states (premium plan but inactive status)
+    if (user.subscription.plan === 'premium' && user.subscription.status === 'inactive') {
+      console.log('🔧 Fixing inconsistent subscription state for user:', user.email);
+      console.log('🔧 Current state - Plan:', user.subscription.plan, 'Status:', user.subscription.status);
+      
+      // Activate the premium subscription
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + SUBSCRIPTION_PLANS.premium.duration);
+      
+      user.subscription.status = 'active';
+      user.subscription.startDate = new Date();
+      user.subscription.endDate = endDate;
+      user.subscription.autoRenew = true;
+      user.isPremium = true;
+      
+      // Enable all premium features
+      user.premiumFeatures = {
+        verifiedBadge: true,
+        prioritySearch: true,
+        advancedAnalytics: true,
+        unlimitedBookings: true,
+        premiumSupport: true,
+        featuredListing: true
+      };
+      
+      // Set unlimited job acceptances for premium users
+      user.jobAcceptance.maxJobs = 999999; // Effectively unlimited
+      user.jobAcceptance.acceptedJobs = 0; // Reset counter
+      
+      await user.save();
+      console.log('✅ Fixed subscription state - now active');
+    }
+
     console.log('🔍 Current subscription for user:', user.email);
     console.log('🔍 Subscription data:', user.subscription);
     console.log('🔍 IsPremium:', user.isPremium);
     console.log('🔍 PremiumFeatures:', user.premiumFeatures);
+    console.log('🔍 CanAcceptJobs:', user.canAcceptJobs);
+    console.log('🔍 RemainingJobs:', user.remainingJobs);
 
     res.status(200).json({
       success: true,
       subscription: user.subscription,
       isPremium: user.isPremium,
       premiumFeatures: user.premiumFeatures,
+      canAcceptJobs: user.canAcceptJobs,
+      remainingJobs: user.remainingJobs,
       plan: SUBSCRIPTION_PLANS[user.subscription.plan]
     });
   } catch (error) {
@@ -207,6 +247,9 @@ exports.verifySubscriptionPayment = async (req, res) => {
     }
 
     // Check if payment was successful
+    console.log('🔍 Payment verification response:', verification);
+    console.log('🔍 Payment status:', verification.data?.status);
+    
     if (verification.data.status === 'success') {
       console.log('✅ Payment verification successful, updating user subscription...');
       console.log('🔍 Verification data:', verification.data);
@@ -224,16 +267,19 @@ exports.verifySubscriptionPayment = async (req, res) => {
         isPremium: user.isPremium
       });
 
+      // Update subscription details
       user.subscription.plan = 'premium';
       user.subscription.status = 'active';
       user.subscription.startDate = new Date();
       user.subscription.endDate = endDate;
       user.subscription.autoRenew = true;
+      
+      // Set premium status
       user.isPremium = true;
       
       console.log('🔍 Updated subscription data:', user.subscription);
       
-      // Add premium benefits
+      // Enable all premium features
       user.premiumFeatures = {
         verifiedBadge: true,
         prioritySearch: true,
@@ -245,6 +291,7 @@ exports.verifySubscriptionPayment = async (req, res) => {
       
       // Set unlimited job acceptances for premium users
       user.jobAcceptance.maxJobs = 999999; // Effectively unlimited
+      user.jobAcceptance.acceptedJobs = 0; // Reset counter
       
       console.log('🔍 Saving user to database...');
       const savedUser = await user.save();
@@ -256,17 +303,24 @@ exports.verifySubscriptionPayment = async (req, res) => {
       console.log(`🔍 User subscription endDate:`, savedUser.subscription.endDate);
       console.log(`🔍 User subscription status:`, savedUser.subscription.status);
       console.log(`🔍 User subscription plan:`, savedUser.subscription.plan);
+      console.log(`🔍 User canAcceptJobs:`, savedUser.canAcceptJobs);
+      console.log(`🔍 User remainingJobs:`, savedUser.remainingJobs);
 
       const responseData = {
         success: true,
         message: 'Premium subscription activated successfully! You now have access to all premium features.',
         subscription: savedUser.subscription,
+        isPremium: savedUser.isPremium,
+        premiumFeatures: savedUser.premiumFeatures,
+        canAcceptJobs: savedUser.canAcceptJobs,
+        remainingJobs: savedUser.remainingJobs,
         user: {
           id: savedUser._id,
           name: savedUser.name,
           email: savedUser.email,
           isPremium: savedUser.isPremium,
-          premiumFeatures: savedUser.premiumFeatures
+          premiumFeatures: savedUser.premiumFeatures,
+          subscription: savedUser.subscription
         }
       };
 
@@ -284,6 +338,85 @@ exports.verifySubscriptionPayment = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error verifying subscription payment'
+    });
+  }
+};
+
+// @desc    Manually activate premium subscription (for testing)
+// @route   POST /api/subscription/activate
+// @access  Private
+exports.activatePremiumSubscription = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    console.log('🔍 Manually activating premium subscription for user:', user.email);
+    console.log('🔍 Current subscription:', user.subscription);
+
+    // Update subscription details
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + SUBSCRIPTION_PLANS.premium.duration);
+    
+    user.subscription.plan = 'premium';
+    user.subscription.status = 'active';
+    user.subscription.startDate = new Date();
+    user.subscription.endDate = endDate;
+    user.subscription.autoRenew = true;
+    
+    // Set premium status
+    user.isPremium = true;
+    
+    // Enable all premium features
+    user.premiumFeatures = {
+      verifiedBadge: true,
+      prioritySearch: true,
+      advancedAnalytics: true,
+      unlimitedBookings: true,
+      premiumSupport: true,
+      featuredListing: true
+    };
+    
+    // Set unlimited job acceptances for premium users
+    user.jobAcceptance.maxJobs = 999999; // Effectively unlimited
+    user.jobAcceptance.acceptedJobs = 0; // Reset counter
+    
+    console.log('🔍 Saving user to database...');
+    const savedUser = await user.save();
+    console.log('✅ User saved successfully');
+
+    console.log(`✅ Premium subscription manually activated for user: ${savedUser.email}`);
+    console.log(`🔍 User isPremium status: ${savedUser.isPremium}`);
+    console.log(`🔍 User subscription status: ${savedUser.subscription.status}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Premium subscription activated successfully!',
+      subscription: savedUser.subscription,
+      isPremium: savedUser.isPremium,
+      premiumFeatures: savedUser.premiumFeatures,
+      canAcceptJobs: savedUser.canAcceptJobs,
+      remainingJobs: savedUser.remainingJobs,
+      user: {
+        id: savedUser._id,
+        name: savedUser.name,
+        email: savedUser.email,
+        isPremium: savedUser.isPremium,
+        premiumFeatures: savedUser.premiumFeatures,
+        subscription: savedUser.subscription
+      }
+    });
+  } catch (error) {
+    console.error('Error manually activating subscription:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error activating subscription'
     });
   }
 };
