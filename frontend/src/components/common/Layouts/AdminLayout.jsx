@@ -12,8 +12,10 @@ import {
   LogOut,
   FileCheck, // New: Added for KYC Verification
   Home,
+  User,
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
+import ProfileDropdown from "../ProfileDropdown"; // Import ProfileDropdown
 
 const AdminLayout = ({ children }) => {
   const { user, handleLogout } = useAuth();
@@ -38,72 +40,90 @@ const AdminLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#151E3D] text-white flex flex-col sticky top-0 h-screen">
-        <div>
-          <h1 className="text-2xl font-bold p-6 text-white">SkilledLink Admin</h1>
-          <nav className="flex flex-col space-y-1 px-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center gap-3 p-1 rounded-md transition-colors ${
-                    isActive
-                      ? "bg-[#F59E0B] text-white font-semibold"
-                      : "hover:text-white"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-          
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 p-4 hover:text-white transition-colors mt-4"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button>
-        </div>
-      </aside>
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky Header with Navigation */}
+      <div className="sticky top-0 z-50">
+        {/* Top Navigation Bar */}
+        <nav className="bg-white shadow-lg border-b-4 border-[#151E3D]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-20">
+              {/* Logo Section */}
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <span className="text-white font-bold text-xl">S</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-[#151E3D]">SkilledLink</h1>
+                  <p className="text-sm text-gray-600 -mt-1">Admin Dashboard</p>
+                </div>
+              </div>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="flex justify-between items-center p-4 bg-white shadow">
-          <div>
-            <h2 className="text-lg font-semibold text-[#151E3D]">
-              Hi, {user?.name || "Admin"} 👋
-            </h2>
-            <p className="text-sm text-gray-500">Welcome to the admin panel</p>
-          </div>
-          <div className="flex items-center gap-6">
-            {/* Home Button */}
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-              title="Go to Homepage"
-            >
-              <Home className="w-4 h-4" />
-              <span className="text-sm font-medium">Home</span>
-            </button>
-            <NotificationDropdown />
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shadow">
-              <Users className="w-5 h-5 text-gray-600" />
+              {/* User Section */}
+              <div className="flex items-center space-x-6">
+                {/* Home Button */}
+                <button
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  title="Go to Homepage"
+                >
+                  <Home className="w-4 h-4" />
+                  <span className="text-sm font-medium">Home</span>
+                </button>
+                <NotificationDropdown />
+                <ProfileDropdown />
+              </div>
             </div>
           </div>
-        </header>
+        </nav>
 
+        {/* Horizontal Navigation Tabs */}
+        <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex space-x-8 overflow-x-auto">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`group flex items-center space-x-2 py-4 px-2 border-b-2 transition-all duration-200 whitespace-nowrap ${
+                      isActive
+                        ? "border-[#151E3D] text-[#151E3D] font-semibold"
+                        : "border-transparent text-gray-600 hover:text-[#151E3D] hover:border-gray-300"
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-[#151E3D]' : 'text-gray-500 group-hover:text-[#151E3D]'}`} />
+                    <span className="text-sm font-medium">{item.name}</span>
+                    {isActive && (
+                      <div className="w-2 h-2 bg-[#151E3D] rounded-full ml-1"></div>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Content */}
-        <div className="p-6">{children}</div>
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          {children}
+        </div>
       </main>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <button
+          onClick={onLogout}
+          className="bg-red-500 hover:bg-red-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200"
+          title="Sign Out"
+        >
+          <LogOut className="w-6 h-6" />
+        </button>
+      </div>
     </div>
   );
 };

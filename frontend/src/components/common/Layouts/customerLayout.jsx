@@ -37,12 +37,37 @@ const CustomerLayout = ({ children }) => {
   const isHomepage = location.pathname === "/";
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] relative"> {/* Added 'relative' */}
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#151E3D] text-white flex flex-col sticky top-0 h-screen">
-          <div>
-            <h1 className="text-2xl font-bold p-6 text-white">SkilledLink</h1>
-            <nav className="flex flex-col space-y-1 px-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky Header with Navigation */}
+      <div className="sticky top-0 z-50">
+        {/* Top Navigation Bar */}
+        <nav className="bg-white shadow-lg border-b-4 border-[#151E3D]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-20">
+              {/* Logo Section */}
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <span className="text-white font-bold text-xl">S</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-[#151E3D]">SkilledLink</h1>
+                  <p className="text-sm text-gray-600 -mt-1">Customer Dashboard</p>
+                </div>
+              </div>
+
+              {/* User Section */}
+              <div className="flex items-center space-x-6">
+                <NotificationDropdown />
+                <ProfileDropdown />
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Horizontal Navigation Tabs */}
+        <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex space-x-8 overflow-x-auto">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -50,47 +75,43 @@ const CustomerLayout = ({ children }) => {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`flex items-center gap-3 p-1 rounded-md transition-colors ${
+                    className={`group flex items-center space-x-2 py-4 px-2 border-b-2 transition-all duration-200 whitespace-nowrap ${
                       isActive
-                        ? "bg-[#F59E0B] text-white font-semibold"
-                        : "hover:text-white"
+                        ? "border-[#151E3D] text-[#151E3D] font-semibold"
+                        : "border-transparent text-gray-600 hover:text-[#151E3D] hover:border-gray-300"
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    {item.name}
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-[#151E3D]' : 'text-gray-500 group-hover:text-[#151E3D]'}`} />
+                    <span className="text-sm font-medium">{item.name}</span>
+                    {isActive && (
+                      <div className="w-2 h-2 bg-[#151E3D] rounded-full ml-1"></div>
+                    )}
                   </Link>
                 );
               })}
-            </nav>
-            
-            <button
-              onClick={onLogout}  // ✅ use the corrected function
-              className="flex items-center gap-3 p-4 hover:text-white transition-colors mt-4"
-            >
-              <LogOut className="w-5 h-5" />
-              Logout
-            </button>
+            </div>
           </div>
-        </aside>
+        </div>
+      </div>
 
-      {/* Main Content */}
-      <main className={`flex-1 flex flex-col ${isDashboard ? "ml-0" : "ml-auto"}`}>
-        {/* Header */}
-        <header className="flex justify-between items-center p-4 bg-white shadow">
-          <div>
-            <h2 className="text-lg font-semibold text-[#151E3D]">
-              Hi, {user?.name || "Guest"} 👋
-            </h2>
-            <p className="text-sm text-gray-500">Welcome to your dashboard</p>
-          </div>
-          <div className="flex items-center gap-6">
-            <NotificationDropdown />
-            <ProfileDropdown />
-          </div>
-        </header>
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Content */}
-        <div className="p-6">{children}</div>
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          {children}
+        </div>
       </main>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <button
+          onClick={onLogout}
+          className="bg-red-500 hover:bg-red-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200"
+          title="Sign Out"
+        >
+          <LogOut className="w-6 h-6" />
+        </button>
+      </div>
     </div>
   );
 };
