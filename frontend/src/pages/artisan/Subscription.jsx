@@ -101,7 +101,6 @@ const Subscription = () => {
       console.log('Processing payment success for reference:', reference);
       
       const response = await subscriptionService.verifyPayment(reference, accessToken);
-      
       console.log('Payment verification response:', response);
       
       // Update user context with premium status immediately
@@ -216,9 +215,17 @@ const Subscription = () => {
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
             <div className="flex items-center">
               <XCircle className="w-5 h-5 text-red-500 mr-2" />
               <span className="text-red-700">{error}</span>
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-500 hover:text-red-700 transition-colors"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}
@@ -338,6 +345,7 @@ const Subscription = () => {
                 </div>
               </div>
             )}
+
           </div>
         </div>
 

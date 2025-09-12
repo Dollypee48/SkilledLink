@@ -56,7 +56,7 @@ const Header = () => {
         <div className="space-x-3 flex items-center">
           {!isAuthenticated ? (
             <Link to="/login" className="text-white hover:text-[#F59E0B] transition-colors duration-300">
-              Sign in/Get Started
+              Sign in/Register
             </Link>
           ) : (
             <div className="flex items-center space-x-4">

@@ -229,12 +229,17 @@ exports.verifySubscriptionPayment = async (req, res) => {
     }
 
     // Verify payment with Paystack
+    console.log('🔍 Verifying payment with reference:', reference);
     const verification = await paystack.transaction.verify(reference);
+    
+    console.log('🔍 Paystack verification response:', JSON.stringify(verification, null, 2));
 
     if (!verification.status) {
+      console.log('❌ Paystack verification failed:', verification);
       return res.status(400).json({
         success: false,
-        message: 'Payment verification failed'
+        message: 'Payment verification failed',
+        details: verification.message || 'Unknown error'
       });
     }
 
@@ -249,7 +254,10 @@ exports.verifySubscriptionPayment = async (req, res) => {
     // Check if payment was successful
     console.log('🔍 Payment verification response:', verification);
     console.log('🔍 Payment status:', verification.data?.status);
+    console.log('🔍 Payment amount:', verification.data?.amount);
+    console.log('🔍 Payment currency:', verification.data?.currency);
     
+    // Check if payment was successful
     if (verification.data.status === 'success') {
       console.log('✅ Payment verification successful, updating user subscription...');
       console.log('🔍 Verification data:', verification.data);
@@ -328,9 +336,14 @@ exports.verifySubscriptionPayment = async (req, res) => {
 
       res.status(200).json(responseData);
     } else {
+      console.log('❌ Payment was not successful. Status:', verification.data?.status);
+      console.log('❌ Payment details:', verification.data);
+      
       res.status(400).json({
         success: false,
-        message: 'Payment was not successful'
+        message: 'Payment was not successful',
+        status: verification.data?.status,
+        details: verification.data?.gateway_response || 'Payment failed'
       });
     }
   } catch (error) {
@@ -341,6 +354,7 @@ exports.verifySubscriptionPayment = async (req, res) => {
     });
   }
 };
+
 
 // @desc    Manually activate premium subscription (for testing)
 // @route   POST /api/subscription/activate
@@ -520,28 +534,59 @@ exports.handleWebhook = async (req, res) => {
 // Helper function to handle successful charge
 async function handleChargeSuccess(data) {
   try {
-    const { customer, subscription } = data;
+    console.log('🔍 Webhook charge success data:', JSON.stringify(data, null, 2));
     
-    if (subscription) {
-      const user = await User.findOne({ 
+    const { customer, subscription, reference } = data;
+    
+    // Find user by customer email or subscription ID
+    let user;
+    if (customer && customer.email) {
+      user = await User.findOne({ email: customer.email });
+    } else if (subscription && subscription.subscription_code) {
+      user = await User.findOne({ 
         'subscription.paystackSubscriptionId': subscription.subscription_code 
       });
+    } else if (reference) {
+      // Try to find user by reference metadata
+      user = await User.findOne({ 
+        'subscription.paystackCustomerId': reference 
+      });
+    }
+    
+    if (user) {
+      console.log(`🔍 Found user for webhook: ${user.email}`);
       
-      if (user) {
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + SUBSCRIPTION_PLANS.premium.duration);
-        
-        user.subscription.status = 'active';
-        user.subscription.startDate = new Date();
-        user.subscription.endDate = endDate;
-        user.isPremium = true;
-        
-        await user.save();
-        console.log(`Subscription activated for user: ${user.email}`);
-      }
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + SUBSCRIPTION_PLANS.premium.duration);
+      
+      user.subscription.plan = 'premium';
+      user.subscription.status = 'active';
+      user.subscription.startDate = new Date();
+      user.subscription.endDate = endDate;
+      user.subscription.autoRenew = true;
+      user.isPremium = true;
+      
+      // Enable all premium features
+      user.premiumFeatures = {
+        verifiedBadge: true,
+        prioritySearch: true,
+        advancedAnalytics: true,
+        unlimitedBookings: true,
+        premiumSupport: true,
+        featuredListing: true
+      };
+      
+      // Set unlimited job acceptances for premium users
+      user.jobAcceptance.maxJobs = 999999;
+      user.jobAcceptance.acceptedJobs = 0;
+      
+      await user.save();
+      console.log(`✅ Subscription activated via webhook for user: ${user.email}`);
+    } else {
+      console.log('❌ No user found for webhook data:', { customer, subscription, reference });
     }
   } catch (error) {
-    // console.error('Error handling charge success:', error);
+    console.error('❌ Error handling charge success webhook:', error);
   }
 }
 

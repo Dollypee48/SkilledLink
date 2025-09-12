@@ -62,9 +62,11 @@ export const subscriptionService = {
       return response.data;
     } catch (error) {
       console.error('Error verifying payment:', error);
+      console.error('Error details:', error.response?.data);
       throw new Error(error.response?.data?.message || 'Failed to verify payment');
     }
   },
+
 
   // Cancel subscription
   cancelSubscription: async (token) => {

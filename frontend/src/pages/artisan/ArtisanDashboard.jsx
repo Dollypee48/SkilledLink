@@ -19,10 +19,11 @@ import {
   Plus,
   Home
 } from 'lucide-react';
+import PremiumBadge from '../../components/common/PremiumBadge';
 import { useNavigate } from 'react-router-dom';
 
 const ArtisanDashboard = () => {
-  const { user, accessToken } = useAuth();
+  const { user, accessToken, isPremium } = useAuth();
   const { profile: currentArtisan, loadProfile: fetchCurrentProfile, fetchBookings, bookings, loading, error } = React.useContext(ArtisanContext);
   const navigate = useNavigate();
   
@@ -383,9 +384,12 @@ const ArtisanDashboard = () => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 text-lg">
-                          {currentArtisan.name || 'Artisan Name'}
-                        </h3>
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-semibold text-gray-900 text-lg">
+                            {currentArtisan.name || 'Artisan Name'}
+                          </h3>
+                          <PremiumBadge isPremium={isPremium} size="sm" />
+                        </div>
                         <p className="text-sm text-gray-600 mb-2">
                           {currentArtisan.artisanProfile?.service || 'Service Provider'}
                         </p>
