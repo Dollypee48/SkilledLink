@@ -79,7 +79,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#151E3D] via-[#1E2A4A] to-[#2D3B5A] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#151E3D] via-[#1E2A4A] to-[#2D3B5A] flex items-center justify-center p-2 sm:p-4">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#F59E0B]/10 rounded-full blur-3xl"></div>
@@ -88,17 +88,17 @@ const Register = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center">
           {/* Left Side - Branding & Info */}
-          <div className="text-center lg:text-left text-white space-y-6">
-            <div className="space-y-3">
+          <div className="text-center lg:text-left text-white space-y-4 lg:space-y-6 order-2 lg:order-1">
+            <div className="space-y-2 lg:space-y-3">
               <div className="flex items-center justify-center lg:justify-start">
                 <Logo variant="full" size="lg" textColor="white" />
               </div>
-              <h2 className="text-3xl lg:text-4xl font-bold leading-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
                 Join Our <span className="text-[#F59E0B]">Community</span>
               </h2>
-              <p className="text-lg text-white/80 leading-relaxed">
+              <p className="text-base sm:text-lg text-white/80 leading-relaxed">
                 Create your account and start connecting with skilled professionals or showcase your talents to the world.
               </p>
             </div>
@@ -121,7 +121,7 @@ const Register = () => {
           </div>
 
           {/* Right Side - Register Form */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 lg:p-8 border border-white/20 max-w-md mx-auto lg:mx-0">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 border border-white/20 max-w-md mx-auto lg:mx-0 order-1 lg:order-2">
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold text-[#151E3D] mb-1">Create Account</h3>
               <p className="text-[#151E3D]/70 text-sm">Join SkilledLink and start your journey</p>

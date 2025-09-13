@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMessage } from '../../context/MessageContext';
 import { useAuth } from '../../context/AuthContext';
-import { Send, Paperclip, Trash2, Smile, Menu, User, MessageCircle } from 'lucide-react';
+import { Send, Paperclip, Trash2, Smile, Menu, User, MessageCircle, ArrowLeft } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 
-const ChatWindow = () => {
+const ChatWindow = ({ onBackToConversations }) => {
   const { user } = useAuth();
   const { 
     currentConversation, 
@@ -151,14 +151,24 @@ const ChatWindow = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-full flex items-center justify-center shadow-sm">
-            <User className="w-6 h-6 text-white" />
+      <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5">
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          {/* Mobile Back Button */}
+          {onBackToConversations && (
+            <button
+              onClick={onBackToConversations}
+              className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Back to conversations"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          )}
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-full flex items-center justify-center shadow-sm">
+            <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg">{selectedRecipient.name || 'Unknown User'}</h3>
-            <p className="text-sm text-gray-500">Online</p>
+            <h3 className="font-semibold text-gray-900 text-base sm:text-lg">{selectedRecipient.name || 'Unknown User'}</h3>
+            <p className="text-xs sm:text-sm text-gray-500">Online</p>
           </div>
         </div>
         

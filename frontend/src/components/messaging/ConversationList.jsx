@@ -3,7 +3,7 @@ import { useMessage } from '../../context/MessageContext';
 import { useAuth } from '../../context/AuthContext';
 import { User, MessageCircle, Search } from 'lucide-react';
 
-const ConversationList = () => {
+const ConversationList = ({ onConversationSelect }) => {
   const { user } = useAuth();
   const { 
     conversations, 
@@ -126,7 +126,10 @@ const ConversationList = () => {
             return (
               <div
                   key={conversation.conversationId}
-                  onClick={() => selectRecipient(partner)}
+                  onClick={() => {
+                    selectRecipient(partner);
+                    onConversationSelect && onConversationSelect();
+                  }}
                   className={`p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 ${
                     isSelected ? 'bg-gradient-to-r from-[#151E3D]/10 to-[#1E2A4A]/10 border-r-4 border-[#151E3D]' : ''
                   }`}

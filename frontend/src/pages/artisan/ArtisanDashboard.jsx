@@ -93,13 +93,13 @@ const ArtisanDashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-[#151E3D]/5">
         {/* Header Section */}
         <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="px-6 py-8">
-            <div className="flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-6 sm:py-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                   Welcome back, {currentArtisan?.name || user?.name || 'Artisan'}!
                 </h1>
-                <p className="text-gray-600 mt-2">
+                <p className="text-gray-600 mt-2 text-sm sm:text-base">
                   Manage your bookings and grow your business
                 </p>
               </div>
@@ -115,9 +115,9 @@ const ArtisanDashboard = () => {
           </div>
         </div>
 
-        <div className="px-6 py-8">
+        <div className="px-4 sm:px-6 py-6 sm:py-8">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {/* Active Bookings */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
               <div className="flex items-center justify-between">

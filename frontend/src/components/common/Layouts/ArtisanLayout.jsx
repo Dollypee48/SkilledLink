@@ -107,16 +107,6 @@ const ArtisanLayout = ({ children }) => {
         </div>
       </main>
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <button
-          onClick={onLogout}
-          className="bg-red-500 hover:bg-red-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200"
-          title="Sign Out"
-        >
-          <LogOut className="w-6 h-6" />
-        </button>
-      </div>
     </div>
   );
 };
