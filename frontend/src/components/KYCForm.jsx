@@ -287,7 +287,7 @@ const KYCForm = () => {
         return {
           icon: <UploadCloud className="w-5 h-5 mr-2" />,
           text: 'KYC verification is required. Please upload the necessary documents.',
-          color: 'bg-blue-100 text-blue-800'
+          color: 'bg-[#151E3D]/10 text-[#151E3D]'
         };
     }
   };
@@ -380,7 +380,7 @@ const KYCForm = () => {
           {currentStep === 1 && (
             <div className="bg-gray-50 rounded-2xl p-8">
               <div className="text-center mb-8">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-[#151E3D]/10 mb-4">
                   <span className="text-2xl">👤</span>
                 </div>
                 <h3 className="text-2xl font-bold text-[#151E3D] mb-2">Personal Information</h3>
@@ -718,15 +718,15 @@ const KYCForm = () => {
               </div>
               
               <div className="mt-8 text-center">
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 border border-[#151E3D]/20 rounded-xl p-4">
                   <div className="flex items-center justify-center mb-2">
-                    <Camera className="w-5 h-5 text-blue-600 mr-2" />
-                    <span className="font-semibold text-blue-800">Quick Capture</span>
+                    <Camera className="w-5 h-5 text-[#151E3D] mr-2" />
+                    <span className="font-semibold text-[#151E3D]">Quick Capture</span>
                   </div>
-                  <p className="text-sm text-blue-700 mb-3">Use your camera to take photos directly</p>
+                  <p className="text-sm text-[#151E3D]/70 mb-3">Use your camera to take photos directly</p>
                   <button 
                     type="button" 
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center mx-auto" 
+                    className="bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center mx-auto" 
                     disabled={loading}
                   >
                     <Camera className="w-4 h-4 mr-2" /> Open Camera
@@ -799,16 +799,16 @@ const KYCForm = () => {
                   </div>
                 </div>
                 
-                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="mt-6 bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 border border-[#151E3D]/20 rounded-xl p-4">
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 text-sm">💡</span>
+                      <div className="w-6 h-6 bg-[#151E3D]/10 rounded-full flex items-center justify-center">
+                        <span className="text-[#151E3D] text-sm">💡</span>
                       </div>
                     </div>
                     <div className="text-left">
-                      <h4 className="font-semibold text-blue-800 mb-1">Photo Tips</h4>
-                      <ul className="text-sm text-blue-700 space-y-1">
+                      <h4 className="font-semibold text-[#151E3D] mb-1">Photo Tips</h4>
+                      <ul className="text-sm text-[#151E3D]/70 space-y-1">
                         <li>• Ensure good lighting on your face</li>
                         <li>• Look directly at the camera</li>
                         <li>• Remove glasses or hats if possible</li>
@@ -854,7 +854,7 @@ const KYCForm = () => {
                   className={`px-8 py-3 font-semibold rounded-xl transition-all duration-300 flex items-center ${
                     loading || !faceRecognitionInfo
                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-lg transform hover:-translate-y-0.5'
+                      : 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white hover:shadow-lg transform hover:-translate-y-0.5'
                   }`}
                   disabled={loading || !faceRecognitionInfo}
                 >

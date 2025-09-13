@@ -131,12 +131,12 @@ const Login = () => {
             </div>
 
             {/* Role Toggle */}
-            <div className="flex justify-between mb-6 bg-gradient-to-r from-[#151E3D]/5 to-[#F59E0B]/5 p-1 rounded-xl border border-[#F59E0B]/20">
+            <div className="flex justify-between mb-6 bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 p-1 rounded-xl border border-[#151E3D]/20">
               <button
                 onClick={() => setRole("customer")}
                 className={`w-1/2 py-2 rounded-lg text-sm font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 ${
                   role === "customer"
-                    ? "bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105"
+                    ? "bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105"
                     : "text-[#151E3D] hover:bg-white/50 hover:scale-105"
                 }`}
               >
@@ -147,7 +147,7 @@ const Login = () => {
                 onClick={() => setRole("artisan")}
                 className={`w-1/2 py-2 rounded-lg text-sm font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 ${
                   role === "artisan"
-                    ? "bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105"
+                    ? "bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105"
                     : "text-[#151E3D] hover:bg-white/50 hover:scale-105"
                 }`}
               >
@@ -167,7 +167,7 @@ const Login = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50"
+                    className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50"
                     placeholder="Enter your email address"
                     required
                   />
@@ -182,7 +182,7 @@ const Login = () => {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50 pr-10"
+                      className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50 pr-10"
                       placeholder="Enter your password"
                       required
                     />
@@ -199,7 +199,7 @@ const Login = () => {
               {error && (
                 <div className={`p-3 rounded-lg text-sm border-2 ${
                   requiresVerification 
-                    ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 text-yellow-800' 
+                    ? 'bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 border-[#151E3D]/20 text-[#151E3D]' 
                     : 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200 text-red-800'
                 }`}>
                   <div className="flex items-center">
@@ -210,7 +210,7 @@ const Login = () => {
               )}
 
               {requiresVerification && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4 text-sm">
+                <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 border-2 border-[#151E3D]/20 rounded-lg p-4 text-sm">
                   <div className="flex items-center mb-2">
                     <Mail className="w-4 h-4 mr-2 text-blue-600" />
                     <span className="font-semibold text-blue-800 text-xs">Email Verification Required</span>
@@ -222,7 +222,7 @@ const Login = () => {
                     type="button"
                     onClick={handleResendVerification}
                     disabled={resendLoading}
-                    className="w-full py-2 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xs"
+                    className="w-full py-2 px-3 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xs"
                   >
                     {resendLoading ? "Sending..." : "Resend Verification Email"}
                   </button>
@@ -232,7 +232,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#D97706] hover:to-[#B45309] text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#F59E0B]/30 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 disabled:scale-100 flex items-center justify-center"
+                className="w-full py-3 rounded-lg bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#151E3D]/30 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 disabled:scale-100 flex items-center justify-center"
               >
                 {loading ? (
                   <>

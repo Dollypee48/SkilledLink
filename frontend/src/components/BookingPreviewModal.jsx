@@ -71,7 +71,7 @@ const BookingPreviewModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white">
           <div>
             <h2 className="text-2xl font-bold">Job Request Details</h2>
             <p className="text-blue-100">Request ID: {booking._id}</p>
@@ -89,7 +89,7 @@ const BookingPreviewModal = ({
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
               {/* Service Information */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+              <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 rounded-xl p-6 border border-[#151E3D]/20">
                 <h3 className="text-xl font-semibold text-blue-900 mb-4 flex items-center">
                   <Star className="w-6 h-6 mr-2" />
                   Service Request
@@ -170,7 +170,7 @@ const BookingPreviewModal = ({
 
               {/* Location Information */}
               {booking.location && (
-                <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-200">
+                <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 rounded-xl p-6 border border-[#151E3D]/20">
                   <h3 className="text-xl font-semibold text-orange-900 mb-4 flex items-center">
                     <MapPin className="w-6 h-6 mr-2" />
                     Location Details
@@ -181,7 +181,7 @@ const BookingPreviewModal = ({
 
               {/* Additional Information */}
               {booking.additionalDetails && (
-                <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-6 border border-purple-200">
+                <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 rounded-xl p-6 border border-[#151E3D]/20">
                   <h3 className="text-xl font-semibold text-purple-900 mb-4">Additional Information</h3>
                   <p className="text-purple-900 text-lg leading-relaxed">{booking.additionalDetails}</p>
                 </div>
@@ -215,7 +215,7 @@ const BookingPreviewModal = ({
 
         {/* Actions Footer */}
         {booking.status === 'Pending' && (
-          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50">
+          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-[#151E3D]/5">
             <div className="flex items-center space-x-4">
               <button
                 onClick={onClose}
@@ -279,7 +279,7 @@ const BookingPreviewModal = ({
 
         {/* Non-pending status footer */}
         {booking.status !== 'Pending' && (
-          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50">
+          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-[#151E3D]/5">
             <div className="flex items-center space-x-4">
               <button
                 onClick={onClose}

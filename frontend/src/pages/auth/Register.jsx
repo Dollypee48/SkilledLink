@@ -128,12 +128,12 @@ const Register = () => {
             </div>
 
             {/* Role Toggle */}
-            <div className="flex justify-between mb-6 bg-gradient-to-r from-[#151E3D]/5 to-[#F59E0B]/5 p-1 rounded-xl border border-[#F59E0B]/20">
+            <div className="flex justify-between mb-6 bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 p-1 rounded-xl border border-[#151E3D]/20">
               <button
                 onClick={() => handleRoleChange('customer')}
                 className={`w-1/2 py-2 rounded-lg text-sm font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 ${
                   formData.role === 'customer'
-                    ? "bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105"
+                    ? "bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105"
                     : "text-[#151E3D] hover:bg-white/50 hover:scale-105"
                 }`}
               >
@@ -144,7 +144,7 @@ const Register = () => {
                 onClick={() => handleRoleChange('artisan')}
                 className={`w-1/2 py-2 rounded-lg text-sm font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 ${
                   formData.role === 'artisan'
-                    ? "bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105"
+                    ? "bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105"
                     : "text-[#151E3D] hover:bg-white/50 hover:scale-105"
                 }`}
               >
@@ -165,7 +165,7 @@ const Register = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50"
+                    className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50"
                     placeholder="Enter your full name"
                     required
                   />
@@ -180,7 +180,7 @@ const Register = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50"
+                    className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50"
                     placeholder="Enter your email address"
                     required
                   />
@@ -196,7 +196,7 @@ const Register = () => {
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50 pr-10"
+                      className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50 pr-10"
                       placeholder="Create a strong password"
                       required
                     />
@@ -220,7 +220,7 @@ const Register = () => {
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50 pr-10"
+                      className="w-full px-3 py-3 rounded-lg bg-gradient-to-r from-[#F8FAFC] to-white border-2 border-[#151E3D]/10 focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50 pr-10"
                       placeholder="Confirm your password"
                       required
                     />
@@ -246,7 +246,7 @@ const Register = () => {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#D97706] hover:to-[#B45309] text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#F59E0B]/30 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 disabled:scale-100 flex items-center justify-center"
+                className="w-full py-3 rounded-lg bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#151E3D]/30 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 disabled:scale-100 flex items-center justify-center"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
                 Create Account

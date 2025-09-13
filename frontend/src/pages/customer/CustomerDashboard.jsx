@@ -73,7 +73,7 @@ export default function CustomerDashboard() {
 
   return (
     <CustomerLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-[#151E3D]/5">
         {/* Header Section */}
         <div className="bg-white shadow-sm border-b border-gray-200">
           <div className="px-6 py-8">

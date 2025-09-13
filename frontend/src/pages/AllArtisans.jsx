@@ -320,7 +320,7 @@ const AllArtisans = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#151E3D]/40 to-transparent"></div>
                 {artisan.verified && (
-                  <div className="absolute top-4 right-4 bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center">
+                  <div className="absolute top-4 right-4 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
@@ -527,8 +527,8 @@ const AllArtisans = () => {
                   {/* Contact Information */}
                   <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-[#151E3D]/10 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-[#151E3D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </div>
@@ -615,7 +615,7 @@ const AllArtisans = () => {
                   </div>
                   
                   {/* Rating Summary */}
-                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg mb-4 border border-yellow-200">
+                  <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 p-4 rounded-lg mb-4 border border-[#151E3D]/20">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="flex items-center space-x-1">

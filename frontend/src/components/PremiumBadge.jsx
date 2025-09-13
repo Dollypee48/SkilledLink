@@ -18,7 +18,7 @@ const PremiumBadge = ({
   const variants = {
     default: 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white',
     gold: 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white',
-    blue: 'bg-gradient-to-r from-blue-500 to-blue-700 text-white',
+    blue: 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white',
     green: 'bg-gradient-to-r from-green-500 to-green-700 text-white'
   };
 

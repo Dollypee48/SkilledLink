@@ -198,7 +198,7 @@ const Subscription = () => {
 
   return (
     <ArtisanLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-[#151E3D]/5 to-[#1E2A4A]/10">
         <div className="p-4">
           {/* Header Section */}
           <div className="text-center mb-8">
@@ -233,7 +233,7 @@ const Subscription = () => {
         {/* Current Subscription Status - Enhanced */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8 relative overflow-hidden">
           {/* Background Pattern */}
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full -translate-y-12 translate-x-12"></div>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#151E3D]/5 to-[#1E2A4A]/5 rounded-full -translate-y-12 translate-x-12"></div>
           <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-purple-50 to-pink-50 rounded-full translate-y-8 -translate-x-8"></div>
           
           {/* Updating Indicator */}
@@ -252,7 +252,7 @@ const Subscription = () => {
                 <div className={`p-2 rounded-lg ${
                   currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active'
                     ? 'bg-gradient-to-r from-green-500 to-emerald-500'
-                    : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                    : 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A]'
                 }`}>
                   {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' ? (
                     <Crown className="w-5 h-5 text-white" />
@@ -268,7 +268,7 @@ const Subscription = () => {
               <div className={`px-4 py-2 rounded-full text-xs font-bold shadow-md ${
                 currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active'
                   ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                  : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                  : 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white'
               }`}>
                 {currentSubscription?.subscription?.plan === 'premium' && currentSubscription?.subscription?.status === 'active' ? 'PREMIUM' : 'FREEMIUM'}
               </div>
@@ -375,7 +375,7 @@ const Subscription = () => {
               )}
 
               {/* Background Pattern */}
-              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full -translate-y-8 translate-x-8"></div>
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#151E3D]/5 to-[#1E2A4A]/5 rounded-full -translate-y-8 translate-x-8"></div>
               <div className="absolute bottom-0 left-0 w-12 h-12 bg-gradient-to-tr from-purple-50 to-pink-50 rounded-full translate-y-6 -translate-x-6"></div>
 
               <div className="relative z-10 p-6">

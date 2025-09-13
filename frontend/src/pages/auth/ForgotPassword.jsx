@@ -165,7 +165,7 @@ const ForgotPassword = () => {
               )}
 
               {requiresVerification && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4 text-sm">
+                <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 border-2 border-[#151E3D]/20 rounded-lg p-4 text-sm">
                   <div className="flex items-center mb-2">
                     <Mail className="w-4 h-4 mr-2 text-blue-600" />
                     <span className="font-semibold text-blue-800 text-xs">Email Verification Required</span>
@@ -175,7 +175,7 @@ const ForgotPassword = () => {
                   </p>
                   <Link
                     to="/login"
-                    className="w-full py-2 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-xs text-center block"
+                    className="w-full py-2 px-3 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-xs text-center block"
                   >
                     Back to Login
                   </Link>
