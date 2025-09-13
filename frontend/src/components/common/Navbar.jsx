@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'; // Corrected import path
 // import { useArtisan } from '../../context/ArtisanContext';
 import { User, Power, LogOut } from 'lucide-react';
 import PremiumBadge from '../PremiumBadge';
+import Logo from './Logo';
 
 const Header = () => {
   const { user, isAuthenticated, handleLogout } = useAuth(); // Get user from AuthContext
@@ -38,11 +39,9 @@ const Header = () => {
     <header className="sticky top-0 z-50 bg-[#151E3D] text-white py-4 shadow">
       <div className="container mx-auto px-6 flex justify-between items-center">
         
-        <div className="text-2xl font-semibold">
-          <Link to="/" className="hover:text-[#F59E0B] transition">
-            Skilled<span className="text-[#F59E0B]">Link</span>
-          </Link>
-        </div>
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <Logo variant="full" size="md" textColor="white" />
+        </Link>
 
         
         <nav className="space-x-10 hidden md:flex">

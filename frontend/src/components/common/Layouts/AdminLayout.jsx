@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
 import ProfileDropdown from "../ProfileDropdown"; // Import ProfileDropdown
+import Logo from "../Logo";
 
 const AdminLayout = ({ children }) => {
   const { user, handleLogout } = useAuth();
@@ -49,9 +50,9 @@ const AdminLayout = ({ children }) => {
             <div className="flex justify-between items-center h-20">
               {/* Logo Section */}
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                  <span className="text-white font-bold text-xl">S</span>
-                </div>
+                <Link to="/" className="hover:opacity-80 transition-opacity">
+                  <Logo variant="icon" size="md" />
+                </Link>
                 <div>
                   <h1 className="text-2xl font-bold text-[#151E3D]">SkilledLink</h1>
                   <p className="text-sm text-gray-600 -mt-1">Admin Dashboard</p>

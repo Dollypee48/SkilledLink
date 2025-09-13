@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Footer from "../components/common/Footer";   // ✅ adjust path based on your folder
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import Logo from "../components/common/Logo";
 
 const Home = () => {
   const navigate = useNavigate();

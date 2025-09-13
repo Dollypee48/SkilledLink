@@ -141,11 +141,16 @@ export const MessageProvider = ({ children }) => {
   // Fetch conversations list
   const fetchConversations = useCallback(async () => {
     const token = localStorage.getItem('accessToken');
-    if (!token) return;
+    if (!token) {
+      console.log('No access token found, skipping conversation fetch');
+      return;
+    }
 
+    console.log('Fetching conversations with token:', token.substring(0, 20) + '...');
     setLoading(true);
     try {
       const data = await messageService.getConversations(token);
+      console.log('Conversations fetched:', data);
       setConversations(data || []);
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
@@ -158,13 +163,18 @@ export const MessageProvider = ({ children }) => {
   // Fetch specific conversation
   const fetchConversation = useCallback(async (otherUserId) => {
     const token = localStorage.getItem('accessToken');
-    if (!token || !otherUserId || isFetchingConversationRef.current) return;
+    if (!token || !otherUserId || isFetchingConversationRef.current) {
+      console.log('Skipping conversation fetch - token:', !!token, 'otherUserId:', otherUserId, 'isFetching:', isFetchingConversationRef.current);
+      return;
+    }
 
+    console.log('Fetching conversation for user:', otherUserId);
     isFetchingConversationRef.current = true;
     setLoading(true);
     
     try {
       const data = await messageService.getConversation(otherUserId, token);
+      console.log('Conversation messages fetched:', data);
       setCurrentConversation(data || []);
     } catch (error) {
       console.error('Failed to fetch conversation:', error);

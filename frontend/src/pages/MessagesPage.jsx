@@ -9,9 +9,16 @@ const MessagesPage = () => {
   const { user } = useAuth();
   
   const messagesContent = (
-    <div className="flex h-screen bg-gray-100">
-      <ConversationList />
-      <ChatWindow />
+    <div className="h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex">
+      {/* Conversation List */}
+      <div className="w-96 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+        <ConversationList />
+      </div>
+      
+      {/* Chat Window */}
+      <div className="flex-1 bg-white">
+        <ChatWindow />
+      </div>
     </div>
   );
 

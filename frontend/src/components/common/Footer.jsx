@@ -1,4 +1,5 @@
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import Logo from './Logo';
 
 const Footer = () => {
   return (
@@ -7,7 +8,9 @@ const Footer = () => {
 
       
         <div>
-          <h2 className="text-xl font-semibold text-white mb-3">SkilledLink</h2>
+          <div className="mb-4">
+            <Logo variant="full" size="lg" textColor="white" />
+          </div>
           <p className="text-sm">
             SkilledLink is an online platform that connects people who need skilled services with verified, local artisans who are trained in different trades such as plumbing, electrical work, carpentry, cleaning, tailoring, painting, mechanics, and more.
           </p>

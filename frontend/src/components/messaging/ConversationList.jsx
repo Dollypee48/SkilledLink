@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useMessage } from '../../context/MessageContext';
 import { useAuth } from '../../context/AuthContext';
-import { User, MessageCircle, Clock } from 'lucide-react';
+import { User, MessageCircle, Search } from 'lucide-react';
 
 const ConversationList = () => {
   const { user } = useAuth();
@@ -12,6 +12,12 @@ const ConversationList = () => {
     loading, 
     error 
   } = useMessage();
+  
+  // Debug logging
+  console.log('ConversationList - conversations:', conversations);
+  console.log('ConversationList - loading:', loading);
+  console.log('ConversationList - error:', error);
+  console.log('ConversationList - user:', user);
   
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -50,9 +56,9 @@ const ConversationList = () => {
 
   if (loading) {
     return (
-      <div className="w-80 bg-white border-r border-gray-200 flex items-center justify-center">
+      <div className="w-96 bg-white border-r border-gray-200 flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#151E3D] border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-500">Loading conversations...</p>
         </div>
       </div>
@@ -61,12 +67,12 @@ const ConversationList = () => {
 
   if (error) {
     return (
-      <div className="w-80 bg-white border-r border-gray-200 flex items-center justify-center">
+      <div className="w-96 bg-white border-r border-gray-200 flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="px-4 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors"
           >
             Retry
           </button>
@@ -76,78 +82,92 @@ const ConversationList = () => {
   }
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-96 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Messages</h2>
+      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Messages</h2>
         
         {/* Search */}
         <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search conversations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-transparent bg-white shadow-sm transition-all duration-200"
           />
-          <MessageCircle className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
         </div>
       </div>
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto">
         {filteredConversations.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full p-6">
             <div className="text-center">
-              <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-10 h-10 text-gray-400" />
+              </div>
+              <p className="text-gray-500 text-lg">
                 {searchTerm ? 'No conversations found' : 'No conversations yet'}
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                {searchTerm ? 'Try adjusting your search terms' : 'Start a conversation to connect with others'}
               </p>
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-100">
             {filteredConversations.map((conversation) => {
               const partner = getConversationPartner(conversation);
               const isSelected = selectedRecipient?._id === partner?._id;
               const unreadCount = conversation.unreadCount || 0;
-              
-              return (
-                <div
+            
+            return (
+              <div
                   key={conversation.conversationId}
                   onClick={() => selectRecipient(partner)}
-                  className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    isSelected ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+                  className={`p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 ${
+                    isSelected ? 'bg-gradient-to-r from-[#151E3D]/10 to-[#1E2A4A]/10 border-r-4 border-[#151E3D]' : ''
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-4">
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-gray-600" />
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${
+                        isSelected ? 'bg-gradient-to-br from-[#151E3D] to-[#1E2A4A]' : 'bg-gradient-to-br from-gray-300 to-gray-400'
+                      }`}>
+                        <User className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-gray-600'}`} />
                       </div>
-                    </div>
+                      {unreadCount > 0 && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </div>
+                  )}
+                </div>
                     
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                  <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className={`text-sm font-semibold truncate ${
+                          isSelected ? 'text-[#151E3D]' : 'text-gray-900'
+                        }`}>
                           {partner?.name || 'Unknown User'}
-                        </h3>
+                    </h3>
                         <span className="text-xs text-gray-500">
                           {formatTimestamp(conversation.timestamp || conversation.createdAt)}
                         </span>
                       </div>
                       
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-sm text-gray-500 truncate">
-                          {conversation.content || 'No messages yet'}
-                        </p>
-                      </div>
-                    </div>
+                      <p className={`text-sm truncate ${
+                        isSelected ? 'text-[#151E3D]/80' : 'text-gray-600'
+                      }`}>
+                        {conversation.content || 'No messages yet'}
+                    </p>
+                </div>
                   </div>
                 </div>
               );
             })}
-          </div>
+              </div>
         )}
       </div>
     </div>

@@ -326,11 +326,11 @@ const ArtisanSettingsPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Modern Header with Glass Effect */}
         <div className="relative bg-white/90 backdrop-blur-sm shadow-xl border-b border-white/20">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#151E3D]/5 via-orange-50/50 to-[#F59E0B]/5"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#151E3D]/5 via-[#151E3D]/10 to-[#1E2A4A]/5"></div>
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#151E3D] via-orange-600 to-[#F59E0B] bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#151E3D] via-[#151E3D] to-[#1E2A4A] bg-clip-text text-transparent">
                   Artisan Settings
                 </h1>
                 <p className="text-gray-600 text-lg">Manage your professional profile, services, and preferences</p>
@@ -350,7 +350,7 @@ const ArtisanSettingsPage = () => {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#F59E0B] to-[#D97706] rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-2xl flex items-center justify-center shadow-lg">
                   <Settings className="w-8 h-8 text-white" />
                 </div>
               </div>
@@ -369,12 +369,12 @@ const ArtisanSettingsPage = () => {
                     onClick={() => setActiveTab('profile')}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
                       activeTab === 'profile'
-                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-[#151E3D]/5 hover:shadow-md'
                     }`}
                   >
                     <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
-                      activeTab === 'profile' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                      activeTab === 'profile' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-[#151E3D]/10'
                     }`}>
                       <User className="w-5 h-5" />
                     </div>
@@ -384,12 +384,12 @@ const ArtisanSettingsPage = () => {
                     onClick={() => setActiveTab('password')}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
                       activeTab === 'password'
-                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-[#151E3D]/5 hover:shadow-md'
                     }`}
                   >
                     <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
-                      activeTab === 'password' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                      activeTab === 'password' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-[#151E3D]/10'
                     }`}>
                       <Lock className="w-5 h-5" />
                     </div>
@@ -399,12 +399,12 @@ const ArtisanSettingsPage = () => {
                     onClick={() => setActiveTab('notifications')}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
                       activeTab === 'notifications'
-                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-[#151E3D]/5 hover:shadow-md'
                     }`}
                   >
                     <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
-                      activeTab === 'notifications' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                      activeTab === 'notifications' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-[#151E3D]/10'
                     }`}>
                       <Bell className="w-5 h-5" />
                     </div>
@@ -414,12 +414,12 @@ const ArtisanSettingsPage = () => {
                     onClick={() => setActiveTab('privacy')}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
                       activeTab === 'privacy'
-                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-[#151E3D]/5 hover:shadow-md'
                     }`}
                   >
                     <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
-                      activeTab === 'privacy' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                      activeTab === 'privacy' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-[#151E3D]/10'
                     }`}>
                       <Shield className="w-5 h-5" />
                     </div>
@@ -429,12 +429,12 @@ const ArtisanSettingsPage = () => {
                     onClick={() => setActiveTab('account')}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
                       activeTab === 'account'
-                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-[#151E3D]/5 hover:shadow-md'
                     }`}
                   >
                     <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
-                      activeTab === 'account' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                      activeTab === 'account' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-[#151E3D]/10'
                     }`}>
                       <AlertTriangle className="w-5 h-5" />
                     </div>
@@ -444,12 +444,12 @@ const ArtisanSettingsPage = () => {
                     onClick={() => setActiveTab('kyc')}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
                       activeTab === 'kyc'
-                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-[#151E3D]/5 hover:shadow-md'
                     }`}
                   >
                     <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
-                      activeTab === 'kyc' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                      activeTab === 'kyc' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-[#151E3D]/10'
                     }`}>
                       <Shield className="w-5 h-5" />
                     </div>
@@ -459,12 +459,12 @@ const ArtisanSettingsPage = () => {
                     onClick={() => setActiveTab('report')}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
                       activeTab === 'report'
-                        ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-orange-50 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-[#151E3D]/5 hover:shadow-md'
                     }`}
                   >
                     <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
-                      activeTab === 'report' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-orange-100'
+                      activeTab === 'report' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-[#151E3D]/10'
                     }`}>
                       <AlertTriangle className="w-5 h-5" />
                     </div>
@@ -1183,20 +1183,20 @@ const ArtisanSettingsPage = () => {
                     </div>
                     
                     <div className="space-y-6">
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+                      <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 border border-[#151E3D]/20 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-[#151E3D] mb-4 flex items-center">
                           <LogOut className="w-5 h-5 mr-2" />
                           Security Actions
                         </h3>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium text-blue-900">Log Out All Devices</p>
-                              <p className="text-sm text-blue-700">Sign out from all devices and browsers</p>
+                              <p className="font-medium text-[#151E3D]">Log Out All Devices</p>
+                              <p className="text-sm text-[#151E3D]/70">Sign out from all devices and browsers</p>
                             </div>
                             <button
                               onClick={handleLogoutAllDevices}
-                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                              className="px-4 py-2 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white rounded-lg transition-all duration-200"
                             >
                               Log Out All
                             </button>
@@ -1284,7 +1284,7 @@ const ArtisanSettingsPage = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Issue Type
                           </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent">
+                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent">
                             <option value="">Select an issue type</option>
                             <option value="bug">Bug Report</option>
                             <option value="feature">Feature Request</option>
@@ -1303,7 +1303,7 @@ const ArtisanSettingsPage = () => {
                           <input
                             type="text"
                             placeholder="Brief description of the issue"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
                           />
                         </div>
                         
@@ -1314,7 +1314,7 @@ const ArtisanSettingsPage = () => {
                           <textarea
                             rows={4}
                             placeholder="Please provide detailed information about the issue..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
                           ></textarea>
                         </div>
                         
@@ -1326,7 +1326,7 @@ const ArtisanSettingsPage = () => {
                             type="file"
                             multiple
                             accept="image/*,.pdf,.doc,.docx"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
                           />
                         </div>
                         

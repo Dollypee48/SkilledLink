@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Lock, ArrowRight, Sparkles, Shield, Zap, User, CheckCircle, ArrowLeft, Mail } from 'lucide-react';
+import Logo from '../../components/common/Logo';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -175,11 +176,8 @@ const ResetPassword = () => {
           {/* Left Side - Branding & Info */}
           <div className="text-center lg:text-left text-white space-y-6">
             <div className="space-y-3">
-              <div className="flex items-center justify-center lg:justify-start space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-[#F59E0B] to-[#D97706] rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold">SkilledLink</h1>
+              <div className="flex items-center justify-center lg:justify-start">
+                <Logo variant="full" size="lg" textColor="white" />
               </div>
               <h2 className="text-3xl lg:text-4xl font-bold leading-tight">
                 Reset Your <span className="text-[#F59E0B]">Password</span>

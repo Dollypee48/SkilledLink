@@ -1,0 +1,151 @@
+import React from 'react';
+
+const Logo = ({ 
+  variant = 'full', // 'full', 'icon', 'text'
+  size = 'md', // 'xs', 'sm', 'md', 'lg', 'xl'
+  className = '',
+  showText = true,
+  textColor = 'white' // 'white', 'dark', or custom color class
+}) => {
+  const sizeClasses = {
+    xs: 'w-6 h-6',
+    sm: 'w-8 h-8', 
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
+    xl: 'w-20 h-20'
+  };
+
+  const textSizeClasses = {
+    xs: 'text-sm',
+    sm: 'text-lg',
+    md: 'text-2xl',
+    lg: 'text-3xl',
+    xl: 'text-4xl'
+  };
+
+  const iconSize = sizeClasses[size] || sizeClasses.md;
+  const textSize = textSizeClasses[size] || textSizeClasses.md;
+
+  // Determine text color class
+  const getTextColorClass = () => {
+    if (textColor === 'white') return 'text-white';
+    if (textColor === 'dark') return 'text-[#151E3D]';
+    return textColor; // Custom color class
+  };
+
+  const LogoIcon = () => (
+    <svg 
+      className={`${iconSize} ${className}`}
+      viewBox="0 0 48 48" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Background Circle */}
+      <circle 
+        cx="24" 
+        cy="24" 
+        r="22" 
+        fill="url(#gradient1)" 
+        stroke="url(#gradient2)" 
+        strokeWidth="2"
+      />
+      
+      {/* Link/Chain Icon */}
+      <path 
+        d="M16 20C16 17.7909 17.7909 16 20 16H28C30.2091 16 32 17.7909 32 20V28C32 30.2091 30.2091 32 28 32H20C17.7909 32 16 30.2091 16 28V20Z" 
+        fill="white" 
+        fillOpacity="0.9"
+      />
+      
+      {/* Link Holes */}
+      <circle cx="20" cy="20" r="2" fill="url(#gradient2)" />
+      <circle cx="28" cy="20" r="2" fill="url(#gradient2)" />
+      <circle cx="20" cy="28" r="2" fill="url(#gradient2)" />
+      <circle cx="28" cy="28" r="2" fill="url(#gradient2)" />
+      
+      {/* Skill/Tool Icons */}
+      <path 
+        d="M12 12L14 14L16 12L18 14L20 12" 
+        stroke="url(#gradient3)" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+      <path 
+        d="M28 12L30 14L32 12L34 14L36 12" 
+        stroke="url(#gradient3)" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+      <path 
+        d="M12 36L14 34L16 36L18 34L20 36" 
+        stroke="url(#gradient3)" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+      <path 
+        d="M28 36L30 34L32 36L34 34L36 36" 
+        stroke="url(#gradient3)" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+      
+      {/* Center Connection Lines */}
+      <path 
+        d="M24 16V12M24 36V32M16 24H12M36 24H32" 
+        stroke="url(#gradient3)" 
+        strokeWidth="2" 
+        strokeLinecap="round"
+      />
+      
+      {/* Gradients */}
+      <defs>
+        <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#151E3D" />
+          <stop offset="100%" stopColor="#1E2A4A" />
+        </linearGradient>
+        <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="#D97706" />
+        </linearGradient>
+        <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="#D97706" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+
+  if (variant === 'icon') {
+    return <LogoIcon />;
+  }
+
+  if (variant === 'text') {
+    return (
+      <div className={`flex items-center ${className}`}>
+        <span className={`${textSize} font-bold ${getTextColorClass()}`}>
+          Skilled<span className="text-[#F59E0B]">Link</span>
+        </span>
+      </div>
+    );
+  }
+
+  // Full logo (icon + text)
+  return (
+    <div className={`flex items-center space-x-3 ${className}`}>
+      <LogoIcon />
+      {showText && (
+        <div>
+          <span className={`${textSize} font-bold ${getTextColorClass()}`}>
+            Skilled<span className="text-[#F59E0B]">Link</span>
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Logo;
