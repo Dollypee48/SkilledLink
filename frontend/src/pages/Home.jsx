@@ -112,7 +112,7 @@ const Home = () => {
 
       {/* Hero Section */}
       <section 
-        className="h-[500px] relative overflow-hidden"
+        className="h-[400px] sm:h-[500px] relative overflow-hidden"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -131,28 +131,28 @@ const Home = () => {
           ))}
         </div>
         <div className="bg-black/40 absolute inset-0"></div>
-        <div className="relative z-10 text-white px-4 py-20 sm:py-24">
+        <div className="relative z-10 text-white px-4 py-12 sm:py-20 lg:py-24">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               {/* Left Side - Main Content */}
               <div className="text-center lg:text-left">
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
                   Where <span className="text-[#F59E0B]">Skills</span> Meet <span className="text-[#F59E0B]">Opportunity</span>
                 </h1>
-                <p className="text-lg sm:text-xl mb-8 text-white/90 leading-relaxed">
+                <p className="text-base sm:text-lg lg:text-xl mb-6 sm:mb-8 text-white/90 leading-relaxed">
                   The marketplace that connects talented artisans with customers who need their expertise. 
                   Every project is a chance to showcase your skills and build your reputation.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
                   <Link
                     to="/find-artisans"
-                    className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg"
+                    className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 hover:scale-105 shadow-lg"
                   >
                     Find Services
                   </Link>
                   <Link
                     to="/register"
-                    className="border-2 border-white text-white hover:bg-white hover:text-[#151E3D] px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105"
+                    className="border-2 border-white text-white hover:bg-white hover:text-[#151E3D] px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all duration-300 hover:scale-105"
                   >
                     Get Started
                   </Link>
@@ -160,21 +160,21 @@ const Home = () => {
               </div>
 
               {/* Right Side - Testimonial Card */}
-              <div className="relative">
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl">
-                  <div className="flex items-center mb-6">
-                    <div className="w-16 h-16 bg-[#F59E0B] rounded-full flex items-center justify-center text-2xl font-bold text-white">
+              <div className="relative mt-8 lg:mt-0">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20 shadow-2xl">
+                  <div className="flex items-center mb-4 sm:mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#F59E0B] rounded-full flex items-center justify-center text-lg sm:text-2xl font-bold text-white">
                       A
                     </div>
-                    <div className="ml-4">
-                      <h3 className="text-xl font-semibold text-white">Aisha Mohammed</h3>
-                      <p className="text-white/70">Customer, Lagos</p>
+                    <div className="ml-3 sm:ml-4">
+                      <h3 className="text-lg sm:text-xl font-semibold text-white">Aisha Mohammed</h3>
+                      <p className="text-sm sm:text-base text-white/70">Customer, Lagos</p>
                     </div>
                   </div>
-                  <blockquote className="text-lg text-white/90 italic mb-6">
+                  <blockquote className="text-sm sm:text-base lg:text-lg text-white/90 italic mb-4 sm:mb-6">
                     "SkilledLink transformed my home renovation project. The electrician I found was not only skilled but also punctual and professional. The platform made everything so easy!"
                   </blockquote>
-                  <div className="flex text-[#F59E0B] text-xl">
+                  <div className="flex text-[#F59E0B] text-lg sm:text-xl">
                     ★★★★★
                   </div>
                 </div>
@@ -270,32 +270,32 @@ const Home = () => {
         </div>
 
         {/* Popular Services */}
-        <h2 className="text-4xl font-bold mb-4 text-gray-800">Popular Services</h2>
-        <p className="text-gray-600 mb-10 text-xl">Find the right professional for any job</p>
-        <div className="max-w-6xl mx-auto grid grid-cols-6 gap-4 px-4">
-          <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-32 w-full flex flex-col items-center justify-center">
-            <span className="text-4xl text-blue-500">🚰</span>
-            <h4 className="text-sm font-semibold mt-2 text-gray-800">Plumbing</h4>
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 text-gray-800">Popular Services</h2>
+        <p className="text-gray-600 mb-6 sm:mb-10 text-lg sm:text-xl">Find the right professional for any job</p>
+        <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 px-4">
+          <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-24 sm:h-32 w-full flex flex-col items-center justify-center">
+            <span className="text-2xl sm:text-4xl text-blue-500">🚰</span>
+            <h4 className="text-xs sm:text-sm font-semibold mt-1 sm:mt-2 text-gray-800">Plumbing</h4>
           </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-32 w-full flex flex-col items-center justify-center">
-            <span className="text-4xl text-yellow-500">💡</span>
-            <h4 className="text-sm font-semibold mt-2 text-gray-800">Electrical</h4>
+          <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-24 sm:h-32 w-full flex flex-col items-center justify-center">
+            <span className="text-2xl sm:text-4xl text-yellow-500">💡</span>
+            <h4 className="text-xs sm:text-sm font-semibold mt-1 sm:mt-2 text-gray-800">Electrical</h4>
           </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-32 w-full flex flex-col items-center justify-center">
-            <span className="text-4xl text-green-500">🧹</span>
-            <h4 className="text-sm font-semibold mt-2 text-gray-800">Cleaning</h4>
+          <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-24 sm:h-32 w-full flex flex-col items-center justify-center">
+            <span className="text-2xl sm:text-4xl text-green-500">🧹</span>
+            <h4 className="text-xs sm:text-sm font-semibold mt-1 sm:mt-2 text-gray-800">Cleaning</h4>
           </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-32 w-full flex flex-col items-center justify-center">
-            <span className="text-4xl text-purple-500">✂️</span>
-            <h4 className="text-sm font-semibold mt-2 text-gray-800">Tailoring</h4>
+          <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-24 sm:h-32 w-full flex flex-col items-center justify-center">
+            <span className="text-2xl sm:text-4xl text-purple-500">✂️</span>
+            <h4 className="text-xs sm:text-sm font-semibold mt-1 sm:mt-2 text-gray-800">Tailoring</h4>
           </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-32 w-full flex flex-col items-center justify-center">
-            <span className="text-4xl text-pink-500">🎨</span>
-            <h4 className="text-sm font-semibold mt-2 text-gray-800">Painting</h4>
+          <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-24 sm:h-32 w-full flex flex-col items-center justify-center">
+            <span className="text-2xl sm:text-4xl text-pink-500">🎨</span>
+            <h4 className="text-xs sm:text-sm font-semibold mt-1 sm:mt-2 text-gray-800">Painting</h4>
           </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-32 w-full flex flex-col items-center justify-center">
-            <span className="text-4xl text-red-500">🔧</span>
-            <h4 className="text-sm font-semibold mt-2 text-gray-800">Mechanic</h4>
+          <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 h-24 sm:h-32 w-full flex flex-col items-center justify-center">
+            <span className="text-2xl sm:text-4xl text-red-500">🔧</span>
+            <h4 className="text-xs sm:text-sm font-semibold mt-1 sm:mt-2 text-gray-800">Mechanic</h4>
           </div>
         </div>
       </section>
@@ -309,26 +309,26 @@ const Home = () => {
       >
         <div className="absolute inset-0 bg-black/15"></div>
         <div className="relative z-10">
-          <h2 className="text-3xl font-bold mb-12 text-white">How SkilledLink Works</h2>
-          <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 px-4">
-            <div className="bg-white/15 backdrop-blur-sm p-8 rounded-xl border border-[#F59E0B]/30 hover:bg-white/20 transition-all duration-300">
-              <span className="text-5xl text-[#F59E0B]">1️⃣</span>
-              <h3 className="text-xl font-semibold mt-4 text-white">Search for a Service</h3>
-              <p className="text-white/90 mt-2">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-white">How SkilledLink Works</h2>
+          <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 px-4">
+            <div className="bg-white/15 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-xl border border-[#F59E0B]/30 hover:bg-white/20 transition-all duration-300">
+              <span className="text-3xl sm:text-4xl lg:text-5xl text-[#F59E0B]">1️⃣</span>
+              <h3 className="text-lg sm:text-xl font-semibold mt-3 sm:mt-4 text-white">Search for a Service</h3>
+              <p className="text-sm sm:text-base text-white/90 mt-2">
                 Browse through our wide range of services or search for specific skills you need.
               </p>
             </div>
-            <div className="bg-white/15 backdrop-blur-sm p-8 rounded-xl border border-[#F59E0B]/30 hover:bg-white/20 transition-all duration-300">
-              <span className="text-5xl text-[#F59E0B]">2️⃣</span>
-              <h3 className="text-xl font-semibold mt-4 text-white">Book an Artisan</h3>
-              <p className="text-white/90 mt-2">
+            <div className="bg-white/15 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-xl border border-[#F59E0B]/30 hover:bg-white/20 transition-all duration-300">
+              <span className="text-3xl sm:text-4xl lg:text-5xl text-[#F59E0B]">2️⃣</span>
+              <h3 className="text-lg sm:text-xl font-semibold mt-3 sm:mt-4 text-white">Book an Artisan</h3>
+              <p className="text-sm sm:text-base text-white/90 mt-2">
                 Choose from available professionals based on ratings, reviews, and availability.
               </p>
             </div>
-            <div className="bg-white/15 backdrop-blur-sm p-8 rounded-xl border border-[#F59E0B]/30 hover:bg-white/20 transition-all duration-300">
-              <span className="text-5xl text-[#F59E0B]">3️⃣</span>
-              <h3 className="text-xl font-semibold mt-4 text-white">Get the Job Done</h3>
-              <p className="text-white/90 mt-2">
+            <div className="bg-white/15 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-xl border border-[#F59E0B]/30 hover:bg-white/20 transition-all duration-300">
+              <span className="text-3xl sm:text-4xl lg:text-5xl text-[#F59E0B]">3️⃣</span>
+              <h3 className="text-lg sm:text-xl font-semibold mt-3 sm:mt-4 text-white">Get the Job Done</h3>
+              <p className="text-sm sm:text-base text-white/90 mt-2">
                 Receive quality service, pay securely, and leave a review to help others.
               </p>
             </div>
@@ -337,75 +337,75 @@ const Home = () => {
       </section>
 
       {/* Customer Reviews */}
-      <section className="py-12 text-center">
-        <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-yellow-500">★★★★★ 5.0</p>
-            <p className="text-gray-600">
+      <section className="py-8 sm:py-12 text-center">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Customer Reviews</h2>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 px-4">
+          <div className="bg-white p-3 sm:p-4 rounded shadow">
+            <p className="text-yellow-500 text-sm sm:text-base">★★★★★ 5.0</p>
+            <p className="text-gray-600 text-sm sm:text-base">
               "SkilledLink made it so easy to find a reliable plumber for my emergency. The service was outstanding and highly recommended!"
             </p>
-            <p className="text-green-500 mt-2">- Sololake Bose, Lagos</p>
+            <p className="text-green-500 mt-2 text-xs sm:text-sm">- Sololake Bose, Lagos</p>
           </div>
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-yellow-500">★★★★★ 5.0</p>
-            <p className="text-gray-600">
+          <div className="bg-white p-3 sm:p-4 rounded shadow">
+            <p className="text-yellow-500 text-sm sm:text-base">★★★★★ 5.0</p>
+            <p className="text-gray-600 text-sm sm:text-base">
               "I needed an electrician to fix some wiring issues. The artisan I found through SkilledLink was knowledgeable and quick!"
             </p>
-            <p className="text-green-500 mt-2">- Muyiwa Tomori, Ibadan</p>
+            <p className="text-green-500 mt-2 text-xs sm:text-sm">- Muyiwa Tomori, Ibadan</p>
           </div>
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-yellow-500">★★★★ 4.0</p>
-            <p className="text-gray-600">
+          <div className="bg-white p-3 sm:p-4 rounded shadow">
+            <p className="text-yellow-500 text-sm sm:text-base">★★★★ 4.0</p>
+            <p className="text-gray-600 text-sm sm:text-base">
               "The cleaning service I booked through SkilledLink was fantastic. My home has never looked better, will definitely use again!"
             </p>
-            <p className="text-green-500 mt-2">- Adam Ridwan, Abuja</p>
+            <p className="text-green-500 mt-2 text-xs sm:text-sm">- Adam Ridwan, Abuja</p>
           </div>
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-yellow-500">★★★★★ 5.0</p>
-            <p className="text-gray-600">
+          <div className="bg-white p-3 sm:p-4 rounded shadow">
+            <p className="text-yellow-500 text-sm sm:text-base">★★★★★ 5.0</p>
+            <p className="text-gray-600 text-sm sm:text-base">
               "Excellent platform! Found a skilled tailor who made my wedding dress perfectly. The quality and attention to detail was amazing."
             </p>
-            <p className="text-green-500 mt-2">- Fatima Ahmed, Kano</p>
+            <p className="text-green-500 mt-2 text-xs sm:text-sm">- Fatima Ahmed, Kano</p>
           </div>
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-yellow-500">★★★★★ 5.0</p>
-            <p className="text-gray-600">
+          <div className="bg-white p-3 sm:p-4 rounded shadow">
+            <p className="text-yellow-500 text-sm sm:text-base">★★★★★ 5.0</p>
+            <p className="text-gray-600 text-sm sm:text-base">
               "The painter I hired through SkilledLink transformed my living room beautifully. Professional work and fair pricing. Highly recommended!"
             </p>
-            <p className="text-green-500 mt-2">- Chinedu Okoro, Port Harcourt</p>
+            <p className="text-green-500 mt-2 text-xs sm:text-sm">- Chinedu Okoro, Port Harcourt</p>
           </div>
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-yellow-500">★★★★ 4.5</p>
-            <p className="text-gray-600">
+          <div className="bg-white p-3 sm:p-4 rounded shadow">
+            <p className="text-yellow-500 text-sm sm:text-base">★★★★ 4.5</p>
+            <p className="text-gray-600 text-sm sm:text-base">
               "Great experience with the mechanic I found. Fixed my car's engine issue quickly and explained everything clearly. Will use again!"
             </p>
-            <p className="text-green-500 mt-2">- Aisha Mohammed, Kaduna</p>
+            <p className="text-green-500 mt-2 text-xs sm:text-sm">- Aisha Mohammed, Kaduna</p>
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 text-center" style={{ backgroundColor: 'rgba(21, 30, 61, 0.05)' }}>
-        <h2 className="text-3xl font-bold mb-12 text-gray-800">Frequently Asked Questions</h2>
+      <section className="py-8 sm:py-12 lg:py-16 text-center" style={{ backgroundColor: 'rgba(21, 30, 61, 0.05)' }}>
+        <h2 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-gray-800">Frequently Asked Questions</h2>
         <div className="max-w-4xl mx-auto px-4">
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {faqData.map((faq) => (
               <div key={faq.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                 <button
                   onClick={() => toggleFAQ(faq.id)}
-                  className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors duration-200"
+                  className="w-full p-4 sm:p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors duration-200"
                 >
-                  <h3 className="text-lg font-semibold text-gray-800 pr-4">{faq.question}</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800 pr-4">{faq.question}</h3>
                   {openFAQ === faq.id ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                    <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                    <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
                   )}
                 </button>
                 {openFAQ === faq.id && (
-                  <div className="px-6 pb-6">
-                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                  <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -415,14 +415,14 @@ const Home = () => {
       </section>
 
       {/* Artisan Call-to-Action */}
-      <section className="bg-[#151E3D] text-white py-16 text-center">
-        <h2 className="text-2xl font-bold mb-4">Are you a Skilled Worker?</h2>
-        <p className="mb-6">
+      <section className="bg-[#151E3D] text-white py-8 sm:py-12 lg:py-16 text-center">
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Are you a Skilled Worker?</h2>
+        <p className="mb-4 sm:mb-6 text-sm sm:text-base px-4">
           Join SkilledLink and grow your business by connecting with customers looking for <strong>expertise</strong>.
         </p>
         <Link
           to="/register"
-          className="bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold px-6 py-3 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2"
+          className="bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold px-4 sm:px-6 py-2 sm:py-3 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 text-sm sm:text-base"
         >
           Join as an Artisan
         </Link>

@@ -32,9 +32,9 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Admin Dashboard</h1>
-          <p>Loading dashboard statistics...</p>
+        <div className="p-4 sm:p-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Admin Dashboard</h1>
+          <p className="text-sm sm:text-base">Loading dashboard statistics...</p>
         </div>
       </AdminLayout>
     );
@@ -43,9 +43,9 @@ const AdminDashboard = () => {
   if (error) {
     return (
       <AdminLayout>
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Admin Dashboard</h1>
-          <p className="text-red-500">Error: {error}</p>
+        <div className="p-4 sm:p-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Admin Dashboard</h1>
+          <p className="text-sm sm:text-base text-red-500">Error: {error}</p>
         </div>
       </AdminLayout>
     );
@@ -66,18 +66,18 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 bg-white shadow-md rounded-lg">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
+      <div className="p-4 sm:p-6 bg-white shadow-md rounded-lg">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">Admin Dashboard</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {statCards.map((card, index) => (
-            <div key={index} className={`${card.color} rounded-lg p-5 flex items-center shadow-md`}>
-              <div className="mr-4">
-                {React.createElement(card.icon, { className: "w-8 h-8" })}
+            <div key={index} className={`${card.color} rounded-lg p-4 sm:p-5 flex items-center shadow-md`}>
+              <div className="mr-3 sm:mr-4">
+                {React.createElement(card.icon, { className: "w-6 h-6 sm:w-8 sm:h-8" })}
               </div>
               <div>
-                <p className="text-sm font-medium">{card.name}</p>
-                <p className="text-2xl font-bold">{card.value !== undefined ? card.value : 'N/A'}</p>
+                <p className="text-xs sm:text-sm font-medium">{card.name}</p>
+                <p className="text-xl sm:text-2xl font-bold">{card.value !== undefined ? card.value : 'N/A'}</p>
               </div>
             </div>
           ))}

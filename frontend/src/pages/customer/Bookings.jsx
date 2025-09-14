@@ -69,22 +69,22 @@ const Bookings = () => {
 
   return (
     <CustomerLayout>
-      <div className="p-6 text-[#151E3D]">
-        <div className="flex items-center gap-3 mb-6">
-          <CalendarCheck className="w-8 h-8 text-[#151E3D]" />
-          <h1 className="text-3xl font-bold">My Bookings</h1>
+      <div className="p-4 sm:p-6 text-[#151E3D]">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <CalendarCheck className="w-6 h-6 sm:w-8 sm:h-8 text-[#151E3D]" />
+          <h1 className="text-2xl sm:text-3xl font-bold">My Bookings</h1>
         </div>
-        <p className="text-gray-600 mb-6">
+        <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
           Manage your booking history and upcoming appointments.
         </p>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center gap-4">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <label className="text-sm font-medium text-[#151E3D]">Sort by:</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
+              className="px-3 sm:px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D] text-sm sm:text-base"
             >
               <option value="date">Date</option>
               <option value="status">Status</option>
@@ -92,8 +92,8 @@ const Bookings = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Booking History</h2>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Booking History</h2>
           {loading ? (
             <p className="text-gray-600">Loading bookings...</p>
           ) : error ? (

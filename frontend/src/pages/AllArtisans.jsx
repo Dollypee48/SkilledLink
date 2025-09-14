@@ -216,12 +216,12 @@ const AllArtisans = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#151E3D]/5 to-[#F59E0B]/5">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
           <div className="text-center">
-            <h1 className="text-5xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">
               Find <span className="text-[#F59E0B]">Skilled</span> Artisans
             </h1>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg lg:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
               Discover talented professionals ready to help with your projects. 
               Connect with verified artisans in your area.
             </p>
@@ -229,21 +229,21 @@ const AllArtisans = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
         {/* Search and Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-[#F59E0B]/20">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-[#151E3D] mb-2">Search & Filter</h2>
-            <p className="text-[#151E3D]/70">Find the perfect artisan for your needs</p>
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 border border-[#F59E0B]/20">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#151E3D] mb-2">Search & Filter</h2>
+            <p className="text-sm sm:text-base text-[#151E3D]/70">Find the perfect artisan for your needs</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#F59E0B] w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search artisans, skills, or services..."
-                className="w-full pl-12 pr-4 py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] placeholder-[#151E3D]/50"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm sm:text-base text-[#151E3D] placeholder-[#151E3D]/50"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -253,7 +253,7 @@ const AllArtisans = () => {
             <div className="relative">
               <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#F59E0B] w-5 h-5" />
               <select
-                className="w-full pl-12 pr-4 py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] bg-white appearance-none cursor-pointer"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm sm:text-base text-[#151E3D] bg-white appearance-none cursor-pointer"
                 value={selectedService}
                 onChange={(e) => setSelectedService(e.target.value)}
               >
@@ -269,7 +269,7 @@ const AllArtisans = () => {
             <div className="relative">
               <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#F59E0B] w-5 h-5" />
               <select
-                className="w-full pl-12 pr-4 py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] bg-white appearance-none cursor-pointer"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm sm:text-base text-[#151E3D] bg-white appearance-none cursor-pointer"
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
               >
@@ -285,7 +285,7 @@ const AllArtisans = () => {
             <div className="relative">
               <Clock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#F59E0B] w-5 h-5" />
               <select
-                className="w-full pl-12 pr-4 py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-[#151E3D] bg-white appearance-none cursor-pointer"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm sm:text-base text-[#151E3D] bg-white appearance-none cursor-pointer"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
@@ -299,20 +299,20 @@ const AllArtisans = () => {
         </div>
 
         {/* Results Count */}
-        <div className="mb-8">
-          <div className="bg-gradient-to-r from-[#151E3D]/10 to-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-xl p-6">
-            <p className="text-[#151E3D] font-semibold text-lg">
+        <div className="mb-6 sm:mb-8">
+          <div className="bg-gradient-to-r from-[#151E3D]/10 to-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-xl p-4 sm:p-6">
+            <p className="text-[#151E3D] font-semibold text-base sm:text-lg">
               <span className="font-bold text-[#F59E0B]">{sortedArtisans.length}</span> of <span className="font-bold text-[#151E3D]">{artisans.length}</span> artisans found
             </p>
           </div>
         </div>
 
         {/* Artisans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {sortedArtisans.map(artisan => (
             <div key={artisan.id} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-[#F59E0B]/20 group hover:-translate-y-1">
               {/* Artisan Image */}
-              <div className="relative h-56 overflow-hidden">
+              <div className="relative h-48 sm:h-56 overflow-hidden">
                 <img
                   src={artisan.image}
                   alt={artisan.name}
@@ -320,22 +320,24 @@ const AllArtisans = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#151E3D]/40 to-transparent"></div>
                 {artisan.verified && (
-                  <div className="absolute top-4 right-4 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center">
+                  <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    KYC Verified
+                    <span className="hidden sm:inline">KYC Verified</span>
+                    <span className="sm:hidden">KYC</span>
                   </div>
                 )}
                 {artisan.isPremium && (
-                  <div className="absolute top-4 left-4 bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center">
+                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
-                    Premium
+                    <span className="hidden sm:inline">Premium</span>
+                    <span className="sm:hidden">Pro</span>
                   </div>
                 )}
-                <div className={`absolute bottom-4 left-4 px-3 py-1 rounded-full text-sm font-semibold shadow-lg ${
+                <div className={`absolute bottom-2 sm:bottom-4 left-2 sm:left-4 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-lg ${
                   artisan.availability === 'Available Now' 
                     ? 'bg-[#F59E0B] text-white' 
                     : 'bg-[#151E3D] text-white'
@@ -345,39 +347,40 @@ const AllArtisans = () => {
               </div>
 
               {/* Artisan Info */}
-              <div className="p-6">
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-[#151E3D] mb-2">{artisan.name}</h3>
-                  <div className="flex items-center mb-3">
-                    <span className="bg-gradient-to-r from-[#F59E0B]/10 to-[#151E3D]/10 text-[#F59E0B] px-3 py-1 rounded-full text-sm font-semibold border border-[#F59E0B]/20">
+              <div className="p-4 sm:p-6">
+                <div className="mb-3 sm:mb-4">
+                  <h3 className="text-lg sm:text-xl font-bold text-[#151E3D] mb-2">{artisan.name}</h3>
+                  <div className="flex items-center mb-2 sm:mb-3">
+                    <span className="bg-gradient-to-r from-[#F59E0B]/10 to-[#151E3D]/10 text-[#F59E0B] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold border border-[#F59E0B]/20">
                       {artisan.service}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div className="flex items-center">
-                    <MapPin className="w-4 h-4 text-[#F59E0B] mr-2" />
-                    <span className="text-[#151E3D]/70 text-sm">{artisan.location}</span>
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1 sm:mr-2" />
+                    <span className="text-[#151E3D]/70 text-xs sm:text-sm">{artisan.location}</span>
                   </div>
                   <div className="flex items-center">
-                    <Star className="w-4 h-4 text-[#F59E0B] mr-1" />
-                    <span className="text-sm font-bold text-[#151E3D]">{artisan.rating.toFixed(1)}</span>
-                    <span className="text-sm text-[#151E3D]/60 ml-1">({artisan.reviews})</span>
+                    <Star className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1" />
+                    <span className="text-xs sm:text-sm font-bold text-[#151E3D]">{artisan.rating.toFixed(1)}</span>
+                    <span className="text-xs sm:text-sm text-[#151E3D]/60 ml-1">({artisan.reviews})</span>
                   </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <button
                     onClick={() => handleViewProfile(artisan)}
-                    className="flex-1 bg-[#F59E0B] hover:bg-[#D97706] text-white text-center py-3 px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center"
+                    className="flex-1 bg-[#F59E0B] hover:bg-[#D97706] text-white text-center py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm sm:text-base"
                   >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Profile
+                    <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">View Profile</span>
+                    <span className="sm:hidden">View</span>
                   </button>
                   <button
                     onClick={() => handleBookClick(artisan)}
-                    className="flex-1 border-2 border-[#151E3D] text-[#151E3D] hover:bg-[#151E3D] hover:text-white text-center py-3 px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+                    className="flex-1 border-2 border-[#151E3D] text-[#151E3D] hover:bg-[#151E3D] hover:text-white text-center py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg text-sm sm:text-base"
                   >
                     Book Now
                   </button>
