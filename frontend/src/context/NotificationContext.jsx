@@ -237,7 +237,7 @@ export const NotificationProvider = ({ children }) => {
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
-    if (!accessToken) {
+    if (!accessToken || !user) {
       return;
     }
     
@@ -253,11 +253,19 @@ export const NotificationProvider = ({ children }) => {
         timestamp: new Date(notification.createdAt || notification.timestamp)
       }));
       
-      // Successfully fetched notifications from API
+      // Filter notifications by user role to ensure proper segregation
+      const roleFilteredNotifications = transformedNotifications.filter(notification => {
+        // Only show notifications intended for the current user's role
+        return notification.recipientRole === user.role || 
+               notification.recipientRole === 'admin' || // Admin can see all
+               !notification.recipientRole; // Legacy notifications without role
+      });
+      
+      // Successfully fetched and filtered notifications from API
       
       // Check for duplicates before setting
       setNotifications(prev => {
-        const newNotifications = [...transformedNotifications];
+        const newNotifications = [...roleFilteredNotifications];
         const existingTitles = prev.map(n => n.title);
         
         // Filter out duplicates based on title
@@ -266,7 +274,7 @@ export const NotificationProvider = ({ children }) => {
         );
         
         if (uniqueNotifications.length !== newNotifications.length) {
-                  // Filtered out duplicate notifications from API
+          // Filtered out duplicate notifications from API
         }
         
         return [...uniqueNotifications, ...prev];
@@ -305,7 +313,7 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount(0);
       }
     }
-  }, [accessToken]);
+  }, [accessToken, user]);
 
   // Note: Socket.IO message and notification handling will be moved to MessageContext
   // to avoid circular dependencies
@@ -322,7 +330,23 @@ export const NotificationProvider = ({ children }) => {
     const handleNewNotification = (event) => {
       const notification = event.detail;
       console.log('NotificationContext received notification:', notification);
-      addNotification(notification);
+      
+      // Filter notifications by user role to ensure proper segregation
+      if (user && notification.recipientRole) {
+        if (notification.recipientRole === user.role || 
+            notification.recipientRole === 'admin' || 
+            !notification.recipientRole) {
+          addNotification(notification);
+        } else {
+          console.log('Notification filtered out due to role mismatch:', {
+            notificationRole: notification.recipientRole,
+            userRole: user.role
+          });
+        }
+      } else {
+        // Legacy notifications without role - add them
+        addNotification(notification);
+      }
     };
 
     window.addEventListener('newNotification', handleNewNotification);
@@ -330,7 +354,7 @@ export const NotificationProvider = ({ children }) => {
     return () => {
       window.removeEventListener('newNotification', handleNewNotification);
     };
-  }, [addNotification]);
+  }, [addNotification, user]);
 
   // Auto-clear old notifications (older than 7 days)
   useEffect(() => {

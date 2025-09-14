@@ -181,27 +181,41 @@ exports.updateBookingStatus = async (req, res) => {
     booking.status = status;
     await booking.save();
 
-    // Send notifications to both customer and artisan
+    // Send notifications only to the appropriate recipient
     try {
-      // Notify customer about status change
-      await NotificationService.notifyJobStatusChange(
-        booking, 
-        status, 
-        booking.customer._id, 
-        userRole === 'admin' ? null : userId
-      );
-
-      // Notify artisan about status change (if not initiated by them)
-      if (userRole !== 'admin') {
+      if (userRole === 'artisan') {
+        // Artisan is updating status - notify customer
+        await NotificationService.notifyJobStatusChange(
+          booking, 
+          status, 
+          booking.customer._id, 
+          userId,
+          'customer',
+          'artisan'
+        );
+      } else if (userRole === 'admin') {
+        // Admin is updating status - notify both customer and artisan
+        await NotificationService.notifyJobStatusChange(
+          booking, 
+          status, 
+          booking.customer._id, 
+          userId,
+          'customer',
+          'admin'
+        );
+        
         await NotificationService.notifyJobStatusChange(
           booking, 
           status, 
           booking.artisan._id, 
-          null
+          userId,
+          'artisan',
+          'admin'
         );
       }
+      // Note: Customer cannot update job status, so no notification needed for customer-initiated changes
     } catch (notificationError) {
-      // // console.error('Error sending notifications:', notificationError);
+      console.error('Error sending notifications:', notificationError);
       // Don't fail the status update if notifications fail
     }
 

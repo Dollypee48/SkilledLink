@@ -40,66 +40,65 @@ const Logo = ({
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Background Circle */}
-      <circle 
-        cx="24" 
-        cy="24" 
-        r="22" 
+      {/* Background with rounded square */}
+      <rect 
+        x="4" 
+        y="4" 
+        width="40" 
+        height="40" 
+        rx="12" 
         fill="url(#gradient1)" 
         stroke="url(#gradient2)" 
-        strokeWidth="2"
+        strokeWidth="1.5"
       />
       
-      {/* Link/Chain Icon */}
+      {/* Main geometric shape - Abstract link/connection symbol */}
       <path 
-        d="M16 20C16 17.7909 17.7909 16 20 16H28C30.2091 16 32 17.7909 32 20V28C32 30.2091 30.2091 32 28 32H20C17.7909 32 16 30.2091 16 28V20Z" 
+        d="M16 16C16 14.8954 16.8954 14 18 14H30C31.1046 14 32 14.8954 32 16V20C32 21.1046 31.1046 22 30 22H26V26C26 27.1046 26.8954 28 28 28H30C31.1046 28 32 28.8954 32 30V34C32 35.1046 31.1046 36 30 36H18C16.8954 36 16 35.1046 16 34V30C16 28.8954 16.8954 28 18 28H20V22H18C16.8954 22 16 21.1046 16 20V16Z" 
         fill="white" 
-        fillOpacity="0.9"
+        fillOpacity="0.95"
       />
       
-      {/* Link Holes */}
-      <circle cx="20" cy="20" r="2" fill="url(#gradient2)" />
-      <circle cx="28" cy="20" r="2" fill="url(#gradient2)" />
-      <circle cx="20" cy="28" r="2" fill="url(#gradient2)" />
-      <circle cx="28" cy="28" r="2" fill="url(#gradient2)" />
-      
-      {/* Skill/Tool Icons */}
+      {/* Connection lines extending outward */}
       <path 
-        d="M12 12L14 14L16 12L18 14L20 12" 
+        d="M8 20L14 20" 
         stroke="url(#gradient3)" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-      />
-      <path 
-        d="M28 12L30 14L32 12L34 14L36 12" 
-        stroke="url(#gradient3)" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-      />
-      <path 
-        d="M12 36L14 34L16 36L18 34L20 36" 
-        stroke="url(#gradient3)" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-      />
-      <path 
-        d="M28 36L30 34L32 36L34 34L36 36" 
-        stroke="url(#gradient3)" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-      />
-      
-      {/* Center Connection Lines */}
-      <path 
-        d="M24 16V12M24 36V32M16 24H12M36 24H32" 
-        stroke="url(#gradient3)" 
-        strokeWidth="2" 
+        strokeWidth="3" 
         strokeLinecap="round"
       />
+      <path 
+        d="M34 20L40 20" 
+        stroke="url(#gradient3)" 
+        strokeWidth="3" 
+        strokeLinecap="round"
+      />
+      <path 
+        d="M8 28L14 28" 
+        stroke="url(#gradient3)" 
+        strokeWidth="3" 
+        strokeLinecap="round"
+      />
+      <path 
+        d="M34 28L40 28" 
+        stroke="url(#gradient3)" 
+        strokeWidth="3" 
+        strokeLinecap="round"
+      />
+      
+      {/* Corner accent elements */}
+      <circle cx="6" cy="20" r="2" fill="url(#gradient2)" />
+      <circle cx="42" cy="20" r="2" fill="url(#gradient2)" />
+      <circle cx="6" cy="28" r="2" fill="url(#gradient2)" />
+      <circle cx="42" cy="28" r="2" fill="url(#gradient2)" />
+      
+      {/* Center connection hub */}
+      <circle cx="24" cy="24" r="3" fill="url(#gradient2)" />
+      
+      {/* Skill indicators - small geometric shapes */}
+      <rect x="10" y="10" width="3" height="3" rx="1" fill="url(#gradient3)" />
+      <rect x="35" y="10" width="3" height="3" rx="1" fill="url(#gradient3)" />
+      <rect x="10" y="35" width="3" height="3" rx="1" fill="url(#gradient3)" />
+      <rect x="35" y="35" width="3" height="3" rx="1" fill="url(#gradient3)" />
       
       {/* Gradients */}
       <defs>

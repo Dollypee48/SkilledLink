@@ -11,6 +11,16 @@ const NotificationSchema = new mongoose.Schema({
     ref: 'User',
     required: false // Optional for system notifications
   },
+  recipientRole: {
+    type: String,
+    enum: ['customer', 'artisan', 'admin'],
+    required: true
+  },
+  senderRole: {
+    type: String,
+    enum: ['customer', 'artisan', 'admin'],
+    required: false // Optional for system notifications
+  },
   title: {
     type: String,
     required: true
