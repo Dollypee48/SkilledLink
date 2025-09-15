@@ -183,4 +183,35 @@ export const adminService = {
       throw new Error(error.response?.data?.message || "Failed to update issue status");
     }
   },
+
+  // KYC Management functions
+  approveKyc: async (userId, token) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const response = await axios.put(`${API_URL}/users/${userId}/kyc/approve`, 
+        {}, 
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to approve KYC");
+    }
+  },
+
+  rejectKyc: async (userId, token) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const response = await axios.put(`${API_URL}/users/${userId}/kyc/reject`, 
+        {}, 
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to reject KYC");
+    }
+  },
 };

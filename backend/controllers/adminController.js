@@ -398,13 +398,27 @@ exports.getAllReports = async (req, res) => {
 // @access  Private (Admin only)
 exports.getAllReviews = async (req, res) => {
   try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
     const reviews = await Review.find()
-      .populate("customer", "name email")
-      .populate("artisan", "name email");
-    res.status(200).json(reviews);
+      .populate("customerId", "name email phone createdAt")
+      .populate("artisanId", "name email phone artisanProfile")
+      .populate("bookingId", "service price status serviceDate")
+      .sort({ date: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: reviews
+    });
   } catch (error) {
     console.error("Error fetching all reviews:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ 
+      success: false,
+      message: "Server error",
+      error: error.message 
+    });
   }
 };
 
@@ -530,5 +544,73 @@ exports.getIssueById = async (req, res) => {
   } catch (error) {
     console.error("Error fetching issue by ID:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Approve user KYC
+// @route   PUT /api/admin/users/:id/kyc/approve
+// @access  Private (Admin only)
+exports.approveKyc = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied. Admins only." });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Update KYC status
+    user.kycStatus = "approved";
+    user.kycVerified = true;
+    user.kycVerifiedAt = new Date();
+    await user.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: "KYC approved successfully", 
+      data: user 
+    });
+  } catch (error) {
+    console.error("Error approving KYC:", error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+// @desc    Reject user KYC
+// @route   PUT /api/admin/users/:id/kyc/reject
+// @access  Private (Admin only)
+exports.rejectKyc = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied. Admins only." });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Update KYC status
+    user.kycStatus = "rejected";
+    user.kycVerified = false;
+    user.kycVerifiedAt = null;
+    await user.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: "KYC rejected successfully", 
+      data: user 
+    });
+  } catch (error) {
+    console.error("Error rejecting KYC:", error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
