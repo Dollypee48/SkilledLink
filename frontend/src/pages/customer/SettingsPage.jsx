@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import CustomerLayout from '../../components/common/Layouts/CustomerLayout';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { User, Lock, Eye, EyeOff, Camera, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Camera, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import KYCForm from '../../components/KYCForm';
 import { getSettings, updateNotificationPreferences, updatePrivacySettings, deactivateAccount, logoutAllDevices } from '../../services/settingsService';
+import { issueService } from '../../services/issueService';
 
 const SettingsPage = () => {
-  const { user, updateProfile, changePassword } = useAuth();
+  const { user, updateProfile, changePassword, accessToken } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   
   // Profile form state
@@ -61,6 +62,18 @@ const SettingsPage = () => {
     new: false,
     confirm: false,
   });
+
+  // Report issue form state
+  const [reportForm, setReportForm] = useState({
+    category: '',
+    title: '',
+    description: '',
+    priority: 'medium',
+    file: null
+  });
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState('');
+  const [reportSuccess, setReportSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
@@ -294,6 +307,91 @@ const SettingsPage = () => {
         console.error('Error logging out all devices:', error);
         toast.error(error.response?.data?.message || 'Failed to logout from all devices');
       }
+    }
+  };
+
+  // Report form handlers
+  const handleReportFormChange = (e) => {
+    const { name, value } = e.target;
+    setReportForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear errors when user starts typing
+    if (reportError) setReportError('');
+  };
+
+  const handleReportFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setReportError('File size must be less than 5MB');
+        return;
+      }
+      
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        setReportError('File type not supported. Please upload JPEG, PNG, PDF, DOC, or DOCX files only.');
+        return;
+      }
+      
+      setReportForm(prev => ({
+        ...prev,
+        file: file
+      }));
+    }
+  };
+
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!reportForm.category || !reportForm.title || !reportForm.description) {
+      setReportError('Please fill in all required fields');
+      return;
+    }
+
+    setReportLoading(true);
+    setReportError('');
+    setReportSuccess('');
+
+    try {
+      const formData = new FormData();
+      formData.append('title', reportForm.title);
+      formData.append('description', reportForm.description);
+      formData.append('category', reportForm.category);
+      formData.append('priority', reportForm.priority);
+      if (reportForm.file) {
+        formData.append('file', reportForm.file);
+      }
+
+      const response = await issueService.submitIssue(formData, accessToken);
+      
+      setReportSuccess('Issue reported successfully! Our support team will review it and get back to you soon.');
+      
+      // Reset form
+      setReportForm({
+        category: '',
+        title: '',
+        description: '',
+        priority: 'medium',
+        file: null
+      });
+      
+      // Clear file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+      
+      toast.success('Issue reported successfully!');
+      
+    } catch (error) {
+      console.error('Error submitting issue:', error);
+      setReportError(error.response?.data?.message || 'Failed to submit issue. Please try again.');
+      toast.error('Failed to submit issue. Please try again.');
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -1180,41 +1278,94 @@ const SettingsPage = () => {
                     </div>
                     
                     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                      <form className="space-y-6">
+                      {/* Success Message */}
+                      {reportSuccess && (
+                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center">
+                            <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                            <p className="text-green-800 font-medium">{reportSuccess}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Error Message */}
+                      {reportError && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center">
+                            <XCircle className="w-5 h-5 text-red-600 mr-2" />
+                            <p className="text-red-800 font-medium">{reportError}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <form onSubmit={handleReportSubmit} className="space-y-6">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Issue Type
+                            Issue Type *
                           </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent">
+                          <select
+                            name="category"
+                            value={reportForm.category}
+                            onChange={handleReportFormChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+                            required
+                          >
                             <option value="">Select an issue type</option>
                             <option value="bug">Bug Report</option>
-                            <option value="feature">Feature Request</option>
-                            <option value="payment">Payment Issue</option>
+                            <option value="feature-request">Feature Request</option>
+                            <option value="billing">Payment Issue</option>
+                            <option value="technical">Technical Issue</option>
                             <option value="booking">Booking Problem</option>
                             <option value="artisan">Artisan Related</option>
-                            <option value="other">Other</option>
+                            <option value="account">Account Related</option>
+                            <option value="general">General Inquiry</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Subject *
+                          </label>
+                          <input
+                            type="text"
+                            name="title"
+                            value={reportForm.title}
+                            onChange={handleReportFormChange}
+                            placeholder="Brief description of the issue"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Priority
+                          </label>
+                          <select
+                            name="priority"
+                            value={reportForm.priority}
+                            onChange={handleReportFormChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
                           </select>
                         </div>
                         
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Subject
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Brief description of the issue"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Description
+                            Description *
                           </label>
                           <textarea
+                            name="description"
+                            value={reportForm.description}
+                            onChange={handleReportFormChange}
                             rows={4}
                             placeholder="Please provide detailed information about the issue..."
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+                            required
                           ></textarea>
                         </div>
                         
@@ -1224,24 +1375,45 @@ const SettingsPage = () => {
                           </label>
                           <input
                             type="file"
-                            multiple
+                            onChange={handleReportFileChange}
                             accept="image/*,.pdf,.doc,.docx"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
                           />
+                          <p className="text-sm text-gray-500 mt-1">
+                            Supported formats: JPEG, PNG, PDF, DOC, DOCX (Max 5MB)
+                          </p>
                         </div>
                         
                         <div className="flex justify-end space-x-4">
                           <button
                             type="button"
+                            onClick={() => {
+                              setReportForm({
+                                category: '',
+                                title: '',
+                                description: '',
+                                priority: 'medium',
+                                file: null
+                              });
+                              setReportError('');
+                              setReportSuccess('');
+                              const fileInput = document.querySelector('input[type="file"]');
+                              if (fileInput) fileInput.value = '';
+                            }}
                             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                           >
-                            Cancel
+                            Clear Form
                           </button>
                           <button
                             type="submit"
-                            className="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                            disabled={reportLoading}
+                            className={`px-6 py-2 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
+                              reportLoading
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white hover:from-[#1E2A4A] hover:to-[#151E3D]'
+                            }`}
                           >
-                            Submit Report
+                            {reportLoading ? 'Submitting...' : 'Submit Report'}
                           </button>
                         </div>
                       </form>

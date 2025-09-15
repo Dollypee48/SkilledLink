@@ -140,4 +140,47 @@ export const adminService = {
       throw new Error(error.response?.data?.message || "Failed to delete user");
     }
   },
+
+  // Issue Management
+  getAllIssues: async (token) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const response = await axios.get(`${API_URL}/issues`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      // console.error("Error fetching all issues:", error);
+      throw new Error(error.response?.data?.message || "Failed to fetch issues");
+    }
+  },
+
+  getIssueById: async (issueId, token) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const response = await axios.get(`${API_URL}/issues/${issueId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      // console.error("Error fetching issue by ID:", error);
+      throw new Error(error.response?.data?.message || "Failed to fetch issue");
+    }
+  },
+
+  updateIssueStatus: async (issueId, status, assignedTo, token) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const response = await axios.put(`${API_URL}/issues/${issueId}/status`, 
+        { status, assignedTo }, 
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      // console.error("Error updating issue status:", error);
+      throw new Error(error.response?.data?.message || "Failed to update issue status");
+    }
+  },
 };

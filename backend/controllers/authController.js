@@ -69,7 +69,7 @@ exports.register = async (req, res) => {
       role,
       phone: '', // Will be filled in profile settings
       nationality: '', // Will be filled in profile settings
-      state: '', // Will be filled in profile settings
+      // state: '', // Will be filled in profile settings - not setting to avoid enum validation
       address: '', // Will be filled in profile settings
       kycVerified: false, // No automatic verification - admin must verify all users
       isVerified: false, // Email verification required

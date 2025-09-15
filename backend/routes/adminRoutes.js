@@ -13,7 +13,10 @@ const {
   getAllBookings, // New
   getAllReports,  // New
   getAllReviews,  // New
-  fixKYCStatus    // New
+  fixKYCStatus,   // New
+  getAllIssues,   // New
+  updateIssueStatus, // New
+  getIssueById    // New
 } = require('../controllers/adminController');
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
@@ -37,5 +40,10 @@ router.get("/artisans", auth, role(["admin"]), getAllArtisans);
 router.get("/bookings", auth, role(["admin"]), getAllBookings);
 router.get("/reports", auth, role(["admin"]), getAllReports);
 router.get("/reviews", auth, role(["admin"]), getAllReviews);
+
+// Issue Management Routes
+router.get("/issues", auth, role(["admin"]), getAllIssues);
+router.get("/issues/:id", auth, role(["admin"]), getIssueById);
+router.put("/issues/:id/status", auth, role(["admin"]), updateIssueStatus);
 
 module.exports = router;

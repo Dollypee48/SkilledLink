@@ -125,6 +125,139 @@ exports.deleteUser = async (req, res) => {
 };
 
 
+// @desc    Get all issues (Admin only)
+// @route   GET /api/admin/issues
+// @access  Private (Admin only)
+exports.getAllIssues = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    const issues = await Issue.find()
+      .populate('reporter', 'name email role')
+      .populate('assignedTo', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: issues
+    });
+  } catch (error) {
+    console.error("Error fetching all issues:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error",
+      error: error.message 
+    });
+  }
+};
+
+// @desc    Update issue status (Admin only)
+// @route   PUT /api/admin/issues/:id/status
+// @access  Private (Admin only)
+exports.updateIssueStatus = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    const { id } = req.params;
+    const { status, assignedTo } = req.body;
+
+    // Validate status
+    const validStatuses = ['open', 'in-progress', 'resolved', 'closed'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid status: open, in-progress, resolved, or closed"
+      });
+    }
+
+    // Find issue
+    const issue = await Issue.findById(id);
+    if (!issue) {
+      return res.status(404).json({
+        success: false,
+        message: "Issue not found"
+      });
+    }
+
+    // Update issue
+    issue.status = status;
+    if (assignedTo) {
+      issue.assignedTo = assignedTo;
+    }
+    
+    // If resolving or closing, set resolvedAt timestamp
+    if (status === 'resolved' || status === 'closed') {
+      issue.resolvedAt = new Date();
+    }
+
+    await issue.save();
+
+    // Populate the updated issue
+    await issue.populate('reporter', 'name email role');
+    await issue.populate('assignedTo', 'name email');
+
+    res.status(200).json({
+      success: true,
+      message: "Issue status updated successfully",
+      data: issue
+    });
+
+  } catch (error) {
+    console.error("Error updating issue status:", error);
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid issue ID"
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get issue by ID (Admin only)
+// @route   GET /api/admin/issues/:id
+// @access  Private (Admin only)
+exports.getIssueById = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    const issue = await Issue.findById(req.params.id)
+      .populate('reporter', 'name email role phone')
+      .populate('assignedTo', 'name email');
+
+    if (!issue) {
+      return res.status(404).json({
+        success: false,
+        message: "Issue not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: issue
+    });
+  } catch (error) {
+    console.error("Error fetching issue by ID:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error",
+      error: error.message 
+    });
+  }
+};
+
 exports.verifyKYC = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
@@ -271,6 +404,131 @@ exports.getAllReviews = async (req, res) => {
     res.status(200).json(reviews);
   } catch (error) {
     console.error("Error fetching all reviews:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Get all issues (for admin)
+// @route   GET /api/admin/issues
+// @access  Private (Admin only)
+exports.getAllIssues = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    const issues = await Issue.find()
+      .populate('reporter', 'name email role')
+      .populate('assignedTo', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: issues
+    });
+  } catch (error) {
+    console.error("Error fetching all issues:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Update issue status (admin only)
+// @route   PUT /api/admin/issues/:id/status
+// @access  Private (Admin only)
+exports.updateIssueStatus = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    const { id } = req.params;
+    const { status, assignedTo } = req.body;
+
+    // Validate status
+    const validStatuses = ['open', 'in-progress', 'resolved', 'closed'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid status: open, in-progress, resolved, or closed"
+      });
+    }
+
+    // Find issue
+    const issue = await Issue.findById(id);
+    if (!issue) {
+      return res.status(404).json({
+        success: false,
+        message: "Issue not found"
+      });
+    }
+
+    // Update issue
+    issue.status = status;
+    if (assignedTo) {
+      issue.assignedTo = assignedTo;
+    }
+    
+    // If resolving or closing, set resolvedAt timestamp
+    if (status === 'resolved' || status === 'closed') {
+      issue.resolvedAt = new Date();
+    }
+
+    await issue.save();
+
+    // Populate the updated issue
+    await issue.populate('reporter', 'name email role');
+    await issue.populate('assignedTo', 'name email');
+
+    res.status(200).json({
+      success: true,
+      message: "Issue status updated successfully",
+      data: issue
+    });
+
+  } catch (error) {
+    console.error("Error updating issue status:", error);
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid issue ID"
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get issue by ID (admin only)
+// @route   GET /api/admin/issues/:id
+// @access  Private (Admin only)
+exports.getIssueById = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    const issue = await Issue.findById(req.params.id)
+      .populate('reporter', 'name email role phone')
+      .populate('assignedTo', 'name email');
+
+    if (!issue) {
+      return res.status(404).json({
+        success: false,
+        message: "Issue not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: issue
+    });
+  } catch (error) {
+    console.error("Error fetching issue by ID:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

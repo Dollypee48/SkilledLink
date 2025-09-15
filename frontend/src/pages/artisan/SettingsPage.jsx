@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { User, Lock, Eye, EyeOff, Camera, Wrench, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle, Briefcase, Star } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Camera, Wrench, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle, Briefcase, Star, CheckCircle, XCircle } from 'lucide-react';
 import KYCForm from '../../components/KYCForm';
 import { getSettings, updateNotificationPreferences, updatePrivacySettings, deactivateAccount, logoutAllDevices } from '../../services/settingsService';
+import { issueService } from '../../services/issueService';
 
 const ArtisanSettingsPage = () => {
   const { user, updateProfile, changePassword } = useAuth();
@@ -64,6 +65,18 @@ const ArtisanSettingsPage = () => {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [privacyLoading, setPrivacyLoading] = useState(false);
+
+  // Report issue form state
+  const [reportForm, setReportForm] = useState({
+    category: '',
+    title: '',
+    description: '',
+    priority: 'medium',
+    file: null
+  });
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState('');
+  const [reportSuccess, setReportSuccess] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -308,6 +321,104 @@ const ArtisanSettingsPage = () => {
         console.error('Error logging out all devices:', error);
         toast.error(error.response?.data?.message || 'Failed to logout from all devices');
       }
+    }
+  };
+
+  // Report issue handlers
+  const handleReportFormChange = (e) => {
+    const { name, value } = e.target;
+    setReportForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear errors when user starts typing
+    if (reportError) setReportError('');
+  };
+
+  const handleReportFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        setReportError('Please upload a valid file (JPEG, PNG, PDF, DOC, or DOCX)');
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setReportError('File size must be less than 5MB');
+        return;
+      }
+      
+      setReportForm(prev => ({
+        ...prev,
+        file: file
+      }));
+      setReportError('');
+    }
+  };
+
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+    setReportLoading(true);
+    setReportError('');
+    setReportSuccess('');
+
+    // Validation
+    if (!reportForm.category) {
+      setReportError('Please select an issue type');
+      setReportLoading(false);
+      return;
+    }
+    if (!reportForm.title.trim()) {
+      setReportError('Please provide a subject');
+      setReportLoading(false);
+      return;
+    }
+    if (!reportForm.description.trim()) {
+      setReportError('Please provide a description');
+      setReportLoading(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
+      const formData = new FormData();
+      formData.append('title', reportForm.title);
+      formData.append('category', reportForm.category);
+      formData.append('description', reportForm.description);
+      formData.append('priority', reportForm.priority);
+      if (reportForm.file) {
+        formData.append('file', reportForm.file);
+      }
+
+      await issueService.submitIssue(formData, token);
+      
+      setReportSuccess('Issue reported successfully! We will review it and get back to you soon.');
+      setReportForm({
+        category: '',
+        title: '',
+        description: '',
+        priority: 'medium',
+        file: null
+      });
+      
+      // Clear file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+      
+      toast.success('Issue reported successfully!');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      setReportError(error.message || 'Failed to submit report. Please try again.');
+      toast.error(error.message || 'Failed to submit report');
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -1279,42 +1390,92 @@ const ArtisanSettingsPage = () => {
                     </div>
                     
                     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                      <form className="space-y-6">
+                      {/* Success Message */}
+                      {reportSuccess && (
+                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center">
+                            <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                            <p className="text-green-800 font-medium">{reportSuccess}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Error Message */}
+                      {reportError && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center">
+                            <XCircle className="w-5 h-5 text-red-600 mr-2" />
+                            <p className="text-red-800 font-medium">{reportError}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <form onSubmit={handleReportSubmit} className="space-y-6">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Issue Type
+                            Issue Type *
                           </label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent">
+                          <select 
+                            name="category"
+                            value={reportForm.category}
+                            onChange={handleReportFormChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+                            required
+                          >
                             <option value="">Select an issue type</option>
                             <option value="bug">Bug Report</option>
-                            <option value="feature">Feature Request</option>
-                            <option value="payment">Payment Issue</option>
-                            <option value="job">Job Related</option>
-                            <option value="customer">Customer Related</option>
-                            <option value="booking">Booking Problem</option>
-                            <option value="other">Other</option>
+                            <option value="feature-request">Feature Request</option>
+                            <option value="billing">Payment Issue</option>
+                            <option value="technical">Technical Issue</option>
+                            <option value="account">Account Related</option>
+                            <option value="general">General Inquiry</option>
                           </select>
                         </div>
                         
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Subject
+                            Subject *
                           </label>
                           <input
                             type="text"
+                            name="title"
+                            value={reportForm.title}
+                            onChange={handleReportFormChange}
                             placeholder="Brief description of the issue"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+                            required
                           />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Priority
+                          </label>
+                          <select 
+                            name="priority"
+                            value={reportForm.priority}
+                            onChange={handleReportFormChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                          </select>
                         </div>
                         
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Description
+                            Description *
                           </label>
                           <textarea
+                            name="description"
+                            value={reportForm.description}
+                            onChange={handleReportFormChange}
                             rows={4}
                             placeholder="Please provide detailed information about the issue..."
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+                            required
                           ></textarea>
                         </div>
                         
@@ -1324,24 +1485,45 @@ const ArtisanSettingsPage = () => {
                           </label>
                           <input
                             type="file"
-                            multiple
+                            onChange={handleReportFileChange}
                             accept="image/*,.pdf,.doc,.docx"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
                           />
+                          <p className="text-sm text-gray-500 mt-1">
+                            Supported formats: JPEG, PNG, PDF, DOC, DOCX (Max 5MB)
+                          </p>
                         </div>
                         
                         <div className="flex justify-end space-x-4">
                           <button
                             type="button"
+                            onClick={() => {
+                              setReportForm({
+                                category: '',
+                                title: '',
+                                description: '',
+                                priority: 'medium',
+                                file: null
+                              });
+                              setReportError('');
+                              setReportSuccess('');
+                              const fileInput = document.querySelector('input[type="file"]');
+                              if (fileInput) fileInput.value = '';
+                            }}
                             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                           >
-                            Cancel
+                            Clear Form
                           </button>
                           <button
                             type="submit"
-                            className="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                            disabled={reportLoading}
+                            className={`px-6 py-2 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
+                              reportLoading
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white hover:from-[#1E2A4A] hover:to-[#151E3D]'
+                            }`}
                           >
-                            Submit Report
+                            {reportLoading ? 'Submitting...' : 'Submit Report'}
                           </button>
                         </div>
                       </form>
