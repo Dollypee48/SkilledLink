@@ -59,15 +59,99 @@ const KYCForm = () => {
 
   // Webcam references and capture logic
   const webcamRef = useRef(null);
+  const documentWebcamRef = useRef(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraMode, setCameraMode] = useState('face'); // 'face' or 'document'
+  const [currentDocumentType, setCurrentDocumentType] = useState('');
+  const [capturedImage, setCapturedImage] = useState(null);
+
   const capture = useCallback(() => {
     if (webcamRef.current) {
       const imageSrc = webcamRef.current.getScreenshot();
-      setFaceRecognitionInfo(imageSrc); // Store the base64 image
-      if (validationErrors.faceImage) {
-        setValidationErrors(prev => ({ ...prev, faceImage: null }));
-      }
+      setCapturedImage(imageSrc); // Store for preview - don't close modal yet
     }
-  }, [webcamRef, validationErrors.faceImage]);
+  }, [webcamRef]);
+
+  const captureDocument = useCallback(() => {
+    if (documentWebcamRef.current) {
+      const imageSrc = documentWebcamRef.current.getScreenshot();
+      setCapturedImage(imageSrc); // Store for preview - don't close modal yet
+    }
+  }, [documentWebcamRef]);
+
+  // Helper function to convert data URL to blob
+  const dataURLtoBlob = (dataURL) => {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  };
+
+  // Function to retake photo
+  const retakePhoto = () => {
+    setCapturedImage(null);
+  };
+
+  // Function to confirm captured photo
+  const confirmPhoto = () => {
+    if (cameraMode === 'face') {
+      // For face capture, set the face recognition info
+      if (capturedImage) {
+        setFaceRecognitionInfo(capturedImage);
+        if (validationErrors.faceImage) {
+          setValidationErrors(prev => ({ ...prev, faceImage: null }));
+        }
+      }
+      setShowCameraModal(false);
+    } else {
+      // For document capture, process the captured image
+      if (capturedImage) {
+        const blob = dataURLtoBlob(capturedImage);
+        const file = new File([blob], `${currentDocumentType}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        
+        // Update the appropriate document field
+        if (currentDocumentType === 'governmentIdFront') {
+          setDocumentInfo({ ...documentInfo, governmentIdFront: file });
+          if (validationErrors.governmentIdFront) {
+            setValidationErrors(prev => ({ ...prev, governmentIdFront: null }));
+          }
+        } else if (currentDocumentType === 'governmentIdBack') {
+          setDocumentInfo({ ...documentInfo, governmentIdBack: file });
+          if (validationErrors.governmentIdBack) {
+            setValidationErrors(prev => ({ ...prev, governmentIdBack: null }));
+          }
+        } else if (currentDocumentType === 'addressProof') {
+          setDocumentInfo({ ...documentInfo, addressProof: file });
+          if (validationErrors.addressProof) {
+            setValidationErrors(prev => ({ ...prev, addressProof: null }));
+          }
+        } else if (currentDocumentType === 'credentials') {
+          setDocumentInfo({ ...documentInfo, credentials: file });
+          if (validationErrors.credentials) {
+            setValidationErrors(prev => ({ ...prev, credentials: null }));
+          }
+        } else if (currentDocumentType === 'portfolio') {
+          setDocumentInfo({ ...documentInfo, portfolio: file });
+          if (validationErrors.portfolio) {
+            setValidationErrors(prev => ({ ...prev, portfolio: null }));
+          }
+        }
+      }
+      setShowCameraModal(false);
+    }
+    setCapturedImage(null);
+  };
+
+  const openCameraForDocument = (documentType) => {
+    setCurrentDocumentType(documentType);
+    setCameraMode('document');
+    setShowCameraModal(true);
+  };
 
   // Validation functions
   const validatePersonalInfo = () => {
@@ -594,6 +678,7 @@ const KYCForm = () => {
                           }
                         }}
                         disabled={loading}
+                        onCameraClick={() => openCameraForDocument('governmentIdFront')}
                       />
                       {validationErrors.governmentIdFront && (
                         <p className="text-red-500 text-sm mt-2 flex items-center">
@@ -620,6 +705,7 @@ const KYCForm = () => {
                           }
                         }}
                         disabled={loading}
+                        onCameraClick={() => openCameraForDocument('governmentIdBack')}
                       />
                       {validationErrors.governmentIdBack && (
                         <p className="text-red-500 text-sm mt-2 flex items-center">
@@ -649,6 +735,7 @@ const KYCForm = () => {
                       }
                     }}
                     disabled={loading}
+                    onCameraClick={() => openCameraForDocument('addressProof')}
                   />
                   {validationErrors.addressProof && (
                     <p className="text-red-500 text-sm mt-2 flex items-center">
@@ -678,6 +765,7 @@ const KYCForm = () => {
                           }
                         }}
                         disabled={loading}
+                        onCameraClick={() => openCameraForDocument('credentials')}
                       />
                       {validationErrors.credentials && (
                         <p className="text-red-500 text-sm mt-2 flex items-center">
@@ -705,6 +793,7 @@ const KYCForm = () => {
                           }
                         }}
                         disabled={loading}
+                        onCameraClick={() => openCameraForDocument('portfolio')}
                       />
                       {validationErrors.portfolio && (
                         <p className="text-red-500 text-sm mt-2 flex items-center">
@@ -717,22 +806,6 @@ const KYCForm = () => {
                 )}
               </div>
               
-              <div className="mt-8 text-center">
-                <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 border border-[#151E3D]/20 rounded-xl p-4">
-                  <div className="flex items-center justify-center mb-2">
-                    <Camera className="w-5 h-5 text-[#151E3D] mr-2" />
-                    <span className="font-semibold text-[#151E3D]">Quick Capture</span>
-                  </div>
-                  <p className="text-sm text-[#151E3D]/70 mb-3">Use your camera to take photos directly</p>
-                  <button 
-                    type="button" 
-                    className="bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center mx-auto" 
-                    disabled={loading}
-                  >
-                    <Camera className="w-4 h-4 mr-2" /> Open Camera
-              </button>
-                </div>
-              </div>
             </div>
           )}
 
@@ -762,23 +835,23 @@ const KYCForm = () => {
                       </div>
                     ) : (
                       <div className="relative">
-                  <Webcam
-                    audio={false}
-                    ref={webcamRef}
-                    screenshotFormat="image/jpeg"
-                    width={200}
-                    height={200}
-                          className="rounded-full border-4 border-gray-300 shadow-lg"
-                    videoConstraints={{ width: 200, height: 200, facingMode: "user" }}
-                  />
-                        <div className="absolute inset-0 rounded-full border-4 border-dashed border-gray-400 opacity-50"></div>
+                  <div className="w-48 h-48 rounded-full border-4 border-dashed border-gray-300 shadow-lg bg-gray-100 flex items-center justify-center">
+                    <div className="text-center">
+                      <Camera className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">Click to capture your photo</p>
+                    </div>
+                  </div>
                       </div>
                 )}
                     
                     <div className="text-center">
                 <button
                   type="button"
-                  onClick={capture}
+                  onClick={() => {
+                    setCameraMode('face');
+                    setShowCameraModal(true);
+                    setCapturedImage(null);
+                  }}
                         className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center mx-auto ${
                           faceRecognitionInfo 
                             ? 'bg-green-600 hover:bg-green-700 text-white' 
@@ -874,6 +947,119 @@ const KYCForm = () => {
             </div>
           </div>
         </form>
+      )}
+
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-[#151E3D]">
+                {cameraMode === 'face' ? 'Take Selfie' : 'Capture Document'}
+              </h3>
+              <button
+                onClick={() => setShowCameraModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="text-center mb-4">
+              <div className="relative inline-block">
+                {capturedImage ? (
+                  // Show captured image preview
+                  <img
+                    src={capturedImage}
+                    alt="Captured"
+                    className={`rounded-2xl border-4 border-gray-300 shadow-lg ${
+                      cameraMode === 'face' ? 'w-[300px] h-[300px] object-cover' : 'w-[400px] h-[300px] object-cover'
+                    }`}
+                  />
+                ) : (
+                  // Show live camera feed
+                  <>
+                    {cameraMode === 'face' ? (
+                      <Webcam
+                        audio={false}
+                        ref={webcamRef}
+                        screenshotFormat="image/jpeg"
+                        width={300}
+                        height={300}
+                        className="rounded-2xl border-4 border-gray-300 shadow-lg"
+                        videoConstraints={{ width: 300, height: 300, facingMode: "user" }}
+                      />
+                    ) : (
+                      <Webcam
+                        audio={false}
+                        ref={documentWebcamRef}
+                        screenshotFormat="image/jpeg"
+                        width={400}
+                        height={300}
+                        className="rounded-2xl border-4 border-gray-300 shadow-lg"
+                        videoConstraints={{ width: 400, height: 300, facingMode: "environment" }}
+                      />
+                    )}
+                    <div className="absolute inset-0 rounded-2xl border-4 border-dashed border-[#151E3D] opacity-50"></div>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <div className="text-center">
+              {capturedImage ? (
+                // Show retake and confirm buttons when image is captured
+                <div className="flex space-x-4 justify-center">
+                  <button
+                    onClick={retakePhoto}
+                    className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 flex items-center"
+                    disabled={loading}
+                  >
+                    <Camera className="w-5 h-5 mr-2" />
+                    Retake Photo
+                  </button>
+                  <button
+                    onClick={confirmPhoto}
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 flex items-center"
+                    disabled={loading}
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Confirm Photo
+                  </button>
+                </div>
+              ) : (
+                // Show capture button when no image is captured
+                <button
+                  onClick={cameraMode === 'face' ? capture : captureDocument}
+                  className="bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 flex items-center mx-auto"
+                  disabled={loading}
+                >
+                  <Camera className="w-5 h-5 mr-2" />
+                  {cameraMode === 'face' ? 'Capture Photo' : 'Capture Document'}
+                </button>
+              )}
+            </div>
+            
+            {cameraMode === 'document' && (
+              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-start space-x-2">
+                  <div className="flex-shrink-0">
+                    <span className="text-blue-600 text-sm">💡</span>
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-semibold text-blue-800 text-sm mb-1">Document Tips</h4>
+                    <ul className="text-xs text-blue-700 space-y-1">
+                      <li>• Ensure the document is flat and well-lit</li>
+                      <li>• Position the document within the frame</li>
+                      <li>• Avoid shadows and glare</li>
+                      <li>• Make sure all text is clearly visible</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

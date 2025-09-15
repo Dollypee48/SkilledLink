@@ -13,7 +13,7 @@ import PremiumBadge from '../../components/PremiumBadge';
 import { useAuth } from '../../context/AuthContext';
 
 const FindArtisans = () => {
-  const { artisans, searchArtisans } = useContext(ArtisanContext); // ✅ use context directly
+  const { artisans, searchArtisans, loading, error } = useContext(ArtisanContext); // ✅ use context directly
   const { openBookingModal, setSelectedArtisan } = useContext(BookingContext); // Use BookingContext
   const { getArtisanReviews } = useContext(ReviewContext); // Use ReviewContext
   const { user } = useAuth(); // Get user from AuthContext
@@ -29,8 +29,30 @@ const FindArtisans = () => {
   const [artisanReviews, setArtisanReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
-  // Services list
-  const services = ["Plumbing", "Electrical", "Painting", "Cleaning", "Carpentry"];
+  // Comprehensive list of Nigerian states
+  const nigerianStates = [
+    'All Locations',
+    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 
+    'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 
+    'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 
+    'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 
+    'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 
+    'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+  ];
+
+  // Comprehensive list of artisan services
+  const services = [
+    'All Services',
+    'Plumber', 'Tailor', 'Mechanic', 'Painter', 'Graphics Designer',
+    'Electrician', 'Carpenter', 'Welder', 'Mason', 'Tiler',
+    'AC Technician', 'Generator Repair', 'Phone Repair', 'Computer Repair',
+    'Hair Stylist', 'Makeup Artist', 'Photographer', 'Videographer',
+    'Interior Designer', 'Landscaper', 'Security Guard', 'Driver',
+    'Cleaner', 'Cook', 'Nanny', 'Tutor', 'Translator',
+    'Event Planner', 'DJ', 'Musician', 'Artist', 'Writer',
+    'Web Developer', 'Mobile App Developer', 'Data Analyst',
+    'Accountant', 'Lawyer', 'Consultant', 'Coach', 'Trainer'
+  ];
 
   // Calculate average rating from reviews
   const calculateAverageRating = (reviews) => {
@@ -42,11 +64,11 @@ const FindArtisans = () => {
   // Fetch artisans on filter change
   useEffect(() => {
     searchArtisans({ search: searchTerm, location, service });
-  }, [searchTerm, location, service]);
+  }, [searchTerm, location, service, searchArtisans]);
 
   // Debug: Log artisans data when it changes
   useEffect(() => {
-    // Artisans data updated
+    console.log('Artisans data updated:', artisans);
   }, [artisans]);
 
   const handleBookNow = (artisan) => {
@@ -130,20 +152,19 @@ const FindArtisans = () => {
               onChange={(e) => setLocation(e.target.value)}
               className="w-full px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
             >
-              <option value="">Select Location</option>
-              <option value="Lagos">Lagos</option>
-              <option value="Abuja">Abuja</option>
-              <option value="Kano">Kano</option>
-              <option value="Port Harcourt">Port Harcourt</option>
+              {nigerianStates.map((state) => (
+                <option key={state} value={state === 'All Locations' ? '' : state}>
+                  {state}
+                </option>
+              ))}
             </select>
             <select
               value={service}
               onChange={(e) => setService(e.target.value)}
               className="w-full px-4 py-2 rounded-md bg-[#F8FAFC] shadow-md focus:outline-none focus:ring-2 focus:ring-[#151E3D]"
             >
-              <option value="">Select Service</option>
               {services.map((svc) => (
-                <option key={svc} value={svc}>
+                <option key={svc} value={svc === 'All Services' ? '' : svc}>
                   {svc}
                 </option>
               ))}
@@ -153,10 +174,37 @@ const FindArtisans = () => {
 
         {/* Artisans List */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Available Artisans</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Available Artisans</h2>
+            {!loading && !error && (
+              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                {artisans.length} {artisans.length === 1 ? 'artisan' : 'artisans'} found
+              </span>
+            )}
+          </div>
 
-          {artisans.length === 0 ? (
-            <p className="text-gray-600">No artisans found matching your criteria.</p>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#151E3D] mx-auto mb-4"></div>
+              <p className="text-gray-600">Searching for artisans...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <p className="text-red-600 mb-4">{error}</p>
+              <button
+                onClick={() => searchArtisans({ search: searchTerm, location, service })}
+                className="bg-[#151E3D] hover:bg-[#1E2A4A] text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : artisans.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-gray-400 text-6xl mb-4">🔍</div>
+              <p className="text-gray-600 mb-4">No artisans found matching your criteria.</p>
+              <p className="text-sm text-gray-500">Try adjusting your search terms or filters.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {artisans.filter(artisan => artisan && artisan._id).map((artisan) => (

@@ -106,8 +106,8 @@ const AllArtisans = () => {
         // Build query parameters
         const params = new URLSearchParams();
         if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
-        if (selectedService && selectedService !== 'All Services') params.append('service', selectedService);
-        if (selectedLocation && selectedLocation !== 'All Locations') params.append('location', selectedLocation);
+        if (selectedService && selectedService !== 'All Services' && selectedService !== '') params.append('service', selectedService);
+        if (selectedLocation && selectedLocation !== 'All Locations' && selectedLocation !== '') params.append('location', selectedLocation);
         
         const response = await axios.get(`${API_URL}/artisans?${params.toString()}`);
         
@@ -116,7 +116,7 @@ const AllArtisans = () => {
           id: artisan._id,
           name: artisan.name || 'Unknown Artisan',
           service: artisan.service || artisan.artisanProfile?.service || 'General Service',
-          location: artisan.location?.state || artisan.state || 'Location not specified',
+          location: artisan.state || artisan.location?.state || artisan.artisanProfile?.location?.state || 'Location not specified',
           rating: artisan.rating || artisan.artisanProfile?.rating || 0,
           reviews: artisan.reviewCount || artisan.artisanProfile?.reviewCount || 0,
           price: artisan.hourlyRate ? `₦${artisan.hourlyRate}` : null,
@@ -125,7 +125,8 @@ const AllArtisans = () => {
           availability: artisan.availability ? 'Available Now' : 'Not Available',
           verified: artisan.kycVerified || false,
           skills: artisan.skills || artisan.artisanProfile?.skills || [],
-          experience: artisan.experience || artisan.artisanProfile?.experience || ''
+          experience: artisan.experience || artisan.artisanProfile?.experience || '',
+          isPremium: artisan.isPremium || false
         }));
         
         setArtisans(transformedArtisans);
@@ -142,19 +143,37 @@ const AllArtisans = () => {
     fetchArtisans();
   }, [API_URL, debouncedSearchTerm, selectedService, selectedLocation]);
 
-  // Get unique services and locations from the data
-  const services = ['All Services', ...new Set(artisans.map(artisan => artisan.service).filter(Boolean))];
-  const locations = ['All Locations', ...new Set(artisans.map(artisan => artisan.location).filter(Boolean))];
+  // Comprehensive list of Nigerian states
+  const nigerianStates = [
+    'All Locations',
+    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 
+    'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 
+    'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 
+    'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 
+    'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 
+    'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+  ];
 
-  const filteredArtisans = artisans.filter(artisan => {
-    const matchesSearch = artisan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         artisan.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         artisan.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesService = selectedService === '' || artisan.service === selectedService;
-    const matchesLocation = selectedLocation === '' || artisan.location === selectedLocation;
-    
-    return matchesSearch && matchesService && matchesLocation;
-  });
+  // Comprehensive list of artisan services
+  const artisanServices = [
+    'All Services',
+    'Plumber', 'Tailor', 'Mechanic', 'Painter', 'Graphics Designer',
+    'Electrician', 'Carpenter', 'Welder', 'Mason', 'Tiler',
+    'AC Technician', 'Generator Repair', 'Phone Repair', 'Computer Repair',
+    'Hair Stylist', 'Makeup Artist', 'Photographer', 'Videographer',
+    'Interior Designer', 'Landscaper', 'Security Guard', 'Driver',
+    'Cleaner', 'Cook', 'Nanny', 'Tutor', 'Translator',
+    'Event Planner', 'DJ', 'Musician', 'Artist', 'Writer',
+    'Web Developer', 'Mobile App Developer', 'Data Analyst',
+    'Accountant', 'Lawyer', 'Consultant', 'Coach', 'Trainer'
+  ];
+
+  // Get unique services and locations from the data, but use our comprehensive lists as primary
+  const services = [...new Set([...artisanServices, ...artisans.map(artisan => artisan.service).filter(Boolean)])];
+  const locations = [...new Set([...nigerianStates, ...artisans.map(artisan => artisan.location).filter(Boolean)])];
+
+  // The filtering is now handled by the backend API, so we just use the artisans as returned
+  const filteredArtisans = artisans;
 
   const sortedArtisans = [...filteredArtisans].sort((a, b) => {
     switch (sortBy) {
@@ -301,15 +320,55 @@ const AllArtisans = () => {
         {/* Results Count */}
         <div className="mb-6 sm:mb-8">
           <div className="bg-gradient-to-r from-[#151E3D]/10 to-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-xl p-4 sm:p-6">
-            <p className="text-[#151E3D] font-semibold text-base sm:text-lg">
-              <span className="font-bold text-[#F59E0B]">{sortedArtisans.length}</span> of <span className="font-bold text-[#151E3D]">{artisans.length}</span> artisans found
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-[#151E3D] font-semibold text-base sm:text-lg">
+                <span className="font-bold text-[#F59E0B]">{sortedArtisans.length}</span> artisan{sortedArtisans.length !== 1 ? 's' : ''} found
+              </p>
+              {(debouncedSearchTerm || selectedService || selectedLocation) && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedService('');
+                    setSelectedLocation('');
+                  }}
+                  className="text-[#F59E0B] hover:text-[#D97706] text-sm font-medium underline"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Artisans Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {sortedArtisans.map(artisan => (
+        {sortedArtisans.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 max-w-md mx-auto">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-[#151E3D] mb-3">No Artisans Found</h3>
+              <p className="text-gray-600 mb-6">
+                {debouncedSearchTerm || selectedService || selectedLocation 
+                  ? "Try adjusting your search criteria or filters to find more artisans."
+                  : "No artisans are currently available. Please check back later."
+                }
+              </p>
+              {(debouncedSearchTerm || selectedService || selectedLocation) && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedService('');
+                    setSelectedLocation('');
+                  }}
+                  className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+                >
+                  Clear All Filters
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            {sortedArtisans.map(artisan => (
             <div key={artisan.id} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-[#F59E0B]/20 group hover:-translate-y-1">
               {/* Artisan Image */}
               <div className="relative h-48 sm:h-56 overflow-hidden">
@@ -388,28 +447,6 @@ const AllArtisans = () => {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* No Results */}
-        {sortedArtisans.length === 0 && (
-          <div className="text-center py-16">
-            <div className="bg-white rounded-2xl shadow-lg p-12 max-w-md mx-auto border border-[#F59E0B]/20">
-              <div className="text-6xl mb-6">🔍</div>
-              <h3 className="text-2xl font-bold text-[#151E3D] mb-3">No artisans found</h3>
-              <p className="text-[#151E3D]/70 mb-6 leading-relaxed">
-                We couldn't find any artisans matching your criteria. Try adjusting your search or filters.
-              </p>
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedService('');
-                  setSelectedLocation('');
-                }}
-                className="bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#D97706] hover:to-[#B45309] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
-              >
-                Clear All Filters
-              </button>
-            </div>
           </div>
         )}
 

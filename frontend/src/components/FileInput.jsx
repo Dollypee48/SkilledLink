@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, Camera } from 'lucide-react';
 
-const FileInput = ({ label, name, file, setFile, disabled = false }) => {
+const FileInput = ({ label, subtitle, name, file, setFile, disabled = false, onCameraClick }) => {
   const fileInputRef = useRef(null);
 
   const handleClick = () => {
@@ -19,6 +19,9 @@ const FileInput = ({ label, name, file, setFile, disabled = false }) => {
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </label>
+      {subtitle && (
+        <p className="text-xs text-gray-500 mb-3">{subtitle}</p>
+      )}
       <div
         onClick={handleClick}
         className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer
@@ -52,6 +55,23 @@ const FileInput = ({ label, name, file, setFile, disabled = false }) => {
           />
         </div>
       </div>
+      
+      {/* Camera Button */}
+      {onCameraClick && (
+        <div className="mt-3 text-center">
+          <button
+            type="button"
+            onClick={onCameraClick}
+            disabled={disabled}
+            className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#151E3D] transition-all duration-200 ${
+              disabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <Camera className="w-4 h-4 mr-2" />
+            Take Photo
+          </button>
+        </div>
+      )}
     </div>
   );
 };

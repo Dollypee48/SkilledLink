@@ -53,8 +53,45 @@ exports.createBooking = async (req, res) => {
       price: price || 0, // Use provided price or default to 0
       status: "Pending", // Initial status
     });
+
+    // Populate booking with customer and artisan details for notification
+    const populatedBooking = await booking.populate([
+      { path: 'customer', select: 'name email' },
+      { path: 'artisan', select: 'name email' }
+    ]);
+
+    // Send notification to artisan about new job request
+    try {
+      console.log('Creating notification for artisan:', artisan);
+      console.log('Customer name:', customer.name);
+      console.log('Service:', service);
+      
+      const notification = await NotificationService.createNotification({
+        recipient: artisan,
+        recipientRole: 'artisan',
+        sender: req.user.id,
+        senderRole: 'customer',
+        title: 'New Job Request!',
+        message: `You have received a new ${service} job request from ${customer.name}. Check your bookings to respond.`,
+        type: 'info',
+        category: 'job_status',
+        important: true,
+        data: {
+          bookingId: booking._id,
+          service: service,
+          customerName: customer.name,
+          date: date,
+          time: time
+        }
+      });
+      
+      console.log('Notification created successfully:', notification._id);
+    } catch (notificationError) {
+      console.error('Error sending job request notification to artisan:', notificationError);
+      // Don't fail the booking creation if notification fails
+    }
     
-    res.status(201).json(booking);
+    res.status(201).json(populatedBooking);
   } catch (err) {
     // console.error("Create booking error:", err.stack); // Changed to err.stack
     res.status(500).json({ message: "Server error during booking creation" });
@@ -141,6 +178,37 @@ exports.updateBookingStatus = async (req, res) => {
     // Only the assigned artisan or an admin can update status
     if (booking.artisan._id.toString() !== userId && userRole !== "admin") {
       return res.status(403).json({ message: "Unauthorized to update this booking" });
+    }
+
+    // Validate status transitions for artisans
+    if (userRole === 'artisan') {
+      const currentStatus = booking.status;
+      const validTransitions = {
+        'Pending': ['Accepted', 'Declined'],
+        'Accepted': ['Pending Confirmation', 'Cancelled'],
+        'Pending Confirmation': ['Completed'], // Only after customer confirmation
+        'Completed': [], // No further transitions from completed
+        'Declined': [], // No further transitions from declined
+        'Cancelled': [] // No further transitions from cancelled
+      };
+
+      if (!validTransitions[currentStatus]?.includes(status)) {
+        return res.status(400).json({ 
+          message: `Invalid status transition from "${currentStatus}" to "${status}". Valid transitions: ${validTransitions[currentStatus]?.join(', ') || 'none'}`,
+          currentStatus,
+          requestedStatus: status,
+          validTransitions: validTransitions[currentStatus] || []
+        });
+      }
+
+      // Special validation for Completed status
+      if (status === 'Completed' && currentStatus !== 'Pending Confirmation') {
+        return res.status(400).json({ 
+          message: "Job can only be marked as completed after customer confirmation. Please first request customer confirmation.",
+          currentStatus,
+          requiredStatus: 'Pending Confirmation'
+        });
+      }
     }
 
     // Check job acceptance limits for artisans when accepting a job

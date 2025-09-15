@@ -50,10 +50,10 @@ const MyJobs = () => {
     }
   };
 
-  // Function to send completion confirmation message to customer
-  const handleMarkAsCompleted = async (bookingId) => {
+  // Function to request customer confirmation for job completion
+  const handleRequestCustomerConfirmation = async (bookingId) => {
     // Show confirmation dialog
-    const isConfirmed = window.confirm('Are you sure you want to mark this job as completed? This action cannot be undone.');
+    const isConfirmed = window.confirm('Are you sure you want to request customer confirmation for this job? The customer will be notified to review and confirm the work.');
     
     if (!isConfirmed) {
       return;
@@ -114,9 +114,9 @@ const MyJobs = () => {
       notifyJobStatusChange(booking, 'Pending Confirmation', 'artisan');
       
       // Show success notification
-      showNotification('success', 'Job status updated to "Pending Confirmation". Waiting for customer confirmation.');
+      showNotification('success', 'Customer confirmation requested. Waiting for customer to review and confirm the work.');
       
-      setSuccessMessage('Confirmation message sent to customer. Job status changed to "Pending Confirmation".');
+      setSuccessMessage('Customer confirmation requested. The customer has been notified to review the work.');
       // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (error) {
@@ -142,7 +142,7 @@ const MyJobs = () => {
 
   // Function to actually mark job as completed (after customer confirmation)
   const handleConfirmCompletion = async (bookingId) => {
-    const isConfirmed = window.confirm('Has the customer confirmed they are satisfied with the work? Mark as completed?');
+    const isConfirmed = window.confirm('Has the customer confirmed they are satisfied with the work? This will mark the job as completed.');
     
     if (!isConfirmed) {
       return;
@@ -358,7 +358,7 @@ const MyJobs = () => {
                           >
                             <Eye className="w-4 h-4" /> View
                           </button>
-                          {/* Show "Confirm Completion" button for pending confirmation jobs */}
+                          {/* Show "Mark as Completed" button for pending confirmation jobs */}
                           {booking.status === "Pending Confirmation" && (
                             <button
                               className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
@@ -375,7 +375,7 @@ const MyJobs = () => {
                                 </>
                               ) : (
                                 <>
-                                  <Check className="w-4 h-4" /> Confirm Completion
+                                  <Check className="w-4 h-4" /> Mark as Completed
                                 </>
                               )}
                             </button>
@@ -560,26 +560,26 @@ const MyJobs = () => {
                 </button>
                 
                 
-                {/* Show Complete button for accepted jobs */}
+                {/* Show Request Confirmation button for accepted jobs */}
                 {selectedBooking.status === "Accepted" && (
                   <button
                     className={`px-6 py-2 rounded-lg text-white font-medium transition-colors duration-200 ${
                       updatingJob === selectedBooking._id
                         ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-green-600 hover:bg-green-700'
+                        : 'bg-orange-600 hover:bg-orange-700'
                     }`}
-                    onClick={() => handleMarkAsCompleted(selectedBooking._id)}
+                    onClick={() => handleRequestCustomerConfirmation(selectedBooking._id)}
                     disabled={updatingJob === selectedBooking._id}
                   >
                     {updatingJob === selectedBooking._id ? (
                       <>
                         <RefreshCw className="w-4 h-4 inline mr-2 animate-spin" />
-                        Updating...
+                        Requesting...
                       </>
                     ) : (
                       <>
                         <Check className="w-4 h-4 inline mr-2" />
-                        Mark as Completed
+                        Job Completed - Request Confirmation from {selectedBooking.customer?.name || 'Customer'}
                       </>
                     )}
                   </button>

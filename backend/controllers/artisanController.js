@@ -105,19 +105,139 @@ exports.getArtisans = async (req, res) => {
   try {
     const { search, location, service } = req.query;
 
-    let query = { availability: true }; // Filter only available artisans by default
+    let query = {}; // Start with empty query to see all artisans
+    // Only add availability filter if no other filters are applied
+    if (!search && !location && !service) {
+      query.availability = true; // Filter only available artisans by default when no search
+    }
+    let orConditions = [];
+    
+    // Build search query
     if (search) {
       query.$or = [
         { skills: { $regex: search, $options: "i" } },
         { service: { $regex: search, $options: "i" } },
+        { bio: { $regex: search, $options: "i" } },
+        { experience: { $regex: search, $options: "i" } }
       ];
     }
-    if (location) query.location = { $regex: location, $options: "i" };
-    if (service) query.service = { $regex: service, $options: "i" };
+    
+    // Build service query
+    if (service) {
+      query.service = { $regex: service, $options: "i" };
+    }
+    
+    
+    // If location filter is provided, we need to use aggregation pipeline
+    if (location) {
+      const pipeline = [
+        { $match: query },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userId"
+          }
+        },
+        { $unwind: "$userId" },
+        {
+          $match: {
+            $or: [
+              { "userId.state": { $regex: location, $options: "i" } },
+              { "location.state": { $regex: location, $options: "i" } }
+            ]
+          }
+        }
+      ];
+      
+      const artisans = await ArtisanProfile.aggregate(pipeline);
+      
+      // Process the results similar to the regular find
+      const Review = require("../models/Review");
+      const result = await Promise.all(artisans.map(async (ap) => {
+        if (!ap.userId) {
+          console.warn("Skipping artisan profile due to null userId:", ap._id);
+          return null;
+        }
+        
+        // Calculate actual rating from reviews
+        let calculatedRating = 0;
+        let reviewCount = 0;
+        
+        try {
+          const reviews = await Review.find({ artisanId: ap.userId._id });
+          if (reviews.length > 0) {
+            const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+            calculatedRating = totalRating / reviews.length;
+            reviewCount = reviews.length;
+          }
+        } catch (error) {
+          console.error('Error calculating rating for artisan:', ap.userId._id, error);
+        }
+        
+        return {
+          _id: ap.userId._id,
+          name: ap.userId.name,
+          email: ap.userId.email || "",
+          phone: ap.userId.phone || "",
+          role: "Artisan",
+          skills: ap.skills.length ? ap.skills : ["Unknown"],
+          service: ap.service || "Unknown",
+          location: ap.location || { state: "", city: "", address: "" },
+          rating: calculatedRating,
+          reviewCount: reviewCount,
+          bio: ap.bio || "",
+          experience: ap.experience || "",
+          availability: ap.availability,
+          profileImageUrl: ap.userId.profileImageUrl || "",
+          state: ap.userId.state || "",
+          address: ap.userId.address || "",
+          nationality: ap.userId.nationality || "",
+          kycVerified: ap.userId.kycVerified || false,
+          kycStatus: ap.userId.kycStatus || "pending",
+          isPremium: ap.userId.isPremium || false,
+          subscription: ap.userId.subscription || { plan: 'free', status: 'active' },
+          artisanProfile: {
+            skills: ap.skills.length ? ap.skills : ["Unknown"],
+            service: ap.service || "Unknown",
+            location: ap.location || { state: "", city: "", address: "" },
+            bio: ap.bio || "",
+            experience: ap.experience || "",
+            rating: calculatedRating,
+            reviewCount: reviewCount,
+            availability: ap.availability
+          }
+        };
+      }));
+      
+      const sortedResult = result.filter(Boolean).sort((a, b) => {
+        // First priority: Premium status (premium first)
+        if (a.isPremium !== b.isPremium) return b.isPremium - a.isPremium;
+        
+        // Second priority: Rating (higher rating first)
+        if (a.rating !== b.rating) return b.rating - a.rating;
+        
+        // Third priority: Review count (more reviews first)
+        return b.reviewCount - a.reviewCount;
+      });
 
+      return res.json(sortedResult);
+    }
+    
     const artisans = await ArtisanProfile.find(query)
       .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus subscription isPremium") // Include subscription fields
       .select("-__v");
+    
+
+    // If no artisans found with availability filter, try without it
+    if (artisans.length === 0 && query.availability === true) {
+      delete query.availability;
+      const allArtisans = await ArtisanProfile.find(query)
+        .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus subscription isPremium")
+        .select("-__v");
+      artisans.push(...allArtisans);
+    }
 
     // Import Review model to calculate ratings
     const Review = require("../models/Review");

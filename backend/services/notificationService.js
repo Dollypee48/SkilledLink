@@ -47,8 +47,14 @@ class NotificationService {
       const io = getIo();
       if (io) {
         console.log('Sending notification via Socket.IO to user:', notification.recipient._id);
+        console.log('Notification details:', {
+          title: notification.title,
+          message: notification.message,
+          recipientRole: notification.recipientRole,
+          important: notification.important
+        });
         io.to(notification.recipient._id.toString()).emit('newNotification', notification);
-        console.log('Notification sent successfully');
+        console.log('Notification sent successfully to user:', notification.recipient._id);
       } else {
         console.log('Socket.IO not available');
       }
