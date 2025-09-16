@@ -27,6 +27,14 @@ const generateOTP = () => {
 // Send verification email with code
 const sendVerificationEmail = async (email, verificationCode, userName) => {
   try {
+    console.log('📧 Creating email transporter...');
+    console.log('📧 SMTP Config:', {
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      user: process.env.SMTP_USER || 'your-email@gmail.com',
+      hasPassword: !!process.env.SMTP_PASS
+    });
+    
     const transporter = createTransporter();
     
     const mailOptions = {
@@ -70,11 +78,19 @@ const sendVerificationEmail = async (email, verificationCode, userName) => {
       `
     };
 
+    console.log('📧 Sending email to:', email);
+    console.log('📧 Verification code:', verificationCode);
+    
     const info = await transporter.sendMail(mailOptions);
-    console.log('Verification email sent:', info.messageId);
+    console.log('✅ Verification email sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    console.error('❌ Error sending verification email:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response
+    });
     return { success: false, error: error.message };
   }
 };

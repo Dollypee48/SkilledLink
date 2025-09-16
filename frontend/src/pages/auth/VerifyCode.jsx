@@ -109,6 +109,8 @@ const VerifyCode = () => {
     setMessage('');
 
     try {
+      console.log('🔄 Attempting to resend verification code for:', email);
+      
       const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
         method: 'POST',
         headers: {
@@ -117,17 +119,22 @@ const VerifyCode = () => {
         body: JSON.stringify({ email }),
       });
 
+      console.log('📡 Response status:', response.status);
       const data = await response.json();
+      console.log('📡 Response data:', data);
 
       if (response.ok && data.success) {
         setMessage('New verification code sent to your email!');
         setTimeLeft(600); // Reset timer to 10 minutes
+        console.log('✅ Resend successful');
       } else {
-        setError(data.message || 'Failed to resend verification code');
+        const errorMessage = data.message || data.error || 'Failed to resend verification code';
+        setError(errorMessage);
+        console.error('❌ Resend failed:', errorMessage);
       }
     } catch (error) {
-      console.error('Resend error:', error);
-      setError('Network error. Please try again.');
+      console.error('❌ Network error during resend:', error);
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setResendLoading(false);
     }

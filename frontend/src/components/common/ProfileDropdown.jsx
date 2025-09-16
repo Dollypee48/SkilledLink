@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, LogOut, Settings, ChevronDown, Eye } from 'lucide-react';
 import PremiumBadge from './PremiumBadge';
+import ProfilePictureModal from './ProfilePictureModal';
 
 const ProfileDropdown = ({ variant = 'header' }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const dropdownRef = useRef(null);
   const { user, handleLogout, isPremium } = useAuth();
   const navigate = useNavigate();
@@ -48,6 +50,12 @@ const ProfileDropdown = ({ variant = 'header' }) => {
     setIsOpen(false);
   };
 
+  const handleProfilePictureClick = (e) => {
+    e.stopPropagation();
+    setShowProfileModal(true);
+    setIsOpen(false);
+  };
+
   const isSidebar = variant === 'sidebar';
   
   return (
@@ -61,25 +69,27 @@ const ProfileDropdown = ({ variant = 'header' }) => {
             : 'hover:bg-gray-100'
         }`}
       >
-        {user?.profileImageUrl ? (
-          <img 
-            src={user.profileImageUrl} 
-            alt="Profile" 
-            className={`w-10 h-10 rounded-full object-cover shadow border-2 transition-colors duration-200 ${
+        <div onClick={handleProfilePictureClick} className="cursor-pointer">
+          {user?.profileImageUrl ? (
+            <img 
+              src={user.profileImageUrl} 
+              alt="Profile" 
+              className={`w-10 h-10 rounded-full object-cover shadow border-2 transition-colors duration-200 hover:scale-105 ${
+                isSidebar 
+                  ? 'border-white hover:border-[#F59E0B]' 
+                  : 'border-white hover:border-[#151E3D]'
+              }`}
+            />
+          ) : (
+            <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] flex items-center justify-center shadow border-2 transition-colors duration-200 hover:scale-105 ${
               isSidebar 
                 ? 'border-white hover:border-[#F59E0B]' 
                 : 'border-white hover:border-[#151E3D]'
-            }`}
-          />
-        ) : (
-          <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] flex items-center justify-center shadow border-2 transition-colors duration-200 ${
-            isSidebar 
-              ? 'border-white hover:border-[#F59E0B]' 
-              : 'border-white hover:border-[#151E3D]'
-          }`}>
-            <User className="w-5 h-5 text-white" />
-          </div>
-        )}
+            }`}>
+              <User className="w-5 h-5 text-white" />
+            </div>
+          )}
+        </div>
         <ChevronDown 
           className={`w-4 h-4 transition-transform duration-200 ${
             isSidebar ? 'text-white' : 'text-gray-600'
@@ -130,6 +140,15 @@ const ProfileDropdown = ({ variant = 'header' }) => {
           </div>
         </div>
       )}
+
+      {/* Profile Picture Modal */}
+      <ProfilePictureModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        imageUrl={user?.profileImageUrl}
+        alt={user?.name || 'Profile'}
+        name={user?.name}
+      />
     </div>
   );
 };

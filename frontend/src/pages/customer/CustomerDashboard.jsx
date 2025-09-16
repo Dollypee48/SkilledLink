@@ -14,7 +14,11 @@ import {
   ArrowRight,
   Plus,
   XCircle,
-  Home
+  Home,
+  MapPin,
+  Wrench,
+  Award,
+  Eye
 } from "lucide-react";
 import { useBooking } from "../../context/BookingContext";
 import { useAuth } from "../../context/AuthContext";
@@ -53,6 +57,7 @@ export default function CustomerDashboard() {
       setHasFetched(true);
     }
   }, [getBookings, loadSuggestions, hasFetched, user, accessToken]); // Keep dependencies updated
+
 
   // Get bookings in progress (Accepted or Pending Confirmation)
   const bookingsInProgress = customerBookings?.filter((b) => 
@@ -276,68 +281,178 @@ export default function CustomerDashboard() {
               </div>
           </div>
 
-            {/* Suggested Artisans */}
+            {/* Recommended Artisans */}
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50">
-                  <h2 className="text-lg font-semibold text-gray-900">Recommended Artisans</h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">Recommended Artisans</h2>
+                    <button 
+                      onClick={() => navigate('/find-artisans')}
+                      className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center"
+                    >
+                      View all
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </button>
+                  </div>
                 </div>
                 <div className="p-6">
-            {loading ? (
+                  {loading ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#151E3D]"></div>
+                      <span className="ml-3 text-gray-600">Loading artisans...</span>
                     </div>
-            ) : error ? (
-                    <p className="text-red-600 text-sm">{error}</p>
-            ) : suggestions?.length === 0 ? (
+                  ) : error ? (
                     <div className="text-center py-8">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Users className="w-6 h-6 text-gray-400" />
+                      <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <XCircle className="w-6 h-6 text-red-600" />
                       </div>
-                      <p className="text-gray-600 text-sm">No recommendations available</p>
+                      <p className="text-red-600 text-sm">{error}</p>
+                    </div>
+                  ) : suggestions?.filter(artisan => artisan.isPremium)?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Award className="w-6 h-6 text-yellow-600" />
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-900 mb-1">No premium artisans available</h3>
+                      <p className="text-gray-600 text-xs mb-4">Premium artisans will appear here when available</p>
+                      <button 
+                        onClick={() => navigate('/find-artisans')}
+                        className="inline-flex items-center px-3 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors text-sm"
+                      >
+                        <Wrench className="w-4 h-4 mr-2" />
+                        Find All Artisans
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {suggestions?.slice(0, 4).map((artisan) => (
-                        <div key={artisan._id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-full flex items-center justify-center text-white font-bold text-lg">
-                            {artisan.skills?.[0]?.charAt(0) || "A"}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-gray-900 truncate">
-                              {artisan.skills?.join(", ") || "Unknown Artisan"}
-                            </h3>
-                            <p className="text-sm text-gray-600 truncate">
-                              {artisan.role || "Artisan"}
-                            </p>
-                            <div className="flex items-center mt-1">
-                              <div className="flex items-center space-x-1">
-                                {Array(5).fill().map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-3 h-3 ${
-                                      i < Math.floor(artisan.rating || 0) 
-                                        ? "text-yellow-400 fill-current" 
-                                        : "text-gray-300"
-                                    }`}
-                                  />
-                                ))}
+                      {suggestions?.filter(artisan => artisan.isPremium)?.slice(0, 4).map((artisan) => (
+                        <div key={artisan._id} className="group p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl hover:from-yellow-100 hover:to-orange-100 transition-all duration-200 border border-yellow-200 hover:border-yellow-300">
+                          <div className="flex items-start space-x-3">
+                            {/* Premium Badge */}
+                            <div className="relative">
+                              <div className="w-12 h-12 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                {artisan.name?.charAt(0) || artisan.artisanProfile?.name?.charAt(0) || "A"}
                               </div>
-                              <span className="text-xs text-gray-600 ml-2">
-                                {artisan.rating ? artisan.rating.toFixed(1) : '0.0'}
-                    </span>
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center">
+                                <Award className="w-3 h-3 text-white" />
+                              </div>
+                            </div>
+                            
+                            {/* Artisan Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center space-x-2">
+                                    <h3 className="font-semibold text-gray-900 truncate">
+                                      {artisan.name || artisan.artisanProfile?.name || "Unknown Artisan"}
+                                    </h3>
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-yellow-400 to-yellow-500 text-white">
+                                      PREMIUM
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-600 truncate flex items-center mt-1">
+                                    <Wrench className="w-3 h-3 mr-1 flex-shrink-0" />
+                                    {artisan.artisanProfile?.service || "Service Provider"}
+                                  </p>
+                                  
+                                  {/* Rating */}
+                                  <div className="flex items-center mt-2">
+                                    <div className="flex items-center space-x-1">
+                                      {Array(5).fill().map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={`w-3 h-3 ${
+                                            i < Math.floor(artisan.artisanProfile?.averageRating || 0) 
+                                              ? "text-yellow-400 fill-current" 
+                                              : "text-gray-300"
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-xs text-gray-600 ml-2">
+                                      {artisan.artisanProfile?.averageRating ? artisan.artisanProfile.averageRating.toFixed(1) : '0.0'}
+                                    </span>
+                                    <span className="text-xs text-gray-500 ml-1">
+                                      ({artisan.artisanProfile?.totalReviews || 0} reviews)
+                                    </span>
+                                  </div>
+
+                                  {/* Location */}
+                                  {artisan.state && (
+                                    <div className="flex items-center mt-1">
+                                      <MapPin className="w-3 h-3 text-gray-400 mr-1" />
+                                      <span className="text-xs text-gray-600">{artisan.state}, Nigeria</span>
+                                    </div>
+                                  )}
+
+                                  {/* Experience */}
+                                  {artisan.artisanProfile?.experience && (
+                                    <div className="flex items-center mt-1">
+                                      <Award className="w-3 h-3 text-gray-400 mr-1" />
+                                      <span className="text-xs text-gray-600">
+                                        {artisan.artisanProfile.experience} years experience
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center space-x-2 ml-3">
+                                  <button 
+                                    onClick={() => navigate(`/artisan/${artisan._id}`)}
+                                    className="p-2 text-gray-400 hover:text-[#151E3D] hover:bg-white rounded-lg transition-all duration-200"
+                                    title="View Profile"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={() => navigate(`/find-artisans?artisan=${artisan._id}`)}
+                                    className="p-2 text-gray-400 hover:text-[#151E3D] hover:bg-white rounded-lg transition-all duration-200"
+                                    title="Book Service"
+                                  >
+                                    <ArrowRight className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Skills */}
+                              {artisan.artisanProfile?.skills && artisan.artisanProfile.skills.length > 0 && (
+                                <div className="mt-3">
+                                  <div className="flex flex-wrap gap-1">
+                                    {artisan.artisanProfile.skills.slice(0, 3).map((skill, index) => (
+                                      <span 
+                                        key={index}
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#151E3D]/10 text-[#151E3D]"
+                                      >
+                                        {skill}
+                                      </span>
+                                    ))}
+                                    {artisan.artisanProfile.skills.length > 3 && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                        +{artisan.artisanProfile.skills.length - 3} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Hourly Rate */}
+                              {artisan.artisanProfile?.hourlyRate && (
+                                <div className="mt-2">
+                                  <span className="text-sm font-medium text-green-600">
+                                    ₦{artisan.artisanProfile.hourlyRate}/hour
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <button className="text-[#151E3D] hover:text-[#1E2A4A] p-1">
-                            <ArrowRight className="w-4 h-4" />
-                          </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-
             </div>
           </div>
         </div>

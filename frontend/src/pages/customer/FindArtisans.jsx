@@ -11,6 +11,7 @@ import { ReviewService } from '../../services/reviewService'; // Import ReviewSe
 import BookingModal from '../../components/BookingModal'; // Import BookingModal
 import PremiumBadge from '../../components/PremiumBadge';
 import { useAuth } from '../../context/AuthContext';
+import ProfilePictureModal from '../../components/common/ProfilePictureModal';
 
 const FindArtisans = () => {
   const { artisans, searchArtisans, loading, error } = useContext(ArtisanContext); // ✅ use context directly
@@ -26,6 +27,9 @@ const FindArtisans = () => {
   const [service, setService] = useState(query.get('service') || "");
   const [selectedArtisanProfile, setSelectedArtisanProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
+  const [selectedProfileImage, setSelectedProfileImage] = useState(null);
+  const [selectedProfileName, setSelectedProfileName] = useState(null);
   const [artisanReviews, setArtisanReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
@@ -111,6 +115,12 @@ const FindArtisans = () => {
     setShowProfileModal(false);
     setSelectedArtisanProfile(null);
     setArtisanReviews([]); // Clear reviews when modal is closed
+  };
+
+  const handleProfilePictureClick = (imageUrl, name) => {
+    setSelectedProfileImage(imageUrl);
+    setSelectedProfileName(name);
+    setShowProfilePictureModal(true);
   };
 
   return (
@@ -378,7 +388,10 @@ const FindArtisans = () => {
               <div className="bg-gradient-to-r from-[#F8FAFC] to-[#F1F5F9] rounded-xl p-5 mb-6">
                 <div className="flex flex-col md:flex-row items-center md:items-start space-y-3 md:space-y-0 md:space-x-5">
                   {/* Profile Image */}
-                  <div className="relative">
+                  <div 
+                    className="relative cursor-pointer hover:scale-105 transition-transform duration-200"
+                    onClick={() => handleProfilePictureClick(selectedArtisanProfile.profileImageUrl, selectedArtisanProfile.name)}
+                  >
                     {selectedArtisanProfile.profileImageUrl ? (
                       <img
                         src={selectedArtisanProfile.profileImageUrl}
@@ -791,6 +804,15 @@ const FindArtisans = () => {
       )}
 
       <BookingModal /> {/* Render the BookingModal here */}
+
+      {/* Profile Picture Modal */}
+      <ProfilePictureModal
+        isOpen={showProfilePictureModal}
+        onClose={() => setShowProfilePictureModal(false)}
+        imageUrl={selectedProfileImage}
+        alt={selectedProfileName || 'Profile'}
+        name={selectedProfileName}
+      />
     </CustomerLayout>
   );
 };

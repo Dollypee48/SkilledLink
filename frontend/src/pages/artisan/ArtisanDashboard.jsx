@@ -19,6 +19,7 @@ import {
   Plus,
   Home
 } from 'lucide-react';
+import ProfilePictureModal from '../../components/common/ProfilePictureModal';
 import PremiumBadge from '../../components/common/PremiumBadge';
 import { useNavigate } from 'react-router-dom';
 
@@ -32,6 +33,9 @@ const ArtisanDashboard = () => {
   const [earningsInput, setEarningsInput] = useState('');
   const [earningsLoading, setEarningsLoading] = useState(false);
   const [earningsMessage, setEarningsMessage] = useState('');
+  
+  // Profile picture modal state
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Fetch artisan profile and bookings on mount
   useEffect(() => {
@@ -363,7 +367,10 @@ const ArtisanDashboard = () => {
                   </div>
                   <div className="p-6">
                     <div className="flex items-center space-x-4 mb-4">
-                      <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 shadow-md">
+                      <div 
+                        className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 shadow-md cursor-pointer hover:scale-105 transition-transform duration-200"
+                        onClick={() => setShowProfileModal(true)}
+                      >
                         {currentArtisan.profileImageUrl ? (
                           <img
                             src={currentArtisan.profileImageUrl}
@@ -433,6 +440,15 @@ const ArtisanDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Profile Picture Modal */}
+      <ProfilePictureModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        imageUrl={currentArtisan?.profileImageUrl}
+        alt={currentArtisan?.name || 'Artisan'}
+        name={currentArtisan?.name}
+      />
     </ArtisanLayout>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Eye, EyeOff, Mail, AlertCircle, User, Lock, ArrowRight, Sparkles, Shield, Zap } from "lucide-react";
+import { Eye, EyeOff, Mail, AlertCircle, User, Lock, ArrowRight, Sparkles, Shield, Zap, ArrowLeft } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
 import { resendVerificationEmail } from "../../services/authService";
 import Logo from "../../components/common/Logo";
@@ -72,8 +72,11 @@ const Login = () => {
     setResendLoading(true);
     try {
       await resendVerificationEmail(verificationEmail);
-      setError("Verification email sent! Please check your inbox.");
-      setRequiresVerification(false);
+      // Navigate to verification page with the email
+      navigate('/verify-code', { 
+        state: { email: verificationEmail },
+        replace: true 
+      });
     } catch (err) {
       setError(err.response?.data?.message || "Failed to resend verification email");
     } finally {
@@ -91,6 +94,17 @@ const Login = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-4xl mx-auto">
+        {/* Back Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/20 hover:border-white/30"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="font-medium">Back</span>
+          </button>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center">
           {/* Left Side - Branding & Info */}
           <div className="text-center lg:text-left text-white space-y-4 lg:space-y-6 order-2 lg:order-1">
@@ -224,7 +238,7 @@ const Login = () => {
                     disabled={resendLoading}
                     className="w-full py-2 px-3 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xs"
                   >
-                    {resendLoading ? "Sending..." : "Resend Verification Email"}
+                    {resendLoading ? "Sending..." : "Resend Code & Go to Verification"}
                   </button>
                 </div>
               )}

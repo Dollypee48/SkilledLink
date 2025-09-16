@@ -172,6 +172,17 @@ const ResetPassword = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-4xl mx-auto">
+        {/* Back Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/20 hover:border-white/30"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="font-medium">Back</span>
+          </button>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center">
           {/* Left Side - Branding & Info */}
           <div className="text-center lg:text-left text-white space-y-4 lg:space-y-6 order-2 lg:order-1">

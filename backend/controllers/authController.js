@@ -432,6 +432,8 @@ exports.resendVerificationEmail = async (req, res) => {
   try {
     const { email } = req.body;
 
+    console.log('🔄 Resend verification request for email:', email);
+
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -439,11 +441,15 @@ exports.resendVerificationEmail = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('❌ User not found for email:', email);
       return res.status(404).json({ message: "User not found" });
     }
 
+    console.log('👤 User found:', { email: user.email, isVerified: user.isVerified });
+
     // Check if already verified
     if (user.isVerified) {
+      console.log('✅ User already verified');
       return res.status(400).json({ 
         message: "Email is already verified",
         success: false 
@@ -454,22 +460,35 @@ exports.resendVerificationEmail = async (req, res) => {
     const verificationCode = generateOTP();
     const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Update user with new code
-    user.verificationCode = verificationCode;
-    user.verificationCodeExpires = verificationCodeExpires;
-    await user.save();
+    console.log('🔐 Generated new verification code:', verificationCode);
+
+    // Update user with new code using updateOne to avoid validation issues
+    await User.updateOne(
+      { _id: user._id },
+      {
+        verificationCode: verificationCode,
+        verificationCodeExpires: verificationCodeExpires
+      }
+    );
+
+    console.log('💾 User updated with new verification code');
 
     // Send verification email
+    console.log('📧 Attempting to send verification email...');
     const emailResult = await sendVerificationEmail(email, verificationCode, user.name);
     
+    console.log('📧 Email result:', emailResult);
+    
     if (!emailResult.success) {
-      console.error('Failed to send verification email:', emailResult.error);
+      console.error('❌ Failed to send verification email:', emailResult.error);
       return res.status(500).json({ 
         message: "Failed to send verification email",
-        success: false 
+        success: false,
+        error: emailResult.error
       });
     }
 
+    console.log('✅ Verification email sent successfully');
     res.json({
       message: "Verification email sent successfully!",
       success: true,
@@ -477,7 +496,7 @@ exports.resendVerificationEmail = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Resend verification error:", err.message);
+    console.error("❌ Resend verification error:", err.message);
     res.status(500).json({ 
       message: "Server error during resend verification",
       success: false 
