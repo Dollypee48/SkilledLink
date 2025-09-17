@@ -10,7 +10,9 @@ const BookingPreviewModal = ({
   booking, 
   onAccept, 
   onDecline, 
-  isLoading 
+  isLoading,
+  isAccepting,
+  isDeclining
 }) => {
   const { user } = useAuth();
   const { selectRecipient } = useMessage();
@@ -236,10 +238,10 @@ const BookingPreviewModal = ({
             <div className="flex space-x-4">
               <button
                 onClick={() => onDecline(booking._id)}
-                disabled={isLoading}
+                disabled={isDeclining || isAccepting}
                 className="px-8 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold shadow-md hover:shadow-lg"
               >
-                {isLoading ? (
+                {isDeclining ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                     Declining...
@@ -253,7 +255,7 @@ const BookingPreviewModal = ({
               </button>
               <button
                 onClick={() => onAccept(booking._id)}
-                disabled={isLoading || (!user?.kycVerified || user?.kycStatus !== 'approved')}
+                disabled={isAccepting || isDeclining || (!user?.kycVerified || user?.kycStatus !== 'approved')}
                 className={`px-8 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold shadow-md hover:shadow-lg ${
                   (!user?.kycVerified || user?.kycStatus !== 'approved') 
                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
@@ -261,7 +263,7 @@ const BookingPreviewModal = ({
                 }`}
                 title={(!user?.kycVerified || user?.kycStatus !== 'approved') ? 'KYC verification required to accept jobs' : ''}
               >
-                {isLoading ? (
+                {isAccepting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                     Accepting...

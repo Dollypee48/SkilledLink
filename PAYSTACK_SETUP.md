@@ -70,7 +70,7 @@ REACT_APP_PAYSTACK_PUBLIC_KEY=pk_test_your_public_key_here
   - Basic customer support
 
 ### Premium Plan
-- Price: ₦50.00/month
+- Price: ₦3000.00/month
 - Duration: 30 days
 - Features:
   - Verified badge on profile

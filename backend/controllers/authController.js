@@ -238,7 +238,7 @@ exports.updateProfile = async (req, res) => {
     const userId = req.user.id; // User ID from authenticated token
     const { name, phone, address, nationality, state, occupation, service, bio, experience, skills, profileImage, role } = req.body;
     
-    console.log('Update Profile - Received data:', { name, phone, address, nationality, state, occupation, role });
+    console.log('Update Profile - Received data:', { name, phone, address, nationality, state, occupation, service, bio, experience, skills, role });
 
     let user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -276,10 +276,14 @@ exports.updateProfile = async (req, res) => {
     await user.save();
 
     // Update artisan profile if user is an artisan
-    if (role === 'artisan' && user.artisanProfile) {
-      let artisanProfile = await ArtisanProfile.findById(user.artisanProfile);
+    if (role === 'artisan') {
+      console.log('Updating artisan profile for user:', userId);
+      let artisanProfile = await ArtisanProfile.findOne({ userId: user._id });
 
       if (artisanProfile) {
+        console.log('Found existing artisan profile:', artisanProfile._id);
+        console.log('Updating with data:', { service, bio, experience, skills });
+        
         artisanProfile.service = service || artisanProfile.service;
         artisanProfile.bio = bio || artisanProfile.bio;
         artisanProfile.experience = experience || artisanProfile.experience;
@@ -288,17 +292,52 @@ exports.updateProfile = async (req, res) => {
           artisanProfile.skills = Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim()).filter(s => s);
         }
         await artisanProfile.save();
+        console.log('Artisan profile updated successfully');
+        
+        // Update user's artisanProfile reference
+        user.artisanProfile = artisanProfile._id;
+        await user.save();
       } else {
-        console.warn("Artisan profile not found for user:", userId);
+        // Create artisan profile if it doesn't exist
+        console.log("Creating new artisan profile for user:", userId);
+        artisanProfile = await ArtisanProfile.create({
+          userId: user._id,
+          service: service || '',
+          bio: bio || '',
+          experience: experience || '',
+          skills: Array.isArray(skills) ? skills : (skills ? skills.split(',').map(s => s.trim()).filter(s => s) : []),
+          hourlyRate: 0,
+          availability: true,
+          portfolio: [],
+          certifications: [],
+          reviews: [],
+          rating: 0,
+          totalJobs: 0,
+          completedJobs: 0,
+          earnings: 0,
+          subscription: 'free'
+        });
+        
+        // Update user's artisanProfile reference
+        user.artisanProfile = artisanProfile._id;
+        await user.save();
       }
     }
 
     // Return the updated user with populated artisan profile
     const updatedUser = await getPopulatedUser(user._id);
 
+    // Check profile completion after update
+    const profileCompletion = checkProfileCompletion(updatedUser);
+    const profileMessage = getProfileCompletionMessage(profileCompletion, updatedUser.role);
+
     res.json({
       message: "Profile updated successfully",
       user: updatedUser,
+      profileCompletion: {
+        ...profileCompletion,
+        message: profileMessage
+      }
     });
 
   } catch (err) {

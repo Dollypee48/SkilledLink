@@ -199,7 +199,17 @@ const ArtisanSettingsPage = () => {
         dataToUpdate.profileImage = imageData;
       }
 
+      // Debug logging
+      console.log('Settings Debug - Data being sent to updateProfile:');
+      console.log('profileForm:', profileForm);
+      console.log('dataToUpdate:', dataToUpdate);
+      console.log('user.role:', user.role);
+
       const updatedUser = await updateProfile(dataToUpdate, user.role);
+      
+      // Debug logging
+      console.log('Settings Debug - Response from updateProfile:');
+      console.log('updatedUser:', updatedUser);
       toast.success('Profile updated successfully!');
       
       // Update the profile image preview with the new URL

@@ -5,14 +5,21 @@ const API_URL = "http://localhost:5000/api/reviews";
 export const ReviewService = {
   // Create a new review
   createReview: async (reviewData, token) => {
-    // Making API call to create review
+    console.log('ReviewService - Making API call to create review:', { reviewData, token: token ? 'present' : 'missing' });
     
-    const res = await axios.post(API_URL, reviewData, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    
-    // Review created successfully
-    return res.data.review;
+    try {
+      const res = await axios.post(API_URL, reviewData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      console.log('ReviewService - Review created successfully:', res.data);
+      // Review created successfully
+      return res.data.review;
+    } catch (error) {
+      console.error('ReviewService - Error creating review:', error);
+      console.error('ReviewService - Error response:', error.response?.data);
+      throw error;
+    }
   },
 
   // Get logged-in customer reviews

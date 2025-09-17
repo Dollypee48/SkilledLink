@@ -63,10 +63,11 @@ export const AuthProvider = ({ children }) => {
       throw new Error("No access token found. Please log in.");
     }
     try {
-      const updatedUser = await authService.updateProfile(profileData, accessToken, userRole);
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      return updatedUser;
+      const response = await authService.updateProfile(profileData, accessToken, userRole);
+      setUser(response.user);
+      setProfileCompletion(response.profileCompletion || null);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      return response.user;
     } catch (error) {
       throw error;
     }

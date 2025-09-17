@@ -64,7 +64,7 @@ const AdminLayout = ({ children }) => {
                 {/* Home Button */}
                 <button
                   onClick={() => navigate('/')}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#151E3D] hover:bg-[#1E2A4A] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                   title="Go to Homepage"
                 >
                   <Home className="w-4 h-4" />

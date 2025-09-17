@@ -346,6 +346,8 @@ const ArtisanRequests = () => {
           onAccept={handleAccept}
           onDecline={handleDecline}
           isLoading={selectedBooking ? actionLoading[selectedBooking._id] : false}
+          isAccepting={selectedBooking ? actionLoading[selectedBooking._id] === 'accepting' : false}
+          isDeclining={selectedBooking ? actionLoading[selectedBooking._id] === 'declining' : false}
         />
       </div>
     </ArtisanLayout>

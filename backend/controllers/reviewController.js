@@ -7,25 +7,39 @@ exports.createReview = async (req, res) => {
   try {
     const { artisanId, rating, comment, bookingId } = req.body;
 
+    console.log('Review creation request:', { artisanId, rating, comment, bookingId, userId: req.user.id });
 
-    // Find the booking and validate it
+    // Find the booking and validate it - allow reviews for both Completed and Pending Confirmation statuses
     const booking = await Booking.findOne({
       _id: bookingId,
       customer: req.user.id, // Use 'customer' field, not 'customerId'
-      status: "Completed", // Use correct case
+      status: { $in: ["Completed", "Pending Confirmation"] }, // Allow both statuses
     });
 
+    console.log('Found booking:', booking ? { id: booking._id, status: booking.status, customer: booking.customer } : 'No booking found');
 
+    // If no booking found, let's check if it exists but with different criteria
     if (!booking) {
+      const anyBooking = await Booking.findById(bookingId);
+      console.log('Any booking found:', anyBooking ? { 
+        id: anyBooking._id, 
+        status: anyBooking.status, 
+        customer: anyBooking.customer,
+        customerType: typeof anyBooking.customer,
+        userId: req.user.id,
+        userIdType: typeof req.user.id,
+        customerMatch: anyBooking.customer.toString() === req.user.id.toString()
+      } : 'No booking found at all');
+      
       return res.status(400).json({ 
-        message: "Invalid or incomplete booking. Please ensure the booking is completed and belongs to you." 
+        message: "Invalid or incomplete booking. Please ensure the booking is completed or pending confirmation and belongs to you." 
       });
     }
 
-    // Additional validation
-    if (booking.status !== "Completed") {
+    // Additional validation - now allows both Completed and Pending Confirmation
+    if (!["Completed", "Pending Confirmation"].includes(booking.status)) {
       return res.status(400).json({ 
-        message: "Cannot review a booking that is not completed. Current status: " + booking.status 
+        message: "Cannot review a booking that is not completed or pending confirmation. Current status: " + booking.status 
       });
     }
 

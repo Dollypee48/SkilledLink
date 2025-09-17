@@ -30,6 +30,25 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
 
   if (!isOpen || !booking) return null;
 
+  // Validate booking object structure
+  if (!booking.artisan || !booking.artisan._id) {
+    console.error('Invalid booking object - missing artisan data:', booking);
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-[9999] p-4">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+          <h2 className="text-xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-600 mb-4">Invalid booking data. Please try refreshing the page.</p>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     setFormError(null);
@@ -48,12 +67,29 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
     }
 
     try {
+      // Validate required data
+      if (!booking.artisan || !booking.artisan._id) {
+        setFormError('Invalid booking data. Please refresh the page and try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!booking._id) {
+        setFormError('Invalid booking ID. Please refresh the page and try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const reviewData = {
         artisanId: booking.artisan._id,
         bookingId: booking._id,
         rating,
         comment: reviewText.trim(),
       };
+
+      console.log('Review data being sent:', reviewData);
+      console.log('Booking object:', booking);
+      console.log('Booking artisan:', booking.artisan);
 
       await createReview(reviewData);
       

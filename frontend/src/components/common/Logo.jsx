@@ -119,7 +119,7 @@ const Logo = ({
   );
 
   if (variant === 'icon') {
-    return <LogoIcon />;
+    return null; // No icon for now
   }
 
   if (variant === 'text') {
@@ -132,10 +132,9 @@ const Logo = ({
     );
   }
 
-  // Full logo (icon + text)
+  // Full logo (text only for now)
   return (
-    <div className={`flex items-center space-x-3 ${className}`}>
-      <LogoIcon />
+    <div className={`flex items-center ${className}`}>
       {showText && (
         <div>
           <span className={`${textSize} font-bold ${getTextColorClass()}`}>

@@ -38,6 +38,12 @@ exports.getCurrentArtisanProfile = async (req, res) => {
       user.artisanProfile.reviewCount = reviewCount;
     }
 
+    console.log('getCurrentArtisanProfile - Returning user data:');
+    console.log('User ID:', user._id);
+    console.log('User role:', user.role);
+    console.log('ArtisanProfile exists:', !!user.artisanProfile);
+    console.log('ArtisanProfile data:', user.artisanProfile);
+
     res.json(user);
   } catch (err) {
     console.error("Profile error:", err);

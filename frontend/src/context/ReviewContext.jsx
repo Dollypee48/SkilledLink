@@ -15,10 +15,15 @@ export const ReviewProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      if (!accessToken) throw new Error("Please log in to perform this action");
+      if (!accessToken) {
+        console.error('ReviewContext - No access token available');
+        throw new Error("Please log in to perform this action");
+      }
+      console.log('ReviewContext - Using access token:', accessToken ? 'present' : 'missing');
       const result = await callback(accessToken);
       return result;
     } catch (err) {
+      console.error('ReviewContext - Error in handleRequest:', err);
       setError(err.message);
       throw err;
     } finally {
@@ -28,13 +33,20 @@ export const ReviewProvider = ({ children }) => {
 
   // Create a review
   const createReview = useCallback(async (reviewData) => {
-    // Creating review
-    const newReview = await handleRequest((token) =>
-      ReviewService.createReview(reviewData, token)
-    );
-    // Review created successfully
-    setReviews((prev) => [...prev, newReview]);
-    return newReview;
+    console.log('ReviewContext - Creating review with data:', reviewData);
+    try {
+      // Creating review
+      const newReview = await handleRequest((token) =>
+        ReviewService.createReview(reviewData, token)
+      );
+      console.log('ReviewContext - Review created successfully:', newReview);
+      // Review created successfully
+      setReviews((prev) => [...prev, newReview]);
+      return newReview;
+    } catch (error) {
+      console.error('ReviewContext - Error creating review:', error);
+      throw error;
+    }
   }, [handleRequest]);
 
   // Fetch current user's reviews
