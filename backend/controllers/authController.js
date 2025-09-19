@@ -75,6 +75,12 @@ exports.register = async (req, res) => {
       isVerified: false, // Email verification required
       verificationCode,
       verificationCodeExpires,
+      // Initialize job acceptance for artisans
+      jobAcceptance: {
+        acceptedJobs: 0,
+        maxJobs: role === 'artisan' ? 3 : 0, // 3 for artisans, 0 for others
+        resetDate: new Date()
+      }
     });
 
     // If artisan, create basic profile
@@ -128,8 +134,35 @@ exports.register = async (req, res) => {
       requiresVerification: true,
     });
   } catch (err) {
-    console.error("Register error:", err.message);
-    res.status(500).json({ message: "Server error during registration" });
+    console.error("Register error:", err);
+    console.error("Error details:", {
+      message: err.message,
+      name: err.name,
+      code: err.code,
+      keyValue: err.keyValue,
+      errors: err.errors
+    });
+    
+    // Handle specific MongoDB errors
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyValue)[0];
+      return res.status(400).json({ 
+        message: `${field} already exists. Please use a different ${field}.` 
+      });
+    }
+    
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ 
+        message: "Validation error", 
+        errors: errors 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Server error during registration",
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    });
   }
 };
 

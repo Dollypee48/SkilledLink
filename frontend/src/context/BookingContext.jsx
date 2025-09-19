@@ -73,11 +73,16 @@ export const BookingProvider = ({ children }) => {
 
   const updateBookingStatus = useCallback( // Memoize updateBookingStatus
     async (id, status) => {
+      console.log(`🔄 Updating booking ${id} to status: ${status}`);
       const updated = await handleRequest((token) =>
         BookingService.updateBookingStatus(id, status, token)
       );
-      setBookings((prev) => prev.map((b) => (b._id === id ? updated : b))); // Update artisan bookings
-      setCustomerBookings((prev) => prev.map((b) => (b._id === id ? updated : b))); // Update customer bookings
+      console.log(`✅ Booking updated in context:`, updated);
+      
+      // Update local state immediately for instant UI feedback
+      setBookings((prev) => prev.map((b) => (b._id === id ? { ...b, status: updated.status } : b))); // Update artisan bookings
+      setCustomerBookings((prev) => prev.map((b) => (b._id === id ? { ...b, status: updated.status } : b))); // Update customer bookings
+      
       return updated;
     },
     [handleRequest]

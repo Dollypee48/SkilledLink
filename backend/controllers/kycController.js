@@ -130,8 +130,34 @@ exports.submitKYC = async (req, res) => {
     const updatedUser = await User.findById(userId).select("-password -refreshToken");
     res.status(200).json({ message: 'KYC documents submitted successfully for review', user: updatedUser });
   } catch (error) {
-    console.error('Error submitting KYC:', error.stack); // Changed to error.stack
-    res.status(500).json({ message: 'Server error during KYC submission' });
+    console.error('Error submitting KYC:', error.stack);
+    
+    // Provide more specific error messages
+    if (error.message.includes('Cloudinary')) {
+      return res.status(500).json({ 
+        message: 'File upload service unavailable. Please check server configuration.',
+        error: 'CLOUDINARY_ERROR'
+      });
+    }
+    
+    if (error.message.includes('validation')) {
+      return res.status(400).json({ 
+        message: 'Invalid KYC data provided',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+    
+    if (error.message.includes('User not found')) {
+      return res.status(404).json({ 
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
+      });
+    }
+    
+    res.status(500).json({ 
+      message: 'Server error during KYC submission',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_SERVER_ERROR'
+    });
   }
 };
 

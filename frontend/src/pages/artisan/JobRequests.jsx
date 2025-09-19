@@ -81,13 +81,22 @@ const ArtisanRequests = () => {
         throw new Error(`Invalid status: ${newStatus}`);
       }
       
+      console.log(`🔄 Accepting booking ${id} with status: ${newStatus}`);
       const updatedBooking = await updateBookingStatus(id, newStatus);
+      console.log(`✅ Booking updated:`, updatedBooking);
       
       // Verify the status was updated correctly
       if (updatedBooking.status !== newStatus) {
+        console.warn(`⚠️ Status mismatch: expected ${newStatus}, got ${updatedBooking.status}`);
       }
       
-      await fetchArtisanBookings(); // Refresh bookings after update
+      // Close modal immediately after successful update
+      setShowBookingModal(false);
+      setSelectedBooking(null);
+      
+      // Refresh bookings after update
+      await fetchArtisanBookings();
+      
       setSuccessMessage("Booking request accepted successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
@@ -120,16 +129,24 @@ const ArtisanRequests = () => {
         throw new Error(`Invalid status: ${newStatus}`);
       }
       
+      console.log(`🔄 Declining booking ${id} with status: ${newStatus}`);
       const updatedBooking = await updateBookingStatus(id, newStatus);
+      console.log(`✅ Booking updated:`, updatedBooking);
       
       // Verify the status was updated correctly
       if (updatedBooking.status !== newStatus) {
+        console.warn(`⚠️ Status mismatch: expected ${newStatus}, got ${updatedBooking.status}`);
       }
       
-      await fetchArtisanBookings(); // Refresh bookings after update
+      // Close modal immediately after successful update
+      setShowBookingModal(false);
+      setSelectedBooking(null);
+      
+      // Refresh bookings after update
+      await fetchArtisanBookings();
+      
       setSuccessMessage("Booking request declined successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
-      setShowBookingModal(false); // Close modal after action
     } catch (error) {
       console.error('Error declining request:', error);
       setSuccessMessage("Error declining request. Please try again.");

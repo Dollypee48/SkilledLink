@@ -435,7 +435,6 @@ const ArtisanDashboard = () => {
                 </div>
               )}
 
-
             </div>
           </div>
         </div>

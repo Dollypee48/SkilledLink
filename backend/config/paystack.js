@@ -11,7 +11,8 @@ const SUBSCRIPTION_PLANS = {
     features: [
       'Basic profile listing',
       'Standard search visibility',
-      'Basic customer support'
+      'Basic customer support',
+      'Up to 3 job acceptances per month'
     ]
   },
   premium: {

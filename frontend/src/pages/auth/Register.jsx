@@ -37,6 +37,13 @@ const Register = () => {
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     // Password validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
     if (!passwordRegex.test(formData.password)) {
@@ -50,6 +57,13 @@ const Register = () => {
     }
 
     try {
+      console.log('🚀 Attempting registration with:', {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        passwordLength: formData.password.length
+      });
+
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,10 +74,18 @@ const Register = () => {
           role: formData.role,
         }),
       });
+      
+      console.log('📡 Registration response status:', response.status);
       const data = await response.json();
+      console.log('📡 Registration response data:', data);
+      
       if (response.ok) {
+        console.log('✅ Registration successful, redirecting to verification...');
         // Store email for verification page
         localStorage.setItem('pendingVerificationEmail', formData.email);
+        // Clear any existing errors
+        setError('');
+        // Navigate to verification page
         navigate('/verify-code', { 
           state: { 
             email: formData.email,
@@ -71,9 +93,15 @@ const Register = () => {
           } 
         });
       } else {
-        setError(data.message || 'Registration failed');
+        console.error('❌ Registration failed:', data);
+        if (data.message === 'Email already registered') {
+          setError('This email is already registered. Please try logging in instead or use a different email address.');
+        } else {
+          setError(data.message || 'Registration failed');
+        }
       }
     } catch (err) {
+      console.error('❌ Registration error:', err);
       setError('An error occurred. Please check your network or try again later.');
     }
   };
@@ -250,7 +278,19 @@ const Register = () => {
                 <div className="p-3 rounded-lg text-sm border-2 bg-gradient-to-r from-red-50 to-pink-50 border-red-200 text-red-800">
                   <div className="flex items-center">
                     <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <span className="font-medium text-xs">{error}</span>
+                    <div className="flex-1">
+                      <span className="font-medium text-xs">{error}</span>
+                      {error.includes('already registered') && (
+                        <div className="mt-2">
+                          <Link 
+                            to="/login" 
+                            className="text-xs text-blue-600 hover:text-blue-800 underline font-medium"
+                          >
+                            Click here to login instead
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

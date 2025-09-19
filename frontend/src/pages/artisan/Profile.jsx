@@ -18,6 +18,7 @@ const ArtisanProfile = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [imageError, setImageError] = useState(false);
 
   const getKycStatusDisplay = (status) => {
     switch (status) {
@@ -45,6 +46,7 @@ const ArtisanProfile = () => {
           setError(null);
           const profileData = await artisanService.getProfile(accessToken);
           setCurrentProfile(profileData);
+          setImageError(false); // Reset image error on initial load
         } catch (err) {
           setError(err.response?.data?.message || 'Failed to fetch profile');
         } finally {
@@ -97,6 +99,7 @@ const ArtisanProfile = () => {
         const profileData = await artisanService.getProfile(accessToken);
         setCurrentProfile(profileData);
         setLastUpdated(new Date());
+        setImageError(false); // Reset image error on profile refresh
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to refresh profile');
       } finally {
@@ -179,6 +182,13 @@ const ArtisanProfile = () => {
   console.log('artisanProfile?.service:', artisanProfile?.service);
   console.log('artisanProfile?.experience:', artisanProfile?.experience);
   console.log('artisanProfile?.bio:', artisanProfile?.bio);
+  console.log('Job Acceptance Debug:');
+  console.log('user.jobAcceptance:', user?.jobAcceptance);
+  console.log('user.remainingJobs:', user?.remainingJobs);
+  console.log('user.isPremium:', user?.isPremium);
+  console.log('Profile Image Debug:');
+  console.log('user.profileImageUrl:', user?.profileImageUrl);
+  console.log('currentProfile.profileImageUrl:', currentProfile?.profileImageUrl);
 
   return (
     <ArtisanLayout>
@@ -231,18 +241,26 @@ const ArtisanProfile = () => {
             {/* Profile Header */}
             <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8 mb-8 pb-6 border-b border-gray-200">
               <div className="relative">
-                {user.profileImageUrl ? (
+                {(currentProfile?.profileImageUrl || user?.profileImageUrl) && !imageError ? (
                   <img 
-                    src={user.profileImageUrl} 
+                    src={currentProfile?.profileImageUrl || user?.profileImageUrl} 
                     alt="Profile" 
                     className="w-32 h-32 rounded-full object-cover border-4 border-[#151E3D] shadow-md" 
+                    onError={(e) => {
+                      console.error('Profile image failed to load:', currentProfile?.profileImageUrl || user?.profileImageUrl);
+                      setImageError(true);
+                    }}
+                    onLoad={() => setImageError(false)}
                   />
-                ) : (
-                  <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center border-4 border-[#151E3D] shadow-md">
-                    <User className="w-16 h-16 text-gray-500" />
-                  </div>
-                )}
-                {user.isPremium && (
+                ) : null}
+                <div 
+                  className={`w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center border-4 border-[#151E3D] shadow-md ${
+                    (currentProfile?.profileImageUrl || user?.profileImageUrl) && !imageError ? 'hidden' : 'flex'
+                  }`}
+                >
+                  <User className="w-16 h-16 text-gray-500" />
+                </div>
+                {(currentProfile?.isPremium || user?.isPremium) && (
                   <div className="absolute -top-2 -right-2">
                     <PremiumBadge size="sm" variant="default" showText={false} />
                   </div>
@@ -251,7 +269,7 @@ const ArtisanProfile = () => {
               <div className="text-center md:text-left">
                 <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
                   <h2 className="text-3xl font-bold text-gray-800">{user.name}</h2>
-                  {user.isPremium && (
+                  {(currentProfile?.isPremium || user?.isPremium) && (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white">
                       <Crown className="w-4 h-4 mr-1" />
                       Premium
@@ -327,6 +345,19 @@ const ArtisanProfile = () => {
                 <span className="text-sm font-medium text-gray-500">Profile Completion</span>
                 <span className="text-base font-semibold mt-1">{profileCompletion}% Complete</span>
               </div>
+              {user?.role === 'artisan' && (
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500">Job Acceptance Limit</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-base font-semibold">
+                      {user.jobAcceptance?.acceptedJobs || 0} / {user.jobAcceptance?.maxJobs || 3}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      ({user.remainingJobs || (user.jobAcceptance?.maxJobs || 3) - (user.jobAcceptance?.acceptedJobs || 0)} remaining)
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Professional Information */}
@@ -368,6 +399,32 @@ const ArtisanProfile = () => {
                     </div>
                   </div>
                 )}
+
+                {/* KYC Status Section */}
+                <div className="mb-6">
+                  <span className="text-sm font-medium text-gray-500">Identity Verification (KYC)</span>
+                  <div className="mt-2 p-4 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getKycStatusDisplay(user.kycStatus)}
+                        <div className="text-sm text-gray-600">
+                          {user.kycStatus === 'approved' && 'Your identity has been verified and you can accept jobs'}
+                          {user.kycStatus === 'pending' && 'Your documents are being reviewed by our team'}
+                          {user.kycStatus === 'rejected' && 'Please resubmit your documents with correct information'}
+                          {!user.kycStatus && 'Complete KYC verification to start accepting jobs'}
+                        </div>
+                      </div>
+                      {user.kycStatus !== 'approved' && (
+                        <button
+                          onClick={() => window.location.href = '/kyc-verification'}
+                          className="bg-[#151E3D] hover:bg-[#1E2A4A] text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                        >
+                          {user.kycStatus === 'rejected' ? 'Resubmit' : 'Complete KYC'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -397,6 +454,18 @@ const ArtisanProfile = () => {
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-500">KYC Status</span>
                   <div className="mt-1">{getKycStatusDisplay(user.kycStatus)}</div>
+                  {user.kycStatus === 'approved' && (
+                    <span className="text-xs text-green-600 mt-1">✓ Identity verified</span>
+                  )}
+                  {user.kycStatus === 'pending' && (
+                    <span className="text-xs text-yellow-600 mt-1">⏳ Under review</span>
+                  )}
+                  {user.kycStatus === 'rejected' && (
+                    <span className="text-xs text-red-600 mt-1">✗ Please resubmit documents</span>
+                  )}
+                  {!user.kycStatus && (
+                    <span className="text-xs text-gray-500 mt-1">Required for job acceptance</span>
+                  )}
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-500">Account Status</span>
