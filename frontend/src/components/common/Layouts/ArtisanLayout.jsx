@@ -9,6 +9,7 @@ import {
   Star,
   User,
   LogOut,
+  Settings,
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
 import ProfileDropdown from "../ProfileDropdown"; // Import ProfileDropdown
@@ -23,12 +24,12 @@ const ArtisanLayout = ({ children }) => {
   // Artisan navigation items
   const navItems = [
     { name: "Dashboard", path: "/artisan-dashboard", icon: LayoutDashboard },
-    { name: "My Jobs", path: "/myJobs", icon: Briefcase },
+    { name: "My Jobs", path: "/myJobs", icon: CalendarCheck },
     { name: "Job Requests", path: "/jobRequest", icon: CalendarCheck },
     { name: "Messages", path: "/artisan-messages", icon: MessageSquare }, // New: Point to the artisan-specific messages page
     { name: "My Reviews", path: "/myReview", icon: Star },
     { name: "Profile", path: "/artisan-profile", icon: User },
-    { name: "Settings", path: "/artisan-settings", icon: User }, // Using User icon for now, can be changed later
+    { name: "Settings", path: "/artisan-settings", icon: Settings },
     { name: "Subscription", path: "/subscription", icon: User },
   ];
 

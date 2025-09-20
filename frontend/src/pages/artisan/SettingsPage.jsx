@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
 import { useAuth } from '../../context/AuthContext';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { User, Lock, Eye, EyeOff, Camera, Wrench, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle, Briefcase, Star, CheckCircle, XCircle, MapPin } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Camera, Wrench, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle, Briefcase, Star, CheckCircle, XCircle, MapPin, Plus, Edit3, Calendar } from 'lucide-react';
 import KYCForm from '../../components/KYCForm';
 import AutoLocationDetector from '../../components/AutoLocationDetector';
+import ServiceProfileModal from '../../components/ServiceProfileModal';
+import serviceProfileService from '../../services/serviceProfileService';
 import { getSettings, updateNotificationPreferences, updatePrivacySettings, deactivateAccount, logoutAllDevices } from '../../services/settingsService';
 import { issueService } from '../../services/issueService';
 
 const ArtisanSettingsPage = () => {
   const { user, updateProfile, changePassword } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
+  
+  // Service Profile state
+  const [serviceProfiles, setServiceProfiles] = useState([]);
+  const [serviceProfileStats, setServiceProfileStats] = useState(null);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [editingServiceProfile, setEditingServiceProfile] = useState(null);
+  const [serviceProfileLoading, setServiceProfileLoading] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingServiceProfile, setViewingServiceProfile] = useState(null);
   
   // Profile form state
   const [profileForm, setProfileForm] = useState({
@@ -485,6 +498,126 @@ const ArtisanSettingsPage = () => {
     );
   }
 
+  // Service Profile Functions
+  const loadServiceProfiles = async () => {
+    try {
+      setServiceProfileLoading(true);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error('No access token found');
+        return;
+      }
+
+      console.log('Loading service profiles...');
+      
+      // Load profiles and stats separately to handle errors independently
+      let profiles = [];
+      let stats = null;
+      
+      try {
+        profiles = await serviceProfileService.getArtisanServiceProfiles(token);
+        console.log('Service profiles loaded:', profiles);
+        setServiceProfiles(profiles);
+      } catch (profileError) {
+        console.error('Error loading service profiles:', profileError);
+        toast.error('Failed to load service profiles');
+      }
+      
+      try {
+        stats = await serviceProfileService.getServiceProfileStats(token);
+        console.log('Service profile stats loaded:', stats);
+        setServiceProfileStats(stats);
+      } catch (statsError) {
+        console.error('Error loading service profile stats:', statsError);
+        // Don't show error for stats as it's not critical
+      }
+    } catch (error) {
+      console.error('Error loading service profiles:', error);
+      console.error('Error details:', error.message, error.stack);
+      toast.error(error.message || 'Failed to load service profiles');
+    } finally {
+      setServiceProfileLoading(false);
+    }
+  };
+
+  const handleCreateServiceProfile = () => {
+    setEditingServiceProfile(null);
+    setShowServiceModal(true);
+  };
+
+  const handleEditServiceProfile = (profile) => {
+    setEditingServiceProfile(profile);
+    setShowServiceModal(true);
+  };
+
+  const handleViewServiceProfile = (profile) => {
+    console.log('Viewing service profile:', profile);
+    setViewingServiceProfile(profile);
+    setShowViewModal(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setShowViewModal(false);
+    setViewingServiceProfile(null);
+  };
+
+  const handleServiceProfileSaved = () => {
+    console.log('Service profile saved, reloading profiles...');
+    setShowServiceModal(false);
+    setEditingServiceProfile(null);
+    loadServiceProfiles();
+    toast.success(editingServiceProfile ? 'Service profile updated successfully!' : 'Service profile created successfully!');
+  };
+
+  const handleServiceModalClose = () => {
+    setShowServiceModal(false);
+    setEditingServiceProfile(null);
+  };
+
+  const handleDeleteServiceProfile = async (profileId) => {
+    console.log('Attempting to delete service profile:', profileId);
+    
+    if (!window.confirm('Are you sure you want to delete this service profile?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      console.log('Deleting service profile with token:', token ? 'Token exists' : 'No token');
+      
+      await serviceProfileService.deleteServiceProfile(profileId, token);
+      console.log('Service profile deleted successfully');
+      
+      await loadServiceProfiles();
+      toast.success('Service profile deleted successfully');
+    } catch (error) {
+      console.error('Error deleting service profile:', error);
+      console.error('Error details:', error.message, error.stack);
+      toast.error(error.message || 'Failed to delete service profile');
+    }
+  };
+
+  const handleToggleServiceProfileStatus = async (profileId) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      await serviceProfileService.toggleServiceProfileStatus(profileId, token);
+      await loadServiceProfiles();
+      toast.success('Service profile status updated successfully');
+    } catch (error) {
+      console.error('Error updating service profile status:', error);
+      toast.error(error.message || 'Failed to update service profile status');
+    }
+  };
+
+  // Load service profiles when the service profiles tab is active
+  useEffect(() => {
+    console.log('useEffect triggered:', { activeTab, userRole: user?.role, userId: user?.id });
+    if (activeTab === 'service-profiles' && user?.role === 'artisan') {
+      console.log('Loading service profiles...');
+      loadServiceProfiles();
+    }
+  }, [activeTab, user?.role]);
+
   return (
     <ArtisanLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -618,6 +751,21 @@ const ArtisanSettingsPage = () => {
                       <Shield className="w-5 h-5" />
                     </div>
                     <span className="font-medium">KYC Verification</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('service-profiles')}
+                    className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-300 group ${
+                      activeTab === 'service-profiles'
+                        ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white shadow-lg transform scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-[#151E3D]/5 hover:shadow-md'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg mr-3 transition-all duration-300 ${
+                      activeTab === 'service-profiles' ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-[#151E3D]/10'
+                    }`}>
+                      <Briefcase className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">Service Profiles</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('report')}
@@ -1594,11 +1742,367 @@ const ArtisanSettingsPage = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Service Profiles Tab */}
+                {activeTab === 'service-profiles' && (
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] rounded-lg flex items-center justify-center mr-4">
+                          <Briefcase className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-gray-900">Service Profiles</h2>
+                          <p className="text-gray-600">Create and manage your service offerings</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleCreateServiceProfile}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white rounded-lg hover:from-[#1E2A4A] hover:to-[#151E3D] transition-all duration-300 shadow-lg hover:shadow-xl"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span>Create New Profile</span>
+                      </button>
+                    </div>
+
+                    {/* Stats Cards */}
+                    {serviceProfileStats && (
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-blue-600 text-sm font-medium">Total Profiles</p>
+                              <p className="text-2xl font-bold text-blue-800">{serviceProfileStats.totalProfiles}</p>
+                            </div>
+                            <Briefcase className="w-8 h-8 text-blue-500" />
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-green-600 text-sm font-medium">Active Profiles</p>
+                              <p className="text-2xl font-bold text-green-800">{serviceProfileStats.activeProfiles}</p>
+                            </div>
+                            <CheckCircle className="w-8 h-8 text-green-500" />
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-purple-600 text-sm font-medium">Total Bookings</p>
+                              <p className="text-2xl font-bold text-purple-800">{serviceProfileStats.totalBookings}</p>
+                            </div>
+                            <User className="w-8 h-8 text-purple-500" />
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-yellow-600 text-sm font-medium">Total Earnings</p>
+                              <p className="text-2xl font-bold text-yellow-800">₦{serviceProfileStats.totalEarnings?.toLocaleString()}</p>
+                            </div>
+                            <Star className="w-8 h-8 text-yellow-500" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Service Profiles List */}
+                    {serviceProfileLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#151E3D]"></div>
+                        <span className="ml-3 text-gray-600">Loading service profiles...</span>
+                      </div>
+                    ) : serviceProfiles.length === 0 ? (
+                      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                        <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-600 mb-2">No Service Profiles Yet</h3>
+                        <p className="text-gray-500 mb-6">Create your first service profile to start offering your services</p>
+                        <button
+                          onClick={handleCreateServiceProfile}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white rounded-lg hover:from-[#1E2A4A] hover:to-[#151E3D] transition-all duration-300"
+                        >
+                          <Plus className="w-5 h-5" />
+                          <span>Create Your First Profile</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {serviceProfiles.map((profile) => (
+                          <div key={profile._id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-3">
+                                  <h3 className="text-xl font-semibold text-gray-900">{profile.title}</h3>
+                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                    profile.isActive 
+                                      ? 'bg-green-100 text-green-700 border border-green-200' 
+                                      : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                  }`}>
+                                    {profile.isActive ? 'Active' : 'Inactive'}
+                                  </span>
+                                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                                    {profile.category}
+                                  </span>
+                                </div>
+                                <p className="text-gray-600 mb-4 line-clamp-2">{profile.description || 'No description provided'}</p>
+                                <div className="flex items-center gap-6 text-sm text-gray-500">
+                                  <div className="flex items-center gap-1">
+                                    <Star className="w-4 h-4 text-yellow-500" />
+                                    <span>{profile.rating?.toFixed(1) || '0.0'}</span>
+                                    <span>({profile.reviewCount || 0} reviews)</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <User className="w-4 h-4" />
+                                    <span>{profile.bookingCount || 0} bookings</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-semibold text-[#151E3D]">₦{profile.hourlyRate?.toLocaleString()}/hr</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 ml-4">
+                                <button
+                                  onClick={() => handleViewServiceProfile(profile)}
+                                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                                  title="View Profile"
+                                >
+                                  <Eye className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => handleToggleServiceProfileStatus(profile._id)}
+                                  className={`p-2 rounded-lg transition-colors duration-200 ${
+                                    profile.isActive
+                                      ? 'text-gray-600 hover:bg-gray-100'
+                                      : 'text-yellow-600 hover:bg-yellow-50'
+                                  }`}
+                                  title={profile.isActive ? 'Deactivate' : 'Activate'}
+                                >
+                                  {profile.isActive ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                                <button
+                                  onClick={() => handleEditServiceProfile(profile)}
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                  title="Edit Profile"
+                                >
+                                  <Edit3 className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteServiceProfile(profile._id)}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                  title="Delete Profile"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Service Profile Modal */}
+      {showServiceModal && (
+        <ServiceProfileModal
+          isOpen={showServiceModal}
+          onClose={handleServiceModalClose}
+          onSave={handleServiceProfileSaved}
+          profile={editingServiceProfile}
+          token={user?.accessToken || localStorage.getItem('accessToken')}
+        />
+      )}
+
+      {/* Service Profile View Modal */}
+      {showViewModal && viewingServiceProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-full flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-[#151E3D]">Service Profile Details</h2>
+                    <p className="text-sm text-gray-500">{viewingServiceProfile.title}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleCloseViewModal}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                >
+                  <XCircle className="w-6 h-6 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column - Basic Info */}
+                <div className="space-y-6">
+                  {/* Service Title & Category */}
+                  <div className="bg-gradient-to-r from-[#F8FAFC] to-[#F1F5F9] rounded-xl p-6">
+                    <h3 className="text-2xl font-bold text-[#151E3D] mb-2">{viewingServiceProfile.title}</h3>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="px-3 py-1 bg-[#F59E0B]/10 text-[#F59E0B] rounded-full text-sm font-semibold border border-[#F59E0B]/20">
+                        {viewingServiceProfile.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        viewingServiceProfile.isActive 
+                          ? 'bg-green-100 text-green-700 border border-green-200' 
+                          : 'bg-gray-100 text-gray-700 border border-gray-200'
+                      }`}>
+                        {viewingServiceProfile.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <p className="text-gray-600">{viewingServiceProfile.description || 'No description provided'}</p>
+                  </div>
+
+                  {/* Pricing Information */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-[#151E3D] mb-4 flex items-center">
+                      <Star className="w-5 h-5 mr-2 text-[#F59E0B]" />
+                      Pricing Details
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Hourly Rate:</span>
+                        <span className="text-xl font-bold text-[#151E3D]">₦{viewingServiceProfile.hourlyRate?.toLocaleString() || '0'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Minimum Hours:</span>
+                        <span className="font-semibold text-[#151E3D]">{viewingServiceProfile.minimumHours || 1} hours</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Maximum Hours:</span>
+                        <span className="font-semibold text-[#151E3D]">{viewingServiceProfile.maximumHours || 8} hours</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Area */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-[#151E3D] mb-4 flex items-center">
+                      <MapPin className="w-5 h-5 mr-2 text-[#F59E0B]" />
+                      Service Area
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-semibold text-[#151E3D] capitalize">{viewingServiceProfile.serviceArea?.type || 'Local'}</span>
+                      </div>
+                      {viewingServiceProfile.serviceArea?.radius && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Radius:</span>
+                          <span className="font-semibold text-[#151E3D]">{viewingServiceProfile.serviceArea.radius} km</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Additional Info */}
+                <div className="space-y-6">
+                  {/* Availability */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-[#151E3D] mb-4 flex items-center">
+                      <Calendar className="w-5 h-5 mr-2 text-[#F59E0B]" />
+                      Weekly Availability
+                    </h4>
+                    <div className="space-y-2">
+                      {Object.entries(viewingServiceProfile.availability || {}).map(([day, schedule]) => (
+                        <div key={day} className="flex justify-between items-center">
+                          <span className="text-gray-600 capitalize">{day}:</span>
+                          <span className={`font-semibold ${schedule.available ? 'text-green-600' : 'text-gray-400'}`}>
+                            {schedule.available ? `${schedule.startTime} - ${schedule.endTime}` : 'Not Available'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Requirements */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-[#151E3D] mb-4 flex items-center">
+                      <Wrench className="w-5 h-5 mr-2 text-[#F59E0B]" />
+                      Service Requirements
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Tools Provided:</span>
+                        <span className={`font-semibold ${viewingServiceProfile.requirements?.toolsProvided ? 'text-green-600' : 'text-red-600'}`}>
+                          {viewingServiceProfile.requirements?.toolsProvided ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Materials Provided:</span>
+                        <span className={`font-semibold ${viewingServiceProfile.requirements?.materialsProvided ? 'text-green-600' : 'text-red-600'}`}>
+                          {viewingServiceProfile.requirements?.materialsProvided ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Statistics */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-[#151E3D] mb-4 flex items-center">
+                      <Star className="w-5 h-5 mr-2 text-[#F59E0B]" />
+                      Performance
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Rating:</span>
+                        <span className="font-semibold text-[#151E3D]">{(viewingServiceProfile.rating || 0).toFixed(1)} ⭐</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Reviews:</span>
+                        <span className="font-semibold text-[#151E3D]">{viewingServiceProfile.reviewCount || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Bookings:</span>
+                        <span className="font-semibold text-[#151E3D]">{viewingServiceProfile.bookingCount || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Total Earnings:</span>
+                        <span className="font-semibold text-[#151E3D]">₦{(viewingServiceProfile.totalEarnings || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex justify-end gap-4">
+                <button
+                  onClick={handleCloseViewModal}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    handleCloseViewModal();
+                    handleEditServiceProfile(viewingServiceProfile);
+                  }}
+                  className="px-6 py-3 bg-[#F59E0B] text-white rounded-lg hover:bg-[#D97706] transition-colors duration-200"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </ArtisanLayout>
   );
 };

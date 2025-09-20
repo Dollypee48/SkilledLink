@@ -17,11 +17,16 @@ import {
   MapPin,
   Edit3,
   Plus,
-  Home
+  Home,
+  Briefcase,
+  Settings
 } from 'lucide-react';
 import ProfilePictureModal from '../../components/common/ProfilePictureModal';
 import PremiumBadge from '../../components/common/PremiumBadge';
+import ServiceProfileModal from '../../components/ServiceProfileModal';
+import serviceProfileService from '../../services/serviceProfileService';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const ArtisanDashboard = () => {
   const { user, accessToken, isPremium } = useAuth();
@@ -36,6 +41,10 @@ const ArtisanDashboard = () => {
   
   // Profile picture modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
+  
+  // Service Profile modal state
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [editingServiceProfile, setEditingServiceProfile] = useState(null);
 
   // Fetch artisan profile and bookings on mount
   useEffect(() => {
@@ -91,6 +100,22 @@ const ArtisanDashboard = () => {
     }
   };
 
+  // Service Profile Functions
+  const handleCreateServiceProfile = () => {
+    setEditingServiceProfile(null);
+    setShowServiceModal(true);
+  };
+
+  const handleServiceProfileSaved = () => {
+    setShowServiceModal(false);
+    setEditingServiceProfile(null);
+    toast.success('Service profile created successfully!');
+  };
+
+  const handleServiceModalClose = () => {
+    setShowServiceModal(false);
+    setEditingServiceProfile(null);
+  };
 
   return (
     <ArtisanLayout>
@@ -107,14 +132,24 @@ const ArtisanDashboard = () => {
                   Manage your bookings and grow your business
                 </p>
               </div>
-              <button
-                onClick={() => navigate('/')}
-                className="flex items-center gap-2 px-4 py-2 bg-[#151E3D] hover:bg-[#1E2A4A] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                title="Go to Homepage"
-              >
-                <Home className="w-4 h-4" />
-                <span className="text-sm font-medium">Home</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleCreateServiceProfile}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#151E3D] hover:bg-[#1E2A4A] text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                  title="Create Service Profile"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm font-medium">Create Profile</span>
+                </button>
+                <button
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#151E3D] hover:bg-[#1E2A4A] text-white rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  title="Go to Homepage"
+                >
+                  <Home className="w-4 h-4" />
+                  <span className="text-sm font-medium">Home</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -288,9 +323,12 @@ const ArtisanDashboard = () => {
                       </div>
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings yet</h3>
                       <p className="text-gray-600 mb-6">Your bookings will appear here once customers start booking your services</p>
-                      <button className="inline-flex items-center px-4 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors">
+                      <button 
+                        onClick={handleCreateServiceProfile}
+                        className="inline-flex items-center px-4 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors"
+                      >
                         <Plus className="w-4 h-4 mr-2" />
-                        Create Service
+                        Create Service Profile
                       </button>
                     </div>
                   ) : (
@@ -454,6 +492,17 @@ const ArtisanDashboard = () => {
         alt={currentArtisan?.name || 'Artisan'}
         name={currentArtisan?.name}
       />
+
+      {/* Service Profile Modal */}
+      {showServiceModal && (
+        <ServiceProfileModal
+          isOpen={showServiceModal}
+          onClose={handleServiceModalClose}
+          onSave={handleServiceProfileSaved}
+          profile={editingServiceProfile}
+          token={accessToken || localStorage.getItem('accessToken')}
+        />
+      )}
     </ArtisanLayout>
   );
 };

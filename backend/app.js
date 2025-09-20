@@ -15,6 +15,7 @@ const kycRoutes = require('./routes/kycRoutes'); // New: Import KYC routes
 const notificationRoutes = require('./routes/notificationRoutes'); // Import notification routes
 const subscriptionRoutes = require('./routes/subscriptionRoutes'); // Import subscription routes
 const settingsRoutes = require('./routes/settingsRoutes'); // Import settings routes
+const serviceProfileRoutes = require('./routes/serviceProfileRoutes'); // Import service profile routes
 
 const app = express();
 
@@ -22,7 +23,7 @@ const app = express();
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '50mb' })); // Increased limit to 50mb
@@ -51,6 +52,7 @@ app.use('/api/kyc', kycRoutes); // New: Use KYC routes
 app.use('/api/notifications', notificationRoutes); // Use notification routes
 app.use('/api/subscription', subscriptionRoutes); // Use subscription routes
 app.use('/api/settings', settingsRoutes); // Use settings routes
+app.use('/api/service-profiles', serviceProfileRoutes); // Use service profile routes
 
 // Error Handler
 app.use(errorHandler);
