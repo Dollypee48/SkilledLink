@@ -264,12 +264,12 @@ const FindArtisans = () => {
                       )}
                       
                       {/* Location */}
-                      {artisan?.state && (
+                      {artisan?.address && (
                         <div className="flex items-center text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
                           <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           </svg>
-                          <span className="font-medium">{artisan.state}</span>
+                          <span className="font-medium truncate">{artisan.address}</span>
                         </div>
                       )}
                     </div>
@@ -435,24 +435,24 @@ const FindArtisans = () => {
                       </svg>
                       <span className="text-sm font-medium">
                         {(() => {
-                          // Handle location object structure
+                          // Handle location object structure - prioritize address
                           if (selectedArtisanProfile.location && typeof selectedArtisanProfile.location === 'object') {
                             const { state, city, address } = selectedArtisanProfile.location;
-                            if (city && city.trim() !== '') {
+                            if (address && address.trim() !== '') {
+                              return address;
+                            } else if (city && city.trim() !== '') {
                               return `${city}${state ? `, ${state}` : ''}`;
                             } else if (state && state.trim() !== '') {
                               return `${state} State`;
-                            } else if (address && address.trim() !== '') {
-                              return address;
                             }
                           }
                           
-                          // Fallback to user's state/address if location object is empty
-                          if (selectedArtisanProfile.state && selectedArtisanProfile.state.trim() !== '') {
-                            return `${selectedArtisanProfile.state} State`;
-                          }
+                          // Fallback to user's address/state if location object is empty - prioritize address
                           if (selectedArtisanProfile.address && selectedArtisanProfile.address.trim() !== '') {
                             return selectedArtisanProfile.address;
+                          }
+                          if (selectedArtisanProfile.state && selectedArtisanProfile.state.trim() !== '') {
+                            return `${selectedArtisanProfile.state} State`;
                           }
                           
                           return 'Location not specified';

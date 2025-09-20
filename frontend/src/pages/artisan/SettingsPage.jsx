@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { User, Lock, Eye, EyeOff, Camera, Wrench, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle, Briefcase, Star, CheckCircle, XCircle } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Camera, Wrench, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle, Briefcase, Star, CheckCircle, XCircle, MapPin } from 'lucide-react';
 import KYCForm from '../../components/KYCForm';
+import AutoLocationDetector from '../../components/AutoLocationDetector';
 import { getSettings, updateNotificationPreferences, updatePrivacySettings, deactivateAccount, logoutAllDevices } from '../../services/settingsService';
 import { issueService } from '../../services/issueService';
 
@@ -117,6 +118,48 @@ const ArtisanSettingsPage = () => {
 
   const handleProfileChange = (e) => {
     setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
+  };
+
+  const handleLocationDetected = (locationData) => {
+    console.log('📍 Location detected:', locationData);
+    
+    // Update the profile form with detected location
+    setProfileForm(prev => ({
+      ...prev,
+      address: locationData.address,
+      state: locationData.state
+    }));
+
+    // No toast notification - silent operation
+  };
+
+  const handleLocationUpdated = async (locationData) => {
+    console.log('📍 Auto-saving location to profile:', locationData);
+    
+    try {
+      // Auto-save the location to the profile
+      const dataToUpdate = {
+        address: locationData.address,
+        state: locationData.state
+      };
+
+      await updateProfile(dataToUpdate, user.role);
+      
+      // No toast notification - silent operation
+    } catch (error) {
+      console.error('❌ Error auto-saving location:', error);
+      // Only show error if auto-save fails
+      toast.error('Failed to auto-save location. Please save manually.', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    }
+  };
+
+  const handleLocationError = (errorMessage) => {
+    console.error('❌ Location detection error:', errorMessage);
+    // Don't show error toast for automatic detection to avoid spam
+    // Only log the error
   };
 
   const handlePasswordChange = (e) => {
@@ -702,6 +745,17 @@ const ArtisanSettingsPage = () => {
                                 required
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#151E3D] focus:border-[#151E3D] transition-all duration-200 bg-white"
                                 placeholder="Enter your address"
+                              />
+                              <AutoLocationDetector
+                                onLocationDetected={handleLocationDetected}
+                                onLocationUpdated={handleLocationUpdated}
+                                onError={handleLocationError}
+                                disabled={loading}
+                                autoDetect={true}
+                                autoSave={true}
+                                showStatus={true}
+                                delay={2000}
+                                className="mt-2"
                               />
                             </div>
                             

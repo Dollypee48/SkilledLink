@@ -420,7 +420,13 @@ const ArtisanDashboard = () => {
                     <div className="space-y-3">
                       <div className="flex items-center text-sm text-gray-600">
                         <MapPin className="w-4 h-4 mr-3 text-gray-400" />
-                        <span>{currentArtisan.artisanProfile?.location?.state || currentArtisan.state || 'State not set'}</span>
+                        <span className="truncate">
+                          {currentArtisan.address || 
+                           currentArtisan.artisanProfile?.location?.address || 
+                           currentArtisan.artisanProfile?.location?.state || 
+                           currentArtisan.state || 
+                           'Location not set'}
+                        </span>
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Phone className="w-4 h-4 mr-3 text-gray-400" />

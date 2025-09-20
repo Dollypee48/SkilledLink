@@ -116,7 +116,7 @@ const AllArtisans = () => {
           id: artisan._id,
           name: artisan.name || 'Unknown Artisan',
           service: artisan.service || artisan.artisanProfile?.service || 'General Service',
-          location: artisan.state || artisan.location?.state || artisan.artisanProfile?.location?.state || 'Location not specified',
+          location: artisan.address || artisan.location?.address || artisan.artisanProfile?.location?.address || artisan.state || artisan.location?.state || artisan.artisanProfile?.location?.state || 'Location not specified',
           rating: artisan.rating || artisan.artisanProfile?.rating || 0,
           reviews: artisan.reviewCount || artisan.artisanProfile?.reviewCount || 0,
           price: artisan.hourlyRate ? `₦${artisan.hourlyRate}` : null,
@@ -430,7 +430,7 @@ const AllArtisans = () => {
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div className="flex items-center">
                     <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1 sm:mr-2" />
-                    <span className="text-[#151E3D]/70 text-xs sm:text-sm">{artisan.location}</span>
+                    <span className="text-[#151E3D]/70 text-xs sm:text-sm truncate">{artisan.location}</span>
                   </div>
                   <div className="flex items-center">
                     <Star className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1" />
