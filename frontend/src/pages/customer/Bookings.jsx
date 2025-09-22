@@ -11,23 +11,40 @@ const Bookings = () => {
   const [selectedBooking, setSelectedBooking] = useState(null); // State to store booking details for the modal
   const { accessToken } = useAuth(); // Get accessToken from AuthContext
 
-  const { customerBookings, loading, error, getBookings, viewBooking } = useBooking();
+  const { 
+    customerBookings, 
+    customerServiceProfileBookings, 
+    loading, 
+    error, 
+    getBookings, 
+    fetchCustomerServiceProfileBookings,
+    viewBooking 
+  } = useBooking();
 
   // Fetch bookings on mount
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         if (accessToken) { // Only fetch if accessToken is available
-          await getBookings(); // This now fetches customer bookings
+          await getBookings(); // This fetches regular customer bookings
+          if (fetchCustomerServiceProfileBookings) {
+            await fetchCustomerServiceProfileBookings(); // This fetches service profile bookings
+          }
         }
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
       }
     };
     fetchBookings();
-  }, [getBookings, accessToken]); // Add accessToken to dependencies
+  }, [getBookings, fetchCustomerServiceProfileBookings, accessToken]); // Add fetchCustomerServiceProfileBookings to dependencies
 
-  const sortedBookings = [...customerBookings].sort((a, b) => {
+  // Combine both types of bookings
+  const allBookings = [
+    ...(customerBookings || []).map(booking => ({ ...booking, type: 'regular' })),
+    ...(customerServiceProfileBookings || []).map(booking => ({ ...booking, type: 'serviceProfile' }))
+  ];
+
+  const sortedBookings = [...allBookings].sort((a, b) => {
     if (sortBy === "date") return new Date(a.date) - new Date(b.date);
     if (sortBy === "status") return a.status.localeCompare(b.status);
     return 0;
@@ -107,6 +124,7 @@ const Bookings = () => {
                   <tr className="border-b">
                     <th className="p-3 text-sm font-medium text-[#151E3D]">Artisan</th>
                     <th className="p-3 text-sm font-medium text-[#151E3D]">Service</th>
+                    <th className="p-3 text-sm font-medium text-[#151E3D]">Type</th>
                     <th className="p-3 text-sm font-medium text-[#151E3D]">Date</th>
                     <th className="p-3 text-sm font-medium text-[#151E3D]">Time</th>
                     <th className="p-3 text-sm font-medium text-[#151E3D]">Status</th>
@@ -119,7 +137,16 @@ const Bookings = () => {
                       <td className="p-3 text-sm text-gray-600">
                         {booking.artisan?.name || "N/A"}
                       </td>
-                      <td className="p-3 text-sm text-gray-600">{booking.service}</td>
+                      <td className="p-3 text-sm text-gray-600">{booking.service || booking.serviceName}</td>
+                      <td className="p-3 text-sm text-gray-600">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          booking.type === 'serviceProfile' 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {booking.type === 'serviceProfile' ? 'Service' : 'Regular'}
+                        </span>
+                      </td>
                       <td className="p-3 text-sm text-gray-600">
                         {new Date(booking.date).toLocaleDateString()}
                       </td>

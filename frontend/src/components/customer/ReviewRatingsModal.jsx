@@ -49,6 +49,10 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
     );
   }
 
+  // Check if booking is completed
+  const isCompleted = booking.status === 'Completed';
+  const isPendingConfirmation = booking.status === 'Pending Confirmation';
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     setFormError(null);
@@ -80,9 +84,13 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
         return;
       }
 
+      // Determine booking type - check if it's a service profile booking
+      const bookingType = booking.type || (booking.serviceName ? 'serviceProfile' : 'regular');
+
       const reviewData = {
         artisanId: booking.artisan._id,
         bookingId: booking._id,
+        bookingType: bookingType,
         rating,
         comment: reviewText.trim(),
       };
@@ -145,14 +153,45 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
           <h3 className="font-semibold text-gray-800 mb-2">Booking Details</h3>
           <p className="text-sm text-gray-600"><span className="font-medium">Artisan:</span> {booking.artisan?.name || 'N/A'}</p>
-          <p className="text-sm text-gray-600"><span className="font-medium">Service:</span> {booking.service}</p>
+          <p className="text-sm text-gray-600"><span className="font-medium">Service:</span> {booking.service || booking.serviceName}</p>
           <p className="text-sm text-gray-600"><span className="font-medium">Date:</span> {new Date(booking.date).toLocaleDateString()}</p>
+          <p className="text-sm text-gray-600"><span className="font-medium">Status:</span> 
+            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+              booking.status === 'Completed' ? 'bg-green-100 text-green-800' :
+              booking.status === 'Pending Confirmation' ? 'bg-yellow-100 text-yellow-800' :
+              booking.status === 'Accepted' ? 'bg-blue-100 text-blue-800' :
+              booking.status === 'Pending' ? 'bg-orange-100 text-orange-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {booking.status}
+            </span>
+          </p>
         </div>
+
+        {/* Status Warning */}
+        {!isCompleted && !isPendingConfirmation && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <Star className="w-5 h-5 text-amber-600 mt-0.5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-amber-800 mb-1">
+                  Review Not Available Yet
+                </h3>
+                <p className="text-sm text-amber-700">
+                  You can only submit a review after the service has been completed. 
+                  Current status: <span className="font-medium">{booking.status}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmitReview} className="space-y-6">
           {/* Rating Stars */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className={`block text-sm font-medium mb-3 ${!isCompleted && !isPendingConfirmation ? 'text-gray-400' : 'text-gray-700'}`}>
               How would you rate this service? *
             </label>
             <div className="flex space-x-1">
@@ -160,14 +199,17 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
                 <button
                   key={star}
                   type="button"
-                  onClick={() => handleStarClick(star)}
-                  onMouseEnter={() => handleStarHover(star)}
+                  onClick={() => (isCompleted || isPendingConfirmation) && handleStarClick(star)}
+                  onMouseEnter={() => (isCompleted || isPendingConfirmation) && handleStarHover(star)}
                   onMouseLeave={handleStarLeave}
-                  className="focus:outline-none"
+                  disabled={!isCompleted && !isPendingConfirmation}
+                  className={`focus:outline-none ${!isCompleted && !isPendingConfirmation ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <Star
                     className={`w-8 h-8 transition-colors ${
-                      star <= (hoverRating || rating)
+                      !isCompleted && !isPendingConfirmation
+                        ? 'text-gray-200'
+                        : star <= (hoverRating || rating)
                         ? 'text-[#F59E0B] fill-current'
                         : 'text-gray-300'
                     }`}
@@ -175,7 +217,7 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
                 </button>
               ))}
             </div>
-            {rating > 0 && (
+            {rating > 0 && (isCompleted || isPendingConfirmation) && (
               <p className="text-sm text-gray-600 mt-1">
                 {rating === 1 ? 'Poor' : 
                  rating === 2 ? 'Fair' : 
@@ -187,16 +229,25 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
 
           {/* Review Text */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${!isCompleted && !isPendingConfirmation ? 'text-gray-400' : 'text-gray-700'}`}>
               Write your review *
             </label>
             <textarea
               value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Share your experience with this service..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent resize-none"
+              onChange={(e) => (isCompleted || isPendingConfirmation) && setReviewText(e.target.value)}
+              placeholder={
+                !isCompleted && !isPendingConfirmation 
+                  ? "Review will be available after service completion..."
+                  : "Share your experience with this service..."
+              }
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent resize-none ${
+                !isCompleted && !isPendingConfirmation
+                  ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                  : 'border-gray-300 focus:ring-[#F59E0B]'
+              }`}
               rows={4}
               required
+              disabled={!isCompleted && !isPendingConfirmation}
             />
           </div>
 
@@ -225,13 +276,22 @@ const ReviewRatingsModal = ({ isOpen, onClose, booking }) => {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || rating === 0 || !reviewText.trim()}
-              className="px-4 py-2 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              disabled={isSubmitting || rating === 0 || !reviewText.trim() || (!isCompleted && !isPendingConfirmation)}
+              className={`px-4 py-2 rounded-md font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center gap-2 ${
+                !isCompleted && !isPendingConfirmation
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-[#F59E0B] hover:bg-[#D97706] text-white focus:ring-[#F59E0B] disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   Submitting...
+                </>
+              ) : !isCompleted && !isPendingConfirmation ? (
+                <>
+                  <Star className="w-4 h-4" />
+                  Review Not Available
                 </>
               ) : (
                 <>

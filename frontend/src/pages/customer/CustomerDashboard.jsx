@@ -12,13 +12,15 @@ import {
   CheckCircle, 
   Users, 
   ArrowRight,
+  ArrowLeft,
   Plus,
   XCircle,
   Home,
   MapPin,
   Wrench,
   Award,
-  Eye
+  Eye,
+  RefreshCw
 } from "lucide-react";
 import { useBooking } from "../../context/BookingContext";
 import { useAuth } from "../../context/AuthContext";
@@ -27,8 +29,15 @@ import { ArtisanContext } from "../../context/ArtisanContext";
 export default function CustomerDashboard() {
   const navigate = useNavigate();
   
-  // Destructure 'bookings' as 'myBookings' to avoid conflict and use the correct data for customers
-  const { customerBookings, loading: bookingsLoading, error: bookingsError, getBookings } = useBooking();
+  // Destructure bookings and service profile bookings for customers
+  const { 
+    customerBookings, 
+    customerServiceProfileBookings,
+    loading: bookingsLoading, 
+    error: bookingsError, 
+    getBookings,
+    fetchCustomerServiceProfileBookings 
+  } = useBooking();
 
   // Use ArtisanContext directly for suggestions
   const { suggestions, loadSuggestions } = useContext(ArtisanContext);
@@ -37,13 +46,21 @@ export default function CustomerDashboard() {
   const [hasFetched, setHasFetched] = useState(false);
   const [artisansLoading, setArtisansLoading] = useState(false);
   const [artisansError, setArtisansError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Pagination state for recent bookings
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
 
   useEffect(() => {
     if (!hasFetched && user && accessToken) {
-      // Fetch bookings for the customer
-      // Ensure getBookings is called and error handled
+      // Fetch both regular bookings and service profile bookings for the customer
       getBookings().catch((err) => {
-        // Handle error silently or show user-friendly message
+        console.error("Error fetching regular bookings:", err);
+      });
+
+      fetchCustomerServiceProfileBookings().catch((err) => {
+        console.error("Error fetching service profile bookings:", err);
       });
 
       // Fetch suggested artisans
@@ -56,11 +73,17 @@ export default function CustomerDashboard() {
 
       setHasFetched(true);
     }
-  }, [getBookings, loadSuggestions, hasFetched, user, accessToken]); // Keep dependencies updated
+  }, [getBookings, fetchCustomerServiceProfileBookings, loadSuggestions, hasFetched, user, accessToken]); // Keep dependencies updated
 
+
+  // Combine regular bookings and service profile bookings
+  const allBookings = [
+    ...(customerBookings || []).map(booking => ({ ...booking, type: 'regular' })),
+    ...(customerServiceProfileBookings || []).map(booking => ({ ...booking, type: 'serviceProfile' }))
+  ];
 
   // Get bookings in progress (Accepted or Pending Confirmation)
-  const bookingsInProgress = customerBookings?.filter((b) => 
+  const bookingsInProgress = allBookings?.filter((b) => 
     b.status === "Accepted" || b.status === "Pending Confirmation"
   ) || [];
 
@@ -70,10 +93,48 @@ export default function CustomerDashboard() {
   };
 
   // Count total bookings made
-  const totalBookings = customerBookings?.length || 0;
+  const totalBookings = allBookings?.length || 0;
 
-  const loading = bookingsLoading || artisansLoading;
+  // Pagination calculations
+  const totalPages = Math.ceil(allBookings?.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentBookings = allBookings?.slice(startIndex, endIndex) || [];
+
+  const loading = bookingsLoading || artisansLoading || refreshing;
   const error = bookingsError || artisansError;
+
+  // Function to refresh all bookings
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        getBookings(),
+        fetchCustomerServiceProfileBookings()
+      ]);
+    } catch (err) {
+      console.error("Error refreshing bookings:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Pagination functions
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleViewAll = () => {
+    navigate('/customer/bookings');
+  };
 
 
   return (
@@ -147,7 +208,7 @@ export default function CustomerDashboard() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Completed</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
-                    {customerBookings?.filter(b => b.status === 'Completed').length || 0}
+                    {allBookings?.filter(b => b.status === 'Completed').length || 0}
                   </p>
                   <p className="text-xs text-purple-600 mt-1 flex items-center">
                     <CheckCircle className="w-3 h-3 mr-1" />
@@ -186,10 +247,24 @@ export default function CustomerDashboard() {
                 <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-gray-900">Recent Bookings</h2>
-                    <button className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center">
-                      View all
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </button>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                        className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center disabled:opacity-50"
+                        title="Refresh bookings"
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+                        Refresh
+                      </button>
+                      <button 
+                        onClick={handleViewAll}
+                        className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center"
+                      >
+                        View all
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="p-6">
@@ -205,7 +280,7 @@ export default function CustomerDashboard() {
                       </div>
                       <p className="text-red-600 font-medium">{error}</p>
                     </div>
-                  ) : customerBookings?.length === 0 ? (
+                  ) : allBookings?.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CalendarCheck className="w-8 h-8 text-gray-400" />
@@ -219,16 +294,21 @@ export default function CustomerDashboard() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {customerBookings?.slice(0, 5).map((booking) => (
+                      {currentBookings?.map((booking) => (
                         <div key={booking._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                           <div className="flex items-center space-x-4">
                             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
                               <CalendarCheck className="w-6 h-6 text-[#151E3D]" />
                             </div>
                             <div>
-                              <h3 className="font-medium text-gray-900">{booking.service || "Service"}</h3>
+                              <h3 className="font-medium text-gray-900">{booking.service || booking.serviceName || "Service"}</h3>
                               <p className="text-sm text-gray-600">
                                 {booking.artisan?.name || "Artisan"} • {new Date(booking.date).toLocaleDateString() || "N/A"}
+                                {booking.type === 'serviceProfile' && (
+                                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Service
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -275,6 +355,36 @@ export default function CustomerDashboard() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                  
+                  {/* Pagination Controls */}
+                  {allBookings?.length > itemsPerPage && (
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={handlePreviousPage}
+                          disabled={currentPage === 1}
+                          className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ArrowLeft className="w-4 h-4 mr-1" />
+                          Previous
+                        </button>
+                        <span className="text-sm text-gray-700">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={currentPage === totalPages}
+                          className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                          <ArrowRight className="w-4 h-4 ml-1" />
+                        </button>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Showing {startIndex + 1}-{Math.min(endIndex, allBookings?.length)} of {allBookings?.length} bookings
+                      </div>
                     </div>
                   )}
                 </div>

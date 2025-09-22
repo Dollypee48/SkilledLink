@@ -112,16 +112,16 @@ const AboutUs = () => {
           <div className="text-center mb-16">
             <div className="flex justify-center mb-8">
               <Logo textColor="dark" />
-            </div>
+          </div>
             <h1 className="text-5xl md:text-7xl font-bold mb-8 text-[#151E3D]">
-              About
+            About
               <span className="block text-[#F59E0B] mt-2">SkilledLink</span>
-            </h1>
+          </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-              We're revolutionizing how Nigeria connects with skilled professionals. 
-              Our platform bridges the gap between talented artisans and customers who need their expertise, 
-              creating opportunities and building communities across the nation.
-            </p>
+            We're revolutionizing how Nigeria connects with skilled professionals. 
+            Our platform bridges the gap between talented artisans and customers who need their expertise, 
+            creating opportunities and building communities across the nation.
+          </p>
           </div>
 
           {/* Enhanced Features Grid */}
@@ -385,7 +385,7 @@ const AboutUs = () => {
             </div>
             <h2 className="text-5xl md:text-6xl font-bold mb-8">
               Contact Us
-            </h2>
+          </h2>
             <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-4xl mx-auto leading-relaxed">
               Have questions, feedback, or need support? We're here to help! 
               Get in touch with our team and we'll respond as soon as possible.

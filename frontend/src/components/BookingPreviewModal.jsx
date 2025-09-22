@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, Clock, MapPin, User, Phone, Mail, MessageSquare, Star, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, User, Phone, MessageSquare, Star, DollarSign, CheckCircle, XCircle } from 'lucide-react';
 import { useMessage } from '../context/MessageContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -62,12 +62,6 @@ const BookingPreviewModal = ({
     });
   };
 
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -99,14 +93,31 @@ const BookingPreviewModal = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-blue-700 font-medium">Service Type</p>
-                    <p className="text-blue-900 text-lg font-semibold">{booking.service}</p>
+                    <p className="text-blue-900 text-lg font-semibold">{booking.service || booking.serviceName}</p>
                   </div>
-                  {booking.budget && (
+                  {(booking.budget || booking.totalAmount) && (
                     <div>
-                      <p className="text-sm text-blue-700 font-medium">Budget</p>
+                      <p className="text-sm text-blue-700 font-medium">Amount</p>
                       <p className="text-blue-900 text-lg font-semibold flex items-center">
                         <DollarSign className="w-5 h-5 mr-1" />
-                        {booking.budget}
+                        ₦{(booking.totalAmount || booking.budget || 0).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                  {booking.hourlyRate && (
+                    <div>
+                      <p className="text-sm text-blue-700 font-medium">Hourly Rate</p>
+                      <p className="text-blue-900 text-lg font-semibold flex items-center">
+                        <DollarSign className="w-5 h-5 mr-1" />
+                        ₦{booking.hourlyRate.toLocaleString()}/hour
+                      </p>
+                    </div>
+                  )}
+                  {booking.estimatedDuration && (
+                    <div>
+                      <p className="text-sm text-blue-700 font-medium">Estimated Duration</p>
+                      <p className="text-blue-900 text-lg font-semibold">
+                        {booking.estimatedDuration} hours
                       </p>
                     </div>
                   )}
@@ -139,13 +150,6 @@ const BookingPreviewModal = ({
                       {booking.customer?.phone || 'N/A'}
                     </p>
                   </div>
-                  <div className="md:col-span-2">
-                    <p className="text-sm text-gray-600 font-medium">Email Address</p>
-                    <p className="text-gray-900 text-lg font-semibold flex items-center">
-                      <Mail className="w-5 h-5 mr-2 text-gray-600" />
-                      {booking.customer?.email || 'N/A'}
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -164,7 +168,7 @@ const BookingPreviewModal = ({
                     <p className="text-sm text-green-700 font-medium">Preferred Time</p>
                     <p className="text-green-900 text-lg font-semibold flex items-center">
                       <Clock className="w-5 h-5 mr-2" />
-                      {formatTime(booking.date)}
+                      {booking.time}
                     </p>
                   </div>
                 </div>
@@ -182,10 +186,10 @@ const BookingPreviewModal = ({
               )}
 
               {/* Additional Information */}
-              {booking.additionalDetails && (
+              {(booking.additionalDetails || booking.specialRequirements) && (
                 <div className="bg-gradient-to-r from-[#151E3D]/5 to-[#1E2A4A]/5 rounded-xl p-6 border border-[#151E3D]/20">
                   <h3 className="text-xl font-semibold text-purple-900 mb-4">Additional Information</h3>
-                  <p className="text-purple-900 text-lg leading-relaxed">{booking.additionalDetails}</p>
+                  <p className="text-purple-900 text-lg leading-relaxed">{booking.additionalDetails || booking.specialRequirements}</p>
                 </div>
               )}
 

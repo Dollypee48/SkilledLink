@@ -1750,12 +1750,12 @@ const ArtisanSettingsPage = () => {
                       <div className="flex items-center">
                         <div className="w-12 h-12 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] rounded-lg flex items-center justify-center mr-4">
                           <Briefcase className="w-6 h-6 text-white" />
-                        </div>
+              </div>
                         <div>
                           <h2 className="text-2xl font-bold text-gray-900">Service Profiles</h2>
                           <p className="text-gray-600">Create and manage your service offerings</p>
-                        </div>
-                      </div>
+            </div>
+          </div>
                       <button
                         onClick={handleCreateServiceProfile}
                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white rounded-lg hover:from-[#1E2A4A] hover:to-[#151E3D] transition-all duration-300 shadow-lg hover:shadow-xl"
@@ -1763,7 +1763,7 @@ const ArtisanSettingsPage = () => {
                         <Plus className="w-5 h-5" />
                         <span>Create New Profile</span>
                       </button>
-                    </div>
+        </div>
 
                     {/* Stats Cards */}
                     {serviceProfileStats && (
@@ -1773,7 +1773,7 @@ const ArtisanSettingsPage = () => {
                             <div>
                               <p className="text-blue-600 text-sm font-medium">Total Profiles</p>
                               <p className="text-2xl font-bold text-blue-800">{serviceProfileStats.totalProfiles}</p>
-                            </div>
+      </div>
                             <Briefcase className="w-8 h-8 text-blue-500" />
                           </div>
                         </div>

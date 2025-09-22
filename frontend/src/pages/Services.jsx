@@ -115,11 +115,11 @@ const Services = () => {
           <div className="text-center mb-16">
             <div className="flex justify-center mb-8">
               <Logo textColor="dark" />
-            </div>
+          </div>
             <h1 className="text-5xl md:text-7xl font-bold mb-8 text-[#151E3D]">
-              Professional Services
+            Professional Services
               <span className="block text-[#F59E0B] mt-2">At Your Fingertips</span>
-            </h1>
+          </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
               Connect with thousands of verified, skilled artisans across Nigeria for all your home, business, and personal needs. 
               From emergency repairs to luxury services, we bring quality professionals directly to your doorstep.
@@ -195,20 +195,20 @@ const Services = () => {
           {/* Call to Action */}
           <div className="text-center">
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link 
+            <Link 
                 to="/find-artisans" 
                 className="bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#D97706] hover:to-[#F59E0B] text-white px-10 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
-              >
-                Find Artisans Now
+            >
+              Find Artisans Now
                 <ArrowRight className="ml-3 w-6 h-6" />
-              </Link>
-              <Link 
-                to="/register" 
+            </Link>
+            <Link 
+              to="/register" 
                 className="bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] hover:from-[#1E2A4A] hover:to-[#151E3D] text-white px-10 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
-              >
-                Join as Artisan
+            >
+              Join as Artisan
                 <Users className="ml-3 w-6 h-6" />
-              </Link>
+            </Link>
             </div>
             <p className="text-gray-500 mt-6 text-lg">
               Join over 50,000 satisfied customers who trust SkilledLink for their service needs
@@ -325,8 +325,8 @@ const Services = () => {
               <Sparkles className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-5xl md:text-6xl font-bold mb-8">
-              Ready to Get Started?
-            </h2>
+            Ready to Get Started?
+          </h2>
             <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-4xl mx-auto leading-relaxed">
               Join over <span className="text-[#F59E0B] font-bold">50,000+</span> satisfied customers who trust SkilledLink for their service needs. 
               From emergency repairs to luxury services, we connect you with the perfect artisan for every task.
@@ -349,13 +349,13 @@ const Services = () => {
                 Search through our extensive database of skilled artisans, read reviews, compare prices, 
                 and book the perfect professional for your specific needs.
               </p>
-              <Link 
+            <Link 
                 to="/find-artisans" 
                 className="inline-flex items-center bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#D97706] hover:to-[#F59E0B] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
-                Browse All Services
+            >
+              Browse All Services
                 <ArrowRight className="ml-3 w-5 h-5" />
-              </Link>
+            </Link>
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300">
@@ -372,13 +372,13 @@ const Services = () => {
                 Showcase your skills, build your reputation, and earn money by providing quality services 
                 to customers who need your expertise.
               </p>
-              <Link 
-                to="/register" 
+            <Link 
+              to="/register" 
                 className="inline-flex items-center bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-xl font-bold text-lg backdrop-blur-sm border border-white/30 hover:border-white/40 transition-all duration-300 transform hover:scale-105"
-              >
+            >
                 Join as Artisan
                 <ArrowRight className="ml-3 w-5 h-5" />
-              </Link>
+            </Link>
             </div>
           </div>
 

@@ -53,6 +53,7 @@ app.use('/api/notifications', notificationRoutes); // Use notification routes
 app.use('/api/subscription', subscriptionRoutes); // Use subscription routes
 app.use('/api/settings', settingsRoutes); // Use settings routes
 app.use('/api/service-profiles', serviceProfileRoutes); // Use service profile routes
+app.use('/api/service-profile-bookings', require('./routes/serviceProfileBookingRoutes')); // Use service profile booking routes
 
 // Error Handler
 app.use(errorHandler);

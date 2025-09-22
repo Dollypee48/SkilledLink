@@ -1,36 +1,52 @@
 const Review = require("../models/Review");
 const Booking = require("../models/Booking");
+const ServiceProfileBooking = require("../models/ServiceProfileBooking");
 const ArtisanProfile = require("../models/ArtisanProfile");
 
 // Create a review (only if booking is completed & belongs to customer)
 exports.createReview = async (req, res) => {
   try {
-    const { artisanId, rating, comment, bookingId } = req.body;
+    const { artisanId, rating, comment, bookingId, bookingType } = req.body;
 
-    console.log('Review creation request:', { artisanId, rating, comment, bookingId, userId: req.user.id });
+    console.log('Review creation request:', { artisanId, rating, comment, bookingId, bookingType, userId: req.user.id });
 
-    // Find the booking and validate it - allow reviews for both Completed and Pending Confirmation statuses
-    const booking = await Booking.findOne({
-      _id: bookingId,
-      customer: req.user.id, // Use 'customer' field, not 'customerId'
-      status: { $in: ["Completed", "Pending Confirmation"] }, // Allow both statuses
-    });
+    let booking = null;
+    let bookingTypeToUse = bookingType || 'regular'; // Default to regular if not specified
 
-    console.log('Found booking:', booking ? { id: booking._id, status: booking.status, customer: booking.customer } : 'No booking found');
-
-    // If no booking found, let's check if it exists but with different criteria
-    if (!booking) {
-      const anyBooking = await Booking.findById(bookingId);
-      console.log('Any booking found:', anyBooking ? { 
-        id: anyBooking._id, 
-        status: anyBooking.status, 
-        customer: anyBooking.customer,
-        customerType: typeof anyBooking.customer,
-        userId: req.user.id,
-        userIdType: typeof req.user.id,
-        customerMatch: anyBooking.customer.toString() === req.user.id.toString()
-      } : 'No booking found at all');
+    // First try to find in regular bookings
+    if (bookingTypeToUse === 'regular' || !bookingType) {
+      booking = await Booking.findOne({
+        _id: bookingId,
+        customer: req.user.id,
+        status: { $in: ["Completed", "Pending Confirmation"] },
+      });
       
+      if (booking) {
+        bookingTypeToUse = 'regular';
+      }
+    }
+
+    // If not found in regular bookings, try service profile bookings
+    if (!booking && (bookingTypeToUse === 'serviceProfile' || !bookingType)) {
+      booking = await ServiceProfileBooking.findOne({
+        _id: bookingId,
+        customer: req.user.id,
+        status: { $in: ["Completed", "Pending Confirmation"] },
+      });
+      
+      if (booking) {
+        bookingTypeToUse = 'serviceProfile';
+      }
+    }
+
+    console.log('Found booking:', booking ? { 
+      id: booking._id, 
+      status: booking.status, 
+      customer: booking.customer,
+      type: bookingTypeToUse
+    } : 'No booking found');
+
+    if (!booking) {
       return res.status(400).json({ 
         message: "Invalid or incomplete booking. Please ensure the booking is completed or pending confirmation and belongs to you." 
       });
@@ -55,11 +71,12 @@ exports.createReview = async (req, res) => {
       customerId: req.user.id,
       artisanId,
       bookingId,
+      bookingType: bookingTypeToUse,
       rating,
       comment,
     });
 
-    // console.log('Review created successfully:', review);
+    console.log('Review created successfully:', review);
 
     // Update artisan rating
     await updateArtisanRating(artisanId);
@@ -75,10 +92,25 @@ exports.createReview = async (req, res) => {
 exports.getMyReviews = async (req, res) => {
   try {
     const reviews = await Review.find({ customerId: req.user.id })
-      .populate("artisanId", "name")
-      .populate("bookingId", "service date");
+      .populate("artisanId", "name");
 
-    res.json(reviews);
+    // Manually populate booking details based on booking type
+    const reviewsWithBookings = await Promise.all(reviews.map(async (review) => {
+      let bookingDetails = null;
+      
+      if (review.bookingType === 'serviceProfile') {
+        bookingDetails = await ServiceProfileBooking.findById(review.bookingId).select('serviceName date');
+      } else {
+        bookingDetails = await Booking.findById(review.bookingId).select('service date');
+      }
+      
+      return {
+        ...review.toObject(),
+        bookingDetails
+      };
+    }));
+
+    res.json(reviewsWithBookings);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -94,10 +126,25 @@ exports.getArtisanReviews = async (req, res) => {
 
     const reviews = await Review.find({ artisanId: req.user.id })
       .populate("customerId", "name")
-      .populate("bookingId", "service date")
       .sort({ date: -1 }); // Sort by date, newest first
 
-    res.json(reviews);
+    // Manually populate booking details based on booking type
+    const reviewsWithBookings = await Promise.all(reviews.map(async (review) => {
+      let bookingDetails = null;
+      
+      if (review.bookingType === 'serviceProfile') {
+        bookingDetails = await ServiceProfileBooking.findById(review.bookingId).select('serviceName date');
+      } else {
+        bookingDetails = await Booking.findById(review.bookingId).select('service date');
+      }
+      
+      return {
+        ...review.toObject(),
+        bookingDetails
+      };
+    }));
+
+    res.json(reviewsWithBookings);
   } catch (err) {
     console.error('Error fetching artisan reviews:', err);
     res.status(500).json({ message: err.message });
@@ -115,11 +162,26 @@ exports.getPublicArtisanReviews = async (req, res) => {
 
     const reviews = await Review.find({ artisanId })
       .populate("customerId", "name")
-      .populate("bookingId", "service date")
       .sort({ date: -1 }) // Sort by date, newest first
       .limit(10); // Limit to 10 most recent reviews for performance
 
-    res.json(reviews);
+    // Manually populate booking details based on booking type
+    const reviewsWithBookings = await Promise.all(reviews.map(async (review) => {
+      let bookingDetails = null;
+      
+      if (review.bookingType === 'serviceProfile') {
+        bookingDetails = await ServiceProfileBooking.findById(review.bookingId).select('serviceName date');
+      } else {
+        bookingDetails = await Booking.findById(review.bookingId).select('service date');
+      }
+      
+      return {
+        ...review.toObject(),
+        bookingDetails
+      };
+    }));
+
+    res.json(reviewsWithBookings);
   } catch (err) {
     console.error('Error fetching public artisan reviews:', err);
     res.status(500).json({ message: err.message });

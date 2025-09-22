@@ -14,10 +14,13 @@ const ArtisanRequests = () => {
   const { user } = useAuth(); // Get user to check role
   const {
     artisanBookings: requests, // Renamed for clarity, assuming BookingContext provides artisanBookings
+    serviceProfileBookings, // Service profile bookings
     loading,
     error,
     fetchArtisanBookings, // Assuming a function to fetch artisan bookings
+    fetchServiceProfileBookings, // Function to fetch service profile bookings
     updateBookingStatus, // Function to update booking status
+    updateServiceProfileBookingStatus, // Function to update service profile booking status
   } = useContext(BookingContext);
 
   // Validate status values - only Pending, Accepted, Declined
@@ -50,22 +53,36 @@ const ArtisanRequests = () => {
   };
 
   useEffect(() => {
-    if (user?.role === "artisan" && fetchArtisanBookings) {
-      fetchArtisanBookings();
+    if (user?.role === "artisan") {
+      if (fetchArtisanBookings) {
+        fetchArtisanBookings();
+      }
+      if (fetchServiceProfileBookings) {
+        fetchServiceProfileBookings();
+      }
     }
-  }, [user, fetchArtisanBookings]); // Depend on user and fetchArtisanBookings
+  }, [user, fetchArtisanBookings, fetchServiceProfileBookings]); // Depend on user and both fetch functions
 
-  const acceptedRequests = requests?.filter((r) => normalizeStatus(r.status) === "Accepted").length || 0;
-  const declinedRequests = requests?.filter((r) => normalizeStatus(r.status) === "Declined").length || 0;
-  const totalRequests = requests?.length || 0;
+  // Combine both types of bookings
+  const allBookings = [
+    ...(requests || []).map(booking => ({ ...booking, type: 'regular' })),
+    ...(serviceProfileBookings || []).map(booking => ({ ...booking, type: 'serviceProfile' }))
+  ];
+
+  const acceptedRequests = allBookings?.filter((r) => normalizeStatus(r.status) === "Accepted").length || 0;
+  const declinedRequests = allBookings?.filter((r) => normalizeStatus(r.status) === "Declined").length || 0;
+  const totalRequests = allBookings?.length || 0;
 
   const filteredRequests =
-    filterStatus === "all" ? requests : requests?.filter((r) => normalizeStatus(r.status) === filterStatus);
+    filterStatus === "all" ? allBookings : allBookings?.filter((r) => normalizeStatus(r.status) === filterStatus);
 
   // Debug logging removed for production
 
   // Accept request
   const handleAccept = async (id) => {
+    // Find the booking to determine its type
+    const booking = allBookings.find(b => b._id === id);
+    const type = booking?.type || 'regular';
     try {
       // Check KYC verification status before accepting
       if (!user?.kycVerified || user?.kycStatus !== 'approved') {
@@ -82,7 +99,9 @@ const ArtisanRequests = () => {
       }
       
       console.log(`🔄 Accepting booking ${id} with status: ${newStatus}`);
-      const updatedBooking = await updateBookingStatus(id, newStatus);
+      const updatedBooking = type === 'serviceProfile' 
+        ? await updateServiceProfileBookingStatus(id, newStatus)
+        : await updateBookingStatus(id, newStatus);
       console.log(`✅ Booking updated:`, updatedBooking);
       
       // Verify the status was updated correctly
@@ -121,6 +140,9 @@ const ArtisanRequests = () => {
 
   // Decline request
   const handleDecline = async (id) => {
+    // Find the booking to determine its type
+    const booking = allBookings.find(b => b._id === id);
+    const type = booking?.type || 'regular';
     try {
       setActionLoading(prev => ({ ...prev, [id]: 'declining' }));
       
@@ -130,7 +152,9 @@ const ArtisanRequests = () => {
       }
       
       console.log(`🔄 Declining booking ${id} with status: ${newStatus}`);
-      const updatedBooking = await updateBookingStatus(id, newStatus);
+      const updatedBooking = type === 'serviceProfile' 
+        ? await updateServiceProfileBookingStatus(id, newStatus)
+        : await updateBookingStatus(id, newStatus);
       console.log(`✅ Booking updated:`, updatedBooking);
       
       // Verify the status was updated correctly
@@ -187,7 +211,10 @@ const ArtisanRequests = () => {
             </select>
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
-              onClick={fetchArtisanBookings} // Refresh from context
+              onClick={() => {
+                if (fetchArtisanBookings) fetchArtisanBookings();
+                if (fetchServiceProfileBookings) fetchServiceProfileBookings();
+              }} // Refresh both types of bookings
             >
               Refresh
             </button>
@@ -293,6 +320,7 @@ const ArtisanRequests = () => {
                     <th className="p-3 font-medium">Request ID</th>
                     <th className="p-3 font-medium">Customer</th>
                     <th className="p-3 font-medium">Service</th>
+                    <th className="p-3 font-medium">Type</th>
                     <th className="p-3 font-medium">Date</th>
                     <th className="p-3 font-medium">Status</th>
                     <th className="p-3 font-medium">Actions</th>
@@ -303,7 +331,16 @@ const ArtisanRequests = () => {
                     <tr key={request._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-gray-600">{request._id}</td>
                       <td className="p-3 text-gray-600">{request.customer?.name || `Customer ${request._id}`}</td>
-                      <td className="p-3 text-gray-600">{request.service}</td>
+                      <td className="p-3 text-gray-600">{request.service || request.serviceName}</td>
+                      <td className="p-3 text-gray-600">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          request.type === 'serviceProfile' 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {request.type === 'serviceProfile' ? 'Service' : 'Regular'}
+                        </span>
+                      </td>
                       <td className="p-3 text-gray-600">{new Date(request.date).toLocaleDateString()}</td>
                       <td className="p-3">
                         {(() => {

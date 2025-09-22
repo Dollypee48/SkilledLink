@@ -1,6 +1,7 @@
 // pages/ArtisanDashboard.jsx
 import React, { useEffect, useState } from 'react';
 import { ArtisanContext } from '../../context/ArtisanContext';
+import { useBooking } from '../../context/BookingContext';
 import { useAuth } from '../../context/AuthContext';
 import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
 import { updateEarnings } from '../../services/artisanService';
@@ -11,6 +12,7 @@ import {
   TrendingUp,
   Users,
   ArrowRight,
+  ArrowLeft,
   CheckCircle,
   Phone,
   Mail,
@@ -19,7 +21,8 @@ import {
   Plus,
   Home,
   Briefcase,
-  Settings
+  Settings,
+  XCircle
 } from 'lucide-react';
 import ProfilePictureModal from '../../components/common/ProfilePictureModal';
 import PremiumBadge from '../../components/common/PremiumBadge';
@@ -30,7 +33,15 @@ import { toast } from 'react-toastify';
 
 const ArtisanDashboard = () => {
   const { user, accessToken, isPremium } = useAuth();
-  const { profile: currentArtisan, loadProfile: fetchCurrentProfile, fetchBookings, bookings, loading, error } = React.useContext(ArtisanContext);
+  const { profile: currentArtisan, loadProfile: fetchCurrentProfile } = React.useContext(ArtisanContext);
+  const { 
+    artisanBookings, 
+    serviceProfileBookings, 
+    fetchArtisanBookings, 
+    fetchServiceProfileBookings, 
+    loading: bookingsLoading, 
+    error: bookingsError 
+  } = useBooking();
   const navigate = useNavigate();
   
   // Earnings state
@@ -45,20 +56,37 @@ const ArtisanDashboard = () => {
   // Service Profile modal state
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [editingServiceProfile, setEditingServiceProfile] = useState(null);
+  
+  // Pagination state for recent bookings
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
 
   // Fetch artisan profile and bookings on mount
   useEffect(() => {
     if (user?.role === 'artisan') {
       fetchCurrentProfile();
-      fetchBookings();
+      fetchArtisanBookings();
+      fetchServiceProfileBookings();
     } else {
       navigate('/login', { replace: true });
     }
-  }, [user, fetchCurrentProfile, fetchBookings, navigate]);
+  }, [user, fetchCurrentProfile, fetchArtisanBookings, fetchServiceProfileBookings, navigate]);
 
-  // Calculate summary stats from bookings
-  const pendingBookings = bookings?.filter((booking) => booking.status === 'Pending').length || 0;
-  const completedBookings = bookings?.filter((booking) => booking.status === 'Completed').length || 0;
+  // Combine regular and service profile bookings
+  const allBookings = [
+    ...(artisanBookings || []).map(booking => ({ ...booking, type: 'regular' })),
+    ...(serviceProfileBookings || []).map(booking => ({ ...booking, type: 'serviceProfile' }))
+  ];
+
+  // Calculate summary stats from all bookings
+  const pendingBookings = allBookings?.filter((booking) => booking.status === 'Pending').length || 0;
+  const completedBookings = allBookings?.filter((booking) => booking.status === 'Completed').length || 0;
+
+  // Pagination calculations
+  const totalPages = Math.ceil(allBookings?.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentBookings = allBookings?.slice(startIndex, endIndex) || [];
 
   // Handle earnings input
   const handleEditEarnings = () => {
@@ -117,6 +145,23 @@ const ArtisanDashboard = () => {
     setEditingServiceProfile(null);
   };
 
+  // Pagination functions
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleViewAll = () => {
+    navigate('/artisan/my-jobs');
+  };
+
   return (
     <ArtisanLayout>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-[#151E3D]/5">
@@ -163,7 +208,7 @@ const ArtisanDashboard = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Active Bookings</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
-                    {bookings?.filter(b => b.status === 'Accepted' || b.status === 'Pending Confirmation').length || 0}
+                    {allBookings?.filter(b => b.status === 'Accepted' || b.status === 'Pending Confirmation').length || 0}
                   </p>
                   <p className="text-xs text-blue-600 mt-1 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -297,26 +342,29 @@ const ArtisanDashboard = () => {
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-gray-900">Recent Bookings</h2>
-                    <button className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center">
+                    <button 
+                      onClick={handleViewAll}
+                      className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center"
+                    >
                       View all
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </button>
                   </div>
                 </div>
                 <div className="p-6">
-                  {loading ? (
+                  {bookingsLoading ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#151E3D]"></div>
                       <span className="ml-3 text-gray-600">Loading bookings...</span>
                     </div>
-                  ) : error ? (
+                  ) : bookingsError ? (
                     <div className="text-center py-12">
                       <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <XCircle className="w-8 h-8 text-red-600" />
                       </div>
-                      <p className="text-red-600 font-medium">{error}</p>
+                      <p className="text-red-600 font-medium">{bookingsError}</p>
                     </div>
-                  ) : bookings?.length === 0 ? (
+                  ) : allBookings?.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CalendarCheck className="w-8 h-8 text-gray-400" />
@@ -333,16 +381,21 @@ const ArtisanDashboard = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {bookings?.slice(0, 5).map((booking) => (
+                      {currentBookings?.map((booking) => (
                         <div key={booking._id || booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                           <div className="flex items-center space-x-4">
                             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
                               <Users className="w-6 h-6 text-[#151E3D]" />
                             </div>
                             <div>
-                              <h3 className="font-medium text-gray-900">{booking.service || "Service"}</h3>
+                              <h3 className="font-medium text-gray-900">{booking.service || booking.serviceName || "Service"}</h3>
                               <p className="text-sm text-gray-600">
                                 {booking.customer?.name || booking.customerName || "Customer"} • {booking.date ? new Date(booking.date).toLocaleDateString() : "N/A"}
+                                {booking.type === 'serviceProfile' && (
+                                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Service
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -389,6 +442,36 @@ const ArtisanDashboard = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                  
+                  {/* Pagination Controls */}
+                  {allBookings?.length > itemsPerPage && (
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={handlePreviousPage}
+                          disabled={currentPage === 1}
+                          className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ArrowLeft className="w-4 h-4 mr-1" />
+                          Previous
+                        </button>
+                        <span className="text-sm text-gray-700">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={currentPage === totalPages}
+                          className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                          <ArrowRight className="w-4 h-4 ml-1" />
+                        </button>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Showing {startIndex + 1}-{Math.min(endIndex, allBookings?.length)} of {allBookings?.length} bookings
+                      </div>
                     </div>
                   )}
                 </div>

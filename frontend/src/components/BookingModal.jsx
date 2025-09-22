@@ -65,10 +65,14 @@ const BookingModal = () => {
     }
 
     const fullBookingData = {
-      artisan: selectedArtisan._id,
-      service: selectedArtisan.service, // Use the artisan's primary service directly
+      artisan: selectedArtisan._id || selectedArtisan, // Handle both object and ID string
+      service: selectedArtisan.service || 'General Service', // Use the artisan's primary service directly
       ...bookingDetails,
     };
+
+    // Debug logging
+    console.log('Booking data being sent:', fullBookingData);
+    console.log('Selected artisan:', selectedArtisan);
 
     try {
       await createBooking(fullBookingData);

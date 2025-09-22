@@ -1,9 +1,10 @@
 import React, { useState, useContext, useEffect } from "react"; // Added useContext and useEffect
 import { CalendarCheck, CheckCircle, Clock, RefreshCw, Eye, MapPin, Phone, Calendar, Clock as ClockIcon, FileText, MessageCircle, X, Check } from "lucide-react";
 import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
-import { ArtisanContext } from "../../context/ArtisanContext"; // Import ArtisanContext
+import { BookingContext } from "../../context/BookingContext"; // Import BookingContext instead of ArtisanContext
 import useAuth from "../../hooks/useAuth"; // Import useAuth to potentially refresh data
 import { BookingService } from "../../services/bookingService"; // Import BookingService
+import { ServiceProfileBookingService } from "../../services/serviceProfileBookingService"; // Import ServiceProfileBookingService
 import { messageService } from "../../services/messageService"; // Import message service
 import { useNotification } from "../../context/NotificationContext"; // Import notification context
 import { useMessage } from "../../context/MessageContext"; // Import MessageContext for chat functionality
@@ -16,17 +17,31 @@ const MyJobs = () => {
   const [selectedBooking, setSelectedBooking] = useState(null); // Selected booking for modal
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
   const { user } = useAuth(); // Use useAuth to get user info
-  const { bookings, loading, error, fetchBookings } = useContext(ArtisanContext); // Get real data from ArtisanContext
+  const { 
+    artisanBookings, 
+    serviceProfileBookings, 
+    loading, 
+    error, 
+    fetchArtisanBookings, 
+    fetchServiceProfileBookings,
+    updateBookingStatus,
+    updateServiceProfileBookingStatus
+  } = useContext(BookingContext); // Get data from BookingContext
   const { notifyJobStatusChange, showNotification } = useNotification(); // Get notification functions
   const { selectRecipient } = useMessage(); // Get selectRecipient for chat functionality
   const navigate = useNavigate(); // Get navigate for navigation
 
   useEffect(() => {
-    // Optionally refresh bookings when component mounts or user/filter changes
-    if (user && user.role === 'artisan' && fetchBookings) {
-      fetchBookings();
+    // Fetch both types of bookings when component mounts or user changes
+    if (user && user.role === 'artisan') {
+      if (fetchArtisanBookings) {
+        fetchArtisanBookings();
+      }
+      if (fetchServiceProfileBookings) {
+        fetchServiceProfileBookings();
+      }
     }
-  }, [user, fetchBookings]);
+  }, [user, fetchArtisanBookings, fetchServiceProfileBookings]);
 
   // Function to handle chat with customer
   const handleChatWithCustomer = (booking) => {
@@ -69,7 +84,7 @@ const MyJobs = () => {
       }
 
       // Find the booking to get customer ID
-      const booking = bookings.find(b => b._id === bookingId);
+      const booking = allBookings.find(b => b._id === bookingId);
       if (!booking) {
         alert('Booking not found');
         return;
@@ -103,11 +118,18 @@ const MyJobs = () => {
       }
 
       // Change status to "Pending Confirmation" - wait for customer confirmation
+      if (booking.type === 'serviceProfile') {
+        await ServiceProfileBookingService.updateServiceProfileBookingStatus(bookingId, 'Pending Confirmation', token);
+      } else {
       await BookingService.updateBookingStatus(bookingId, 'Pending Confirmation', token);
+      }
       
       // Refresh the bookings to show updated status
-      if (fetchBookings) {
-        fetchBookings();
+      if (fetchArtisanBookings) {
+        fetchArtisanBookings();
+      }
+      if (fetchServiceProfileBookings) {
+        fetchServiceProfileBookings();
       }
       
       // Notify about job status change
@@ -157,18 +179,29 @@ const MyJobs = () => {
         return;
       }
 
+      // Find the booking to determine its type
+      const booking = allBookings.find(b => b._id === bookingId);
+      if (!booking) {
+        alert('Booking not found');
+        return;
+      }
+
+      if (booking.type === 'serviceProfile') {
+        await ServiceProfileBookingService.updateServiceProfileBookingStatus(bookingId, 'Completed', token);
+      } else {
       await BookingService.updateBookingStatus(bookingId, 'Completed', token);
+      }
       
       // Refresh the bookings to show updated status
-      if (fetchBookings) {
-        fetchBookings();
+      if (fetchArtisanBookings) {
+        fetchArtisanBookings();
+      }
+      if (fetchServiceProfileBookings) {
+        fetchServiceProfileBookings();
       }
       
       // Notify about job status change
-      const booking = bookings.find(b => b._id === bookingId);
-      if (booking) {
         notifyJobStatusChange(booking, 'Completed', 'artisan');
-      }
       
       setSuccessMessage('Job marked as completed successfully!');
       // Clear success message after 5 seconds
@@ -201,14 +234,20 @@ const MyJobs = () => {
   };
 
 
+  // Combine both types of bookings
+  const allBookings = [
+    ...(artisanBookings || []).map(booking => ({ ...booking, type: 'regular' })),
+    ...(serviceProfileBookings || []).map(booking => ({ ...booking, type: 'serviceProfile' }))
+  ];
+
   const filteredBookings =
     filterStatus === "all"
-      ? bookings
-      : bookings.filter((b) => b.status === filterStatus);
+      ? allBookings
+      : allBookings.filter((b) => b.status === filterStatus);
 
-  const completedJobs = bookings?.filter((b) => b.status === "Completed").length || 0;
-  const pendingJobs = bookings?.filter((b) => b.status === "Pending").length || 0;
-  const totalJobs = bookings?.length || 0;
+  const completedJobs = allBookings?.filter((b) => b.status === "Completed").length || 0;
+  const pendingJobs = allBookings?.filter((b) => b.status === "Pending").length || 0;
+  const totalJobs = allBookings?.length || 0;
 
   return (
     <ArtisanLayout>
@@ -232,7 +271,10 @@ const MyJobs = () => {
             </select>
             <button
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
-              onClick={fetchBookings} // Call fetchBookings from context
+              onClick={() => {
+                if (fetchArtisanBookings) fetchArtisanBookings();
+                if (fetchServiceProfileBookings) fetchServiceProfileBookings();
+              }} // Fetch both types of bookings
             >
               <RefreshCw className="w-4 h-4" /> Refresh
             </button>
@@ -297,7 +339,7 @@ const MyJobs = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">In Progress Jobs</p>
-                  <p className="text-xl font-semibold text-gray-900">{bookings?.filter((b) => b.status === "Accepted").length || 0}</p>
+                  <p className="text-xl font-semibold text-gray-900">{allBookings?.filter((b) => b.status === "Accepted").length || 0}</p>
                 </div>
               </div>
             </div>
@@ -333,6 +375,7 @@ const MyJobs = () => {
                     <th className="p-3 font-medium">Job ID</th>
                     <th className="p-3 font-medium">Customer</th>
                     <th className="p-3 font-medium">Service</th>
+                    <th className="p-3 font-medium">Type</th>
                     <th className="p-3 font-medium">Date</th>
                     <th className="p-3 font-medium">Status</th>
                     <th className="p-3 font-medium">Actions</th>
@@ -342,9 +385,18 @@ const MyJobs = () => {
                   {filteredBookings.map((booking) => (
                     <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-gray-600">{booking._id}</td>
-                      <td className="p-3 text-gray-600">{booking.customer?.name || "N/A"}</td> {/* Access customer name */}
-                      <td className="p-3 text-gray-600">{booking.service}</td>
-                      <td className="p-3 text-gray-600">{new Date(booking.date).toLocaleDateString()}</td> {/* Format date */}
+                      <td className="p-3 text-gray-600">{booking.customer?.name || "N/A"}</td>
+                      <td className="p-3 text-gray-600">{booking.service || booking.serviceName}</td>
+                      <td className="p-3 text-gray-600">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          booking.type === 'serviceProfile' 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {booking.type === 'serviceProfile' ? 'Service' : 'Regular'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-gray-600">{new Date(booking.date).toLocaleDateString()}</td>
                       <td className="p-3">
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                           {booking.status === 'Accepted' ? 'In Progress' : booking.status}
@@ -459,7 +511,7 @@ const MyJobs = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Service</p>
-                        <p className="font-semibold text-gray-800">{selectedBooking.service}</p>
+                        <p className="font-semibold text-gray-800">{selectedBooking.service || selectedBooking.serviceName}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -507,6 +559,43 @@ const MyJobs = () => {
                         <p className="font-semibold text-gray-800">{selectedBooking.status}</p>
                       </div>
                     </div>
+                    {selectedBooking.type === 'serviceProfile' && (
+                      <>
+                        {selectedBooking.hourlyRate && (
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-bold text-green-600">₦</span>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Hourly Rate</p>
+                              <p className="font-semibold text-gray-800">₦{selectedBooking.hourlyRate.toLocaleString()}/hour</p>
+                            </div>
+                          </div>
+                        )}
+                        {selectedBooking.estimatedDuration && (
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                              <ClockIcon className="w-4 h-4 text-purple-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Estimated Duration</p>
+                              <p className="font-semibold text-gray-800">{selectedBooking.estimatedDuration} hours</p>
+                            </div>
+                          </div>
+                        )}
+                        {selectedBooking.totalAmount && (
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-bold text-green-600">₦</span>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Total Amount</p>
+                              <p className="font-semibold text-gray-800">₦{selectedBooking.totalAmount.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -524,11 +613,11 @@ const MyJobs = () => {
                       {selectedBooking.description || 'No description provided'}
                     </p>
                   </div>
-                  {selectedBooking.specialRequirements && (
+                  {(selectedBooking.specialRequirements || selectedBooking.additionalDetails) && (
                     <div>
                       <p className="text-sm text-gray-500 mb-2">Special Requirements</p>
                       <p className="text-gray-800 bg-gray-50 p-4 rounded-lg border-l-4 border-orange-200">
-                        {selectedBooking.specialRequirements}
+                        {selectedBooking.specialRequirements || selectedBooking.additionalDetails}
                       </p>
                     </div>
                   )}

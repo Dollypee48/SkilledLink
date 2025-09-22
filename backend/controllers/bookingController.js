@@ -5,9 +5,13 @@ const NotificationService = require('../services/notificationService'); // Impor
 // Create a new booking
 exports.createBooking = async (req, res) => {
   try {
+    console.log('Received booking request:', req.body);
+    console.log('User ID:', req.user.id);
+    
     const { 
       artisan, 
       service, 
+      serviceProfile, // New field for service profile ID
       date, 
       time, 
       description, 
@@ -15,13 +19,35 @@ exports.createBooking = async (req, res) => {
       contactPhone,
       preferredContactMethod,
       specialRequirements,
-      price 
+      price,
+      hourlyRate,
+      totalAmount,
+      estimatedDuration,
+      location
     } = req.body;
     
     // Validate required fields
+    console.log('Validating fields:', {
+      artisan: !!artisan,
+      service: !!service,
+      date: !!date,
+      time: !!time,
+      description: !!description,
+      contactPhone: !!contactPhone
+    });
+    
     if (!artisan || !service || !date || !time || !description || !contactPhone) {
+      console.log('Validation failed - missing required fields');
       return res.status(400).json({ 
-        message: "Missing required fields: artisan, service, date, time, description, and contactPhone are required" 
+        message: "Missing required fields: artisan, service, date, time, description, and contactPhone are required",
+        received: {
+          artisan: !!artisan,
+          service: !!service,
+          date: !!date,
+          time: !!time,
+          description: !!description,
+          contactPhone: !!contactPhone
+        }
       });
     }
 
@@ -43,6 +69,7 @@ exports.createBooking = async (req, res) => {
       customer: req.user.id, // Use 'customer' field
       artisan,
       service,
+      serviceProfile: serviceProfile || null, // Service profile ID if available
       date,
       time,
       description,
@@ -50,14 +77,18 @@ exports.createBooking = async (req, res) => {
       contactPhone,
       preferredContactMethod: preferredContactMethod || 'phone',
       specialRequirements: specialRequirements || '',
-      price: price || 0, // Use provided price or default to 0
+      estimatedDuration: estimatedDuration || null,
+      location: location || '',
+      hourlyRate: hourlyRate || 0, // Hourly rate from service profile
+      totalAmount: totalAmount || 0, // Calculated total amount
+      price: price || totalAmount || 0, // Use totalAmount as price if available
       status: "Pending", // Initial status
     });
 
     // Populate booking with customer and artisan details for notification
     const populatedBooking = await booking.populate([
-      { path: 'customer', select: 'name email' },
-      { path: 'artisan', select: 'name email' }
+      { path: 'customer', select: 'name email phone' },
+      { path: 'artisan', select: 'name email phone' }
     ]);
 
     // Send notification to artisan about new job request
@@ -102,8 +133,8 @@ exports.createBooking = async (req, res) => {
 exports.getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ customer: req.user.id }) // Use 'customer' field
-      .populate("artisan", "name email") // Populate artisan details
-      .populate("customer", "name email"); // Also populate customer details for consistency
+      .populate("artisan", "name email phone") // Populate artisan details
+      .populate("customer", "name email phone"); // Also populate customer details for consistency
     res.json(bookings);
   } catch (err) {
     // console.error("Get my bookings error:", err.message);
@@ -116,7 +147,7 @@ exports.getArtisanBookings = async (req, res) => {
   try {
     const artisanId = req.user.id;
     const bookings = await Booking.find({ artisan: artisanId })
-      .populate("customer", "name email")
+      .populate("customer", "name email phone")
       .populate("artisan", "name email");
 
     res.json(bookings);
@@ -131,7 +162,7 @@ exports.getBookingById = async (req, res) => {
   try {
     // console.log("--- Entering getBookingById controller ---");
     const booking = await Booking.findById(req.params.id)
-      .populate("customer", "name email")
+      .populate("customer", "name email phone")
       .populate("artisan", "name email");
 
     if (!booking) {
@@ -168,7 +199,7 @@ exports.updateBookingStatus = async (req, res) => {
     }
 
     let booking = await Booking.findById(id)
-      .populate("customer", "name email")
+      .populate("customer", "name email phone")
       .populate("artisan", "name email");
 
     if (!booking) {

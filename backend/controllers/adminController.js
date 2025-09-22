@@ -368,7 +368,7 @@ exports.getAllArtisans = async (req, res) => {
 exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate("customer", "name email")
+      .populate("customer", "name email phone")
       .populate("artisan", "name email");
     res.status(200).json(bookings);
   } catch (error) {

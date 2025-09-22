@@ -1,16 +1,151 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Clock, Filter, Search, Eye, ArrowLeft, Briefcase, DollarSign, User, Calendar, XCircle } from 'lucide-react';
+import { Star, MapPin, Clock, Filter, Search, Eye, ArrowLeft, Briefcase, DollarSign, User, Calendar, XCircle, MessageCircle } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { ReviewService } from '../services/reviewService';
-import BookingModal from '../components/BookingModal';
-import { useBooking } from '../context/BookingContext';
+import ServiceProfileBookingModal from '../components/ServiceProfileBookingModal';
+import { MessageProvider } from '../context/MessageContext';
 import serviceProfileService from '../services/serviceProfileService';
+
+// Chat Interface Component
+const ChatInterface = ({ artisan, onClose, messages, loading, onSendMessage, onRefresh }) => {
+  const { user } = useAuth();
+  const [newMessage, setNewMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || sending) return;
+
+    const messageText = newMessage.trim();
+    setNewMessage('');
+    setSending(true);
+
+
+    try {
+      await onSendMessage(messageText, artisan._id);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-6 min-h-[300px] max-h-[400px] bg-gray-50">
+        {loading ? (
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#151E3D]"></div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <MessageCircle className="w-12 h-12 mb-3 text-gray-300" />
+            <p className="text-center font-medium">No messages yet</p>
+            <p className="text-center text-sm text-gray-400">Start the conversation with {artisan.name || 'this artisan'}!</p>
+            <button
+              onClick={onRefresh}
+              className="mt-4 px-4 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors duration-200 text-sm"
+            >
+              Refresh Messages
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.filter(message => message && message.content).map((message) => {
+            // Use the same logic as the main message page
+            const isOwnMessage = message?.sender?._id === user?._id;
+            const messageTime = message?.timestamp || message?.createdAt;
+            
+            return (
+            <div
+              key={message._id + (message.timestamp || message.createdAt)}
+              className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`flex items-end space-x-3 max-w-[70%] ${isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                {/* Avatar for received messages only */}
+                {!isOwnMessage && (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm">
+                    {message?.sender?.name?.charAt(0)?.toUpperCase() || 'A'}
+                  </div>
+                )}
+                
+                {/* Message bubble */}
+                <div className={`relative group ${isOwnMessage ? 'ml-12' : 'mr-12'}`}>
+                  <div className={`px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
+                    isOwnMessage 
+                      ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white rounded-br-md' 
+                      : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
+                  } ${message.isOptimistic ? 'opacity-70' : ''}`}>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message?.content || ''}</p>
+                    
+                    {/* Message time */}
+                    <div className={`text-xs mt-2 ${
+                      isOwnMessage ? 'text-white/70' : 'text-gray-500'
+                    }`}>
+                      {messageTime ? new Date(messageTime).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      }) : 'Just now'}
+                      {message.isOptimistic && ' (Sending...)'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            );
+            })}
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Message Input */}
+      <form onSubmit={sendMessage} className="border-t border-gray-200 p-4 bg-white">
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder={`Message ${artisan.name || 'this artisan'}...`}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-transparent transition-colors duration-200"
+            disabled={sending}
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim() || sending}
+            className="px-6 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
+          >
+            {sending ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              'Send'
+            )}
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Press Enter to send, or click the Send button
+        </p>
+      </form>
+    </div>
+  );
+};
 
 const AllArtisans = () => {
   const { user } = useAuth();
-  const { setSelectedArtisan, openBookingModal } = useBooking();
   const navigate = useNavigate();
   const [serviceProfiles, setServiceProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +159,12 @@ const AllArtisans = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [serviceProfileReviews, setServiceProfileReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [selectedArtisanForChat, setSelectedArtisanForChat] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [showServiceBookingModal, setShowServiceBookingModal] = useState(false);
+  const [selectedServiceProfileForBooking, setSelectedServiceProfileForBooking] = useState(null);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -60,9 +201,15 @@ const AllArtisans = () => {
       return;
     }
     
-    // Set the selected artisan and open booking modal
-    setSelectedArtisan(serviceProfile.artisanId);
-    openBookingModal();
+    // Set the selected service profile and open service booking modal
+    setSelectedServiceProfileForBooking(serviceProfile);
+    setShowServiceBookingModal(true);
+  };
+
+  // Close service booking modal
+  const closeServiceBookingModal = () => {
+    setShowServiceBookingModal(false);
+    setSelectedServiceProfileForBooking(null);
   };
 
   // Handle view profile
@@ -95,6 +242,125 @@ const AllArtisans = () => {
     setShowProfileModal(false);
     setSelectedServiceProfile(null);
     setServiceProfileReviews([]);
+  };
+
+  // Handle chat click
+  const handleChatClick = (serviceProfile) => {
+    if (!user) {
+      navigate('/login?redirect=/all-artisans');
+      return;
+    }
+    
+    if (user.role !== 'customer') {
+      alert('Only customers can chat with artisans. Please log in as a customer.');
+      return;
+    }
+
+    // Ensure we have a valid artisan ID
+    const artisanId = serviceProfile.artisanId?._id || serviceProfile.artisanId;
+    if (!artisanId) {
+      console.error('No valid artisan ID found:', serviceProfile.artisanId);
+      alert('Unable to start chat. Artisan information is missing.');
+      return;
+    }
+
+    setSelectedArtisanForChat(serviceProfile.artisanId);
+    setShowChatModal(true);
+    // Load conversation when opening chat
+    loadChatConversation(artisanId);
+  };
+
+  // Close chat modal
+  const closeChatModal = () => {
+    setShowChatModal(false);
+    setSelectedArtisanForChat(null);
+    // Don't clear messages, keep them for when modal reopens
+  };
+
+  // Load chat conversation
+  const loadChatConversation = async (artisanId) => {
+    setChatLoading(true);
+    try {
+      // Validate artisan ID
+      if (!artisanId) {
+        console.error('No artisan ID provided to loadChatConversation');
+        setChatMessages([]);
+        return;
+      }
+
+      console.log('Loading conversation for artisan ID:', artisanId);
+      
+      const { messageService } = await import('../services/messageService');
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
+        console.error('No access token found');
+        setChatMessages([]);
+        return;
+      }
+
+      const messages = await messageService.getConversation(artisanId, token);
+      
+      // The backend returns messages array directly, not wrapped in an object
+      console.log('Received messages from backend:', messages);
+      if (Array.isArray(messages)) {
+        setChatMessages(messages);
+      } else {
+        console.log('Messages is not an array:', typeof messages, messages);
+        setChatMessages([]);
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      setChatMessages([]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  // Send chat message
+  const handleSendMessage = async (messageText, artisanId) => {
+    try {
+      // Ensure we have a valid artisan ID
+      const validArtisanId = artisanId?._id || artisanId;
+      if (!validArtisanId) {
+        throw new Error('Invalid artisan ID');
+      }
+
+      // Create optimistic message
+      const tempMessage = {
+        _id: Date.now().toString(),
+        content: messageText,
+        sender: user.id,
+        recipient: validArtisanId,
+        timestamp: new Date().toISOString(),
+        isOptimistic: true
+      };
+
+      setChatMessages(prev => [...prev, tempMessage]);
+
+      // Send message via messageService
+      const { messageService } = await import('../services/messageService');
+      const token = localStorage.getItem('accessToken');
+      const sentMessage = await messageService.sendMessage(validArtisanId, messageText, null, null, token);
+      
+      // Replace optimistic message with real message
+      setChatMessages(prev => 
+        prev.map(msg => 
+          msg._id === tempMessage._id 
+            ? { 
+                ...sentMessage, 
+                isOptimistic: false,
+                timestamp: sentMessage.timestamp || new Date().toISOString()
+              }
+            : msg
+        )
+      );
+
+    } catch (error) {
+      // Remove optimistic message on error
+      setChatMessages(prev => prev.filter(msg => msg._id !== tempMessage._id));
+      throw error;
+    }
   };
 
   // Calculate average rating from reviews
@@ -498,6 +764,14 @@ const AllArtisans = () => {
                     <span className="sm:hidden">View</span>
                   </button>
                   <button
+                    onClick={() => handleChatClick(serviceProfile)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm sm:text-base"
+                  >
+                    <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Chat</span>
+                    <span className="sm:hidden">Chat</span>
+                  </button>
+                  <button
                     onClick={() => handleBookClick(serviceProfile)}
                     disabled={!serviceProfile.isActive}
                     className={`flex-1 text-center py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base ${
@@ -586,7 +860,7 @@ const AllArtisans = () => {
                           {selectedServiceProfile.artisanId?.name || 'Unknown Artisan'}
                         </span>
                       </div>
-
+                      
                       {/* Location */}
                       <div className="flex items-center justify-center md:justify-start space-x-2 text-gray-600 mb-3">
                         <MapPin className="w-4 h-4 text-gray-500" />
@@ -606,12 +880,12 @@ const AllArtisans = () => {
                           
                           if (kycVerified && kycStatus === 'approved') {
                             return (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
-                                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                                KYC Verified
-                              </span>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            KYC Verified
+                          </span>
                             );
                           } else if (kycStatus === 'pending') {
                             return (
@@ -633,12 +907,12 @@ const AllArtisans = () => {
                             );
                           } else {
                             return (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800 border border-gray-200">
-                                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                </svg>
-                                Not Verified
-                              </span>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                            </svg>
+                            Not Verified
+                          </span>
                             );
                           }
                         })()}
@@ -784,7 +1058,7 @@ const AllArtisans = () => {
                           <p className="font-medium text-gray-900">
                             {selectedServiceProfile.artisanId?.artisanProfile?.experience || 'Not specified'}
                           </p>
-                        </div>
+                    </div>
                       </div>
 
                     </div>
@@ -1092,11 +1366,69 @@ const AllArtisans = () => {
           </div>
         )}
 
-        {/* Booking Modal */}
-        <BookingModal />
+        {/* Chat Modal */}
+        {showChatModal && selectedArtisanForChat && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[80vh] flex flex-col">
+              {/* Chat Modal Header */}
+              <div className="bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white p-4 rounded-t-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">Chat with {selectedArtisanForChat.name || 'Artisan'}</h3>
+                      <p className="text-sm text-white/80">Start a conversation</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={closeChatModal}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors duration-200"
+                  >
+                    <XCircle className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Chat Modal Content */}
+              <div className="flex-1 flex flex-col p-4">
+                <ChatInterface 
+                  artisan={selectedArtisanForChat}
+                  onClose={closeChatModal}
+                  messages={chatMessages}
+                  loading={chatLoading}
+                  onSendMessage={handleSendMessage}
+                  onRefresh={() => {
+                    const artisanId = selectedArtisanForChat?._id || selectedArtisanForChat;
+                    if (artisanId) {
+                      loadChatConversation(artisanId);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Service Profile Booking Modal */}
+        <ServiceProfileBookingModal 
+          isOpen={showServiceBookingModal}
+          onClose={closeServiceBookingModal}
+          serviceProfile={selectedServiceProfileForBooking}
+        />
       </div>
     </div>
   );
 };
 
-export default AllArtisans;
+// Wrap AllArtisans with MessageProvider for chat functionality
+const AllArtisansWithProvider = () => {
+  return (
+    <MessageProvider>
+      <AllArtisans />
+    </MessageProvider>
+  );
+};
+
+export default AllArtisansWithProvider;

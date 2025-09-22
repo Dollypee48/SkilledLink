@@ -488,7 +488,7 @@ exports.suggestArtisansByLocation = async (req, res) => {
 exports.getArtisanBookings = async (req, res) => {
   try {
     const artisanId = req.user.id; // User ID from authenticated token
-    const bookings = await Booking.find({ artisan: artisanId }).populate("customer", "name email"); // Assuming 'artisan' field in Booking model
+    const bookings = await Booking.find({ artisan: artisanId }).populate("customer", "name email phone"); // Assuming 'artisan' field in Booking model
     res.json(bookings);
   } catch (err) {
     console.error("Get artisan bookings error:", err.message);
