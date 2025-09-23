@@ -475,8 +475,6 @@ const AllArtisans = () => {
         }
       });
       
-      console.log('Artisans response:', response.data);
-      console.log('Artisans count:', response.data.artisans?.length || 0);
       setArtisans(response.data.artisans || []);
       setPagination(response.data.pagination || {
         currentPage: 1,
@@ -513,10 +511,6 @@ const AllArtisans = () => {
       
       const response = await serviceProfileService.getAllServiceProfiles(filters);
       
-      console.log('Service profiles response:', response.serviceProfiles);
-      if (response.serviceProfiles && response.serviceProfiles.length > 0) {
-        console.log('First service profile artisan data:', response.serviceProfiles[0].artisanId);
-      }
       
       setServiceProfiles(response.serviceProfiles || []);
       setPagination(response.pagination || {
@@ -893,7 +887,7 @@ const AllArtisans = () => {
                     <span className="sm:hidden">KYC</span>
                   </div>
                 )}
-                {item.artisanId?.subscriptionStatus === 'premium' && (
+                {(item.artisanId?.subscriptionStatus === 'premium' || item.artisanId?.isPremium) && (
                   <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-10">
                     <PremiumBadge />
                   </div>
@@ -1021,7 +1015,7 @@ const AllArtisans = () => {
                         <span className="sm:hidden">KYC</span>
                       </div>
                     )}
-                    {item.subscriptionStatus === 'premium' && (
+                    {item.isPremium && (
                       <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-10">
                         <PremiumBadge />
                       </div>

@@ -55,14 +55,6 @@ const Subscription = () => {
         subscriptionService.getCurrentSubscription(accessToken)
       ]);
       
-      console.log('Fetched subscription data:', subscriptionResponse);
-      console.log('Subscription status:', subscriptionResponse.subscription?.status);
-      console.log('Subscription plan:', subscriptionResponse.subscription?.plan);
-      console.log('Subscription end date:', subscriptionResponse.subscription?.endDate);
-      console.log('IsPremium:', subscriptionResponse.isPremium);
-      console.log('PremiumFeatures:', subscriptionResponse.premiumFeatures);
-      console.log('CanAcceptJobs:', subscriptionResponse.canAcceptJobs);
-      console.log('RemainingJobs:', subscriptionResponse.remainingJobs);
       
       setPlans(plansResponse.plans);
       setCurrentSubscription(subscriptionResponse);
@@ -98,10 +90,8 @@ const Subscription = () => {
       setIsUpdating(true);
       setError(null);
       
-      console.log('Processing payment success for reference:', reference);
       
       const response = await subscriptionService.verifyPayment(reference, accessToken);
-      console.log('Payment verification response:', response);
       
       // Update user context with premium status immediately
       if (response.user) {

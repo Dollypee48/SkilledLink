@@ -1,6 +1,11 @@
 const User = require('../models/User');
 const { paystack, SUBSCRIPTION_PLANS, PAYSTACK_EVENTS } = require('../config/paystack');
 
+// Validate Paystack configuration
+if (!process.env.PAYSTACK_SECRET_KEY) {
+  console.error('❌ PAYSTACK_SECRET_KEY environment variable is not set');
+}
+
 // @desc    Get subscription plans
 // @route   GET /api/subscription/plans
 // @access  Public
@@ -37,8 +42,6 @@ exports.getCurrentSubscription = async (req, res) => {
 
     // Fix inconsistent subscription states (premium plan but inactive status)
     if (user.subscription.plan === 'premium' && user.subscription.status === 'inactive') {
-      console.log('🔧 Fixing inconsistent subscription state for user:', user.email);
-      console.log('🔧 Current state - Plan:', user.subscription.plan, 'Status:', user.subscription.status);
       
       // Activate the premium subscription
       const endDate = new Date();
@@ -65,15 +68,8 @@ exports.getCurrentSubscription = async (req, res) => {
       user.jobAcceptance.acceptedJobs = 0; // Reset counter
       
       await user.save();
-      console.log('✅ Fixed subscription state - now active');
     }
 
-    console.log('🔍 Current subscription for user:', user.email);
-    console.log('🔍 Subscription data:', user.subscription);
-    console.log('🔍 IsPremium:', user.isPremium);
-    console.log('🔍 PremiumFeatures:', user.premiumFeatures);
-    console.log('🔍 CanAcceptJobs:', user.canAcceptJobs);
-    console.log('🔍 RemainingJobs:', user.remainingJobs);
 
     res.status(200).json({
       success: true,
@@ -101,10 +97,8 @@ exports.initializeSubscription = async (req, res) => {
     const { plan } = req.body;
     const userId = req.user.id;
 
-    console.log('🔍 Initialize subscription request:', { plan, userId });
 
     if (!plan || !SUBSCRIPTION_PLANS[plan]) {
-      console.log('❌ Invalid plan:', plan, 'Available plans:', Object.keys(SUBSCRIPTION_PLANS));
       return res.status(400).json({
         success: false,
         message: 'Invalid subscription plan'
@@ -134,13 +128,23 @@ exports.initializeSubscription = async (req, res) => {
       });
     }
 
+    // If user has a cancelled premium subscription, allow them to resubscribe
+    if (user.subscription.plan === 'premium' && user.subscription.status === 'cancelled') {
+      // Reset subscription status to allow new subscription
+      user.subscription.status = 'inactive';
+      user.subscription.startDate = null;
+      user.subscription.endDate = null;
+      user.subscription.autoRenew = false;
+      user.isPremium = false;
+      await user.save();
+    }
+
     const planConfig = SUBSCRIPTION_PLANS[plan];
     const amount = planConfig.price; // Amount in kobo
 
     // Create Paystack customer if not exists
     let customerId = user.subscription.paystackCustomerId;
     if (!customerId) {
-      console.log('🔍 Creating Paystack customer for:', user.email);
       const customer = await paystack.customer.create({
         email: user.email,
         first_name: user.name.split(' ')[0],
@@ -148,10 +152,8 @@ exports.initializeSubscription = async (req, res) => {
         phone: user.phone
       });
 
-      console.log('🔍 Paystack customer creation response:', customer);
 
       if (!customer.status) {
-        console.log('❌ Failed to create Paystack customer:', customer);
         return res.status(400).json({
           success: false,
           message: 'Failed to create Paystack customer'
@@ -166,49 +168,57 @@ exports.initializeSubscription = async (req, res) => {
     }
 
     // Initialize payment transaction with Paystack
-    const transaction = await paystack.transaction.initialize({
-      email: user.email,
-      amount: amount,
-      currency: 'NGN',
-      reference: `sub_${Date.now()}_${userId}`,
-      metadata: {
-        plan: plan,
-        userId: userId,
-        customerId: customerId
-      }
-    });
+    try {
+      const transaction = await paystack.transaction.initialize({
+        email: user.email,
+        amount: amount,
+        currency: 'NGN',
+        reference: `sub_${Date.now()}_${userId}`,
+        metadata: {
+          plan: plan,
+          userId: userId,
+          customerId: customerId
+        }
+      });
 
-    if (!transaction.status) {
-      console.log('❌ Failed to initialize Paystack transaction:', transaction);
-      return res.status(400).json({
+      if (!transaction.status) {
+        return res.status(400).json({
+          success: false,
+          message: 'Failed to initialize payment',
+          details: transaction.message || 'Unknown error'
+        });
+      }
+
+      // Update user subscription details
+      user.subscription.plan = plan;
+      user.subscription.status = 'inactive'; // Will be activated after payment
+      user.subscription.paystackCustomerId = customerId;
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Payment initialized successfully',
+        payment: {
+          authorizationUrl: transaction.data.authorization_url,
+          accessCode: transaction.data.access_code,
+          reference: transaction.data.reference,
+          customerCode: customerId,
+          amount: amount,
+          plan: planConfig
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({
         success: false,
-        message: 'Failed to initialize payment'
+        message: 'Error initializing payment',
+        details: error.message
       });
     }
-
-    // Update user subscription details
-    user.subscription.plan = plan;
-    user.subscription.status = 'inactive'; // Will be activated after payment
-    user.subscription.paystackCustomerId = customerId;
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Payment initialized successfully',
-      payment: {
-        authorizationUrl: transaction.data.authorization_url,
-        accessCode: transaction.data.access_code,
-        reference: transaction.data.reference,
-        customerCode: customerId,
-        amount: amount,
-        plan: planConfig
-      }
-    });
   } catch (error) {
-    // console.error('Error initializing subscription:', error);
     res.status(500).json({
       success: false,
-      message: 'Error initializing subscription'
+      message: 'Error initializing subscription',
+      details: error.message
     });
   }
 };
@@ -229,17 +239,22 @@ exports.verifySubscriptionPayment = async (req, res) => {
     }
 
     // Verify payment with Paystack
-    console.log('🔍 Verifying payment with reference:', reference);
-    const verification = await paystack.transaction.verify(reference);
-    
-    console.log('🔍 Paystack verification response:', JSON.stringify(verification, null, 2));
-
-    if (!verification.status) {
-      console.log('❌ Paystack verification failed:', verification);
-      return res.status(400).json({
+    let verification;
+    try {
+      verification = await paystack.transaction.verify(reference);
+      
+      if (!verification.status) {
+        return res.status(400).json({
+          success: false,
+          message: 'Payment verification failed',
+          details: verification.message || 'Unknown error'
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({
         success: false,
-        message: 'Payment verification failed',
-        details: verification.message || 'Unknown error'
+        message: 'Error verifying payment',
+        details: error.message
       });
     }
 
@@ -252,28 +267,14 @@ exports.verifySubscriptionPayment = async (req, res) => {
     }
 
     // Check if payment was successful
-    console.log('🔍 Payment verification response:', verification);
-    console.log('🔍 Payment status:', verification.data?.status);
-    console.log('🔍 Payment amount:', verification.data?.amount);
-    console.log('🔍 Payment currency:', verification.data?.currency);
     
     // Check if payment was successful
     if (verification.data.status === 'success') {
-      console.log('✅ Payment verification successful, updating user subscription...');
-      console.log('🔍 Verification data:', verification.data);
       
       // Update user subscription
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + SUBSCRIPTION_PLANS.premium.duration);
       
-      console.log('🔍 Setting end date to:', endDate);
-      console.log('🔍 Premium duration:', SUBSCRIPTION_PLANS.premium.duration, 'days');
-      console.log('🔍 User before update:', {
-        id: user._id,
-        email: user.email,
-        subscription: user.subscription,
-        isPremium: user.isPremium
-      });
 
       // Update subscription details
       user.subscription.plan = 'premium';
@@ -285,7 +286,6 @@ exports.verifySubscriptionPayment = async (req, res) => {
       // Set premium status
       user.isPremium = true;
       
-      console.log('🔍 Updated subscription data:', user.subscription);
       
       // Enable all premium features
       user.premiumFeatures = {
@@ -301,18 +301,8 @@ exports.verifySubscriptionPayment = async (req, res) => {
       user.jobAcceptance.maxJobs = 999999; // Effectively unlimited
       user.jobAcceptance.acceptedJobs = 0; // Reset counter
       
-      console.log('🔍 Saving user to database...');
       const savedUser = await user.save();
-      console.log('✅ User saved successfully');
 
-      console.log(`✅ Premium subscription activated for user: ${savedUser.email}`);
-      console.log(`🔍 User isPremium status: ${savedUser.isPremium}`);
-      console.log(`🔍 User premiumFeatures:`, savedUser.premiumFeatures);
-      console.log(`🔍 User subscription endDate:`, savedUser.subscription.endDate);
-      console.log(`🔍 User subscription status:`, savedUser.subscription.status);
-      console.log(`🔍 User subscription plan:`, savedUser.subscription.plan);
-      console.log(`🔍 User canAcceptJobs:`, savedUser.canAcceptJobs);
-      console.log(`🔍 User remainingJobs:`, savedUser.remainingJobs);
 
       const responseData = {
         success: true,
@@ -332,12 +322,9 @@ exports.verifySubscriptionPayment = async (req, res) => {
         }
       };
 
-      console.log(`🔍 Sending response:`, responseData);
 
       res.status(200).json(responseData);
     } else {
-      console.log('❌ Payment was not successful. Status:', verification.data?.status);
-      console.log('❌ Payment details:', verification.data);
       
       res.status(400).json({
         success: false,
@@ -371,8 +358,6 @@ exports.activatePremiumSubscription = async (req, res) => {
       });
     }
 
-    console.log('🔍 Manually activating premium subscription for user:', user.email);
-    console.log('🔍 Current subscription:', user.subscription);
 
     // Update subscription details
     const endDate = new Date();
@@ -401,13 +386,8 @@ exports.activatePremiumSubscription = async (req, res) => {
     user.jobAcceptance.maxJobs = 999999; // Effectively unlimited
     user.jobAcceptance.acceptedJobs = 0; // Reset counter
     
-    console.log('🔍 Saving user to database...');
     const savedUser = await user.save();
-    console.log('✅ User saved successfully');
 
-    console.log(`✅ Premium subscription manually activated for user: ${savedUser.email}`);
-    console.log(`🔍 User isPremium status: ${savedUser.isPremium}`);
-    console.log(`🔍 User subscription status: ${savedUser.subscription.status}`);
 
     res.status(200).json({
       success: true,
@@ -534,7 +514,6 @@ exports.handleWebhook = async (req, res) => {
 // Helper function to handle successful charge
 async function handleChargeSuccess(data) {
   try {
-    console.log('🔍 Webhook charge success data:', JSON.stringify(data, null, 2));
     
     const { customer, subscription, reference } = data;
     
@@ -554,7 +533,6 @@ async function handleChargeSuccess(data) {
     }
     
     if (user) {
-      console.log(`🔍 Found user for webhook: ${user.email}`);
       
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + SUBSCRIPTION_PLANS.premium.duration);
@@ -581,9 +559,7 @@ async function handleChargeSuccess(data) {
       user.jobAcceptance.acceptedJobs = 0;
       
       await user.save();
-      console.log(`✅ Subscription activated via webhook for user: ${user.email}`);
     } else {
-      console.log('❌ No user found for webhook data:', { customer, subscription, reference });
     }
   } catch (error) {
     console.error('❌ Error handling charge success webhook:', error);
@@ -604,7 +580,6 @@ async function handleSubscriptionDisable(data) {
       user.isPremium = false;
       
       await user.save();
-      console.log(`Subscription cancelled for user: ${user.email}`);
     }
   } catch (error) {
     // console.error('Error handling subscription disable:', error);

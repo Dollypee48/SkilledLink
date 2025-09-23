@@ -25,7 +25,7 @@ exports.getServiceProfile = async (req, res) => {
     const { id } = req.params;
     
     const serviceProfile = await ServiceProfile.findById(id)
-      .populate('artisanId', 'name email phone profileImageUrl state address kycVerified kycStatus nationality')
+      .populate('artisanId', 'name email phone profileImageUrl state address kycVerified kycStatus nationality isPremium')
       .populate({
         path: 'artisanId',
         populate: {
@@ -284,7 +284,7 @@ exports.getAllServiceProfiles = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const serviceProfiles = await ServiceProfile.find(query)
-      .populate('artisanId', 'name email phone profileImageUrl state address kycVerified kycStatus nationality')
+      .populate('artisanId', 'name email phone profileImageUrl state address kycVerified kycStatus nationality isPremium')
       .populate({
         path: 'artisanId',
         populate: {

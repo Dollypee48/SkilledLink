@@ -203,7 +203,6 @@ exports.getArtisans = async (req, res) => {
           kycVerified: ap.userId.kycVerified || false,
           kycStatus: ap.userId.kycStatus || "pending",
           isPremium: ap.userId.isPremium || false,
-          subscription: ap.userId.subscription || { plan: 'free', status: 'active' },
           artisanProfile: {
             skills: ap.skills.length ? ap.skills : ["Unknown"],
             service: ap.service || "Unknown",
@@ -241,7 +240,7 @@ exports.getArtisans = async (req, res) => {
     }
     
     const artisans = await ArtisanProfile.find(query)
-      .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus subscription isPremium") // Include subscription fields
+      .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus isPremium")
       .select("-__v");
     
 
@@ -249,7 +248,7 @@ exports.getArtisans = async (req, res) => {
     if (artisans.length === 0 && query.availability === true) {
       delete query.availability;
       const allArtisans = await ArtisanProfile.find(query)
-        .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus subscription isPremium")
+        .populate("userId", "name email phone role profileImageUrl state address nationality kycVerified kycStatus isPremium")
         .select("-__v");
       artisans.push(...allArtisans);
     }
@@ -298,8 +297,7 @@ exports.getArtisans = async (req, res) => {
         nationality: ap.userId.nationality || "", // Include nationality
         kycVerified: ap.userId.kycVerified || false, // Include KYC verification status
         kycStatus: ap.userId.kycStatus || "pending", // Include KYC status
-        isPremium: ap.userId.isPremium || false, // Include premium status
-        subscription: ap.userId.subscription || { plan: 'free', status: 'active' }, // Include subscription info
+        isPremium: ap.userId.isPremium || false,
         // Include artisanProfile data for nested access
         artisanProfile: {
           skills: ap.skills.length ? ap.skills : ["Unknown"],
@@ -476,8 +474,7 @@ exports.suggestArtisansByLocation = async (req, res) => {
         nationality: ap.userId.nationality || "", // Include nationality
         kycVerified: ap.userId.kycVerified || false, // Include KYC verification status
         kycStatus: ap.userId.kycStatus || "pending", // Include KYC status
-        isPremium: ap.userId.isPremium || false, // Include premium status
-        subscription: ap.userId.subscription || { plan: 'free', status: 'active' }, // Include subscription info
+        isPremium: ap.userId.isPremium || false,
         // Include artisanProfile data for nested access
         artisanProfile: {
           skills: ap.skills.length ? ap.skills : ["Unknown"],
