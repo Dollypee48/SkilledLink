@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Clock, Filter, Search, Eye, ArrowLeft, Briefcase, DollarSign, User, Calendar, XCircle, MessageCircle } from 'lucide-react';
+import { Star, MapPin, Clock, Filter, Search, Eye, ArrowLeft, Briefcase, DollarSign, User, Calendar, XCircle, MessageCircle, Users, Wrench } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { ReviewService } from '../services/reviewService';
 import ServiceProfileBookingModal from '../components/ServiceProfileBookingModal';
+import BookingModal from '../components/BookingModal';
+import PremiumBadge from '../components/PremiumBadge';
 import { MessageProvider } from '../context/MessageContext';
+import { BookingContext } from '../context/BookingContext';
 import serviceProfileService from '../services/serviceProfileService';
 
 // Chat Interface Component
@@ -146,8 +149,18 @@ const ChatInterface = ({ artisan, onClose, messages, loading, onSendMessage, onR
 
 const AllArtisans = () => {
   const { user } = useAuth();
+  const { openBookingModal, setSelectedArtisan } = useContext(BookingContext);
   const navigate = useNavigate();
+  
+  // View toggle state
+  const [viewMode, setViewMode] = useState('services'); // 'services' or 'artisans'
+  
+  // Service profiles state
   const [serviceProfiles, setServiceProfiles] = useState([]);
+  
+  // Artisans state
+  const [artisans, setArtisans] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -165,6 +178,10 @@ const AllArtisans = () => {
   const [chatLoading, setChatLoading] = useState(false);
   const [showServiceBookingModal, setShowServiceBookingModal] = useState(false);
   const [selectedServiceProfileForBooking, setSelectedServiceProfileForBooking] = useState(null);
+  const [showArtisanProfileModal, setShowArtisanProfileModal] = useState(false);
+  const [selectedArtisanProfile, setSelectedArtisanProfile] = useState(null);
+  const [artisanReviews, setArtisanReviews] = useState([]);
+  const [artisanReviewsLoading, setArtisanReviewsLoading] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -270,6 +287,57 @@ const AllArtisans = () => {
     loadChatConversation(artisanId);
   };
 
+  const handleArtisanChatClick = (artisan) => {
+    if (!user) {
+      navigate('/login?redirect=/all-artisans');
+      return;
+    }
+    
+    if (user.role !== 'customer') {
+      alert('Only customers can chat with artisans. Please log in as a customer.');
+      return;
+    }
+
+    // Ensure we have a valid artisan ID
+    const artisanId = artisan._id;
+    if (!artisanId) {
+      console.error('No valid artisan ID found:', artisan);
+      alert('Unable to start chat. Artisan information is missing.');
+      return;
+    }
+
+    setSelectedArtisanForChat(artisan);
+    setShowChatModal(true);
+    // Load conversation when opening chat
+    loadChatConversation(artisanId);
+  };
+
+  const handleViewArtisanProfile = async (artisan) => {
+    if (!artisan || !artisan._id) {
+      return;
+    }
+    
+    setSelectedArtisanProfile(artisan);
+    setShowArtisanProfileModal(true);
+    
+    // Fetch artisan reviews
+    try {
+      setArtisanReviewsLoading(true);
+      const reviews = await ReviewService.getPublicArtisanReviews(artisan._id);
+      setArtisanReviews(reviews);
+    } catch (error) {
+      setArtisanReviews([]);
+    } finally {
+      setArtisanReviewsLoading(false);
+    }
+  };
+
+  const closeArtisanProfileModal = () => {
+    setShowArtisanProfileModal(false);
+    setSelectedArtisanProfile(null);
+    setArtisanReviews([]); // Clear reviews when modal is closed
+  };
+
   // Close chat modal
   const closeChatModal = () => {
     setShowChatModal(false);
@@ -330,7 +398,7 @@ const AllArtisans = () => {
       const tempMessage = {
         _id: Date.now().toString(),
         content: messageText,
-        sender: user.id,
+        sender: { _id: user._id, name: user.name },
         recipient: validArtisanId,
         timestamp: new Date().toISOString(),
         isOptimistic: true
@@ -380,49 +448,101 @@ const AllArtisans = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Fetch service profiles from API
-  useEffect(() => {
-    const fetchServiceProfiles = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Build query parameters
-        const filters = {
+  // Fetch artisans from API
+  const fetchArtisans = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching artisans from:', `${API_URL}/artisans`);
+      console.log('Request params:', {
+        search: debouncedSearchTerm || undefined,
+        category: selectedCategory && selectedCategory !== 'All Categories' ? selectedCategory : undefined,
+        location: selectedLocation && selectedLocation !== 'All Locations' ? selectedLocation : undefined,
+        sortBy: sortBy,
+        page: pagination.currentPage,
+        limit: 12
+      });
+      
+      const response = await axios.get(`${API_URL}/artisans`, {
+        params: {
           search: debouncedSearchTerm || undefined,
           category: selectedCategory && selectedCategory !== 'All Categories' ? selectedCategory : undefined,
           location: selectedLocation && selectedLocation !== 'All Locations' ? selectedLocation : undefined,
           sortBy: sortBy,
           page: pagination.currentPage,
           limit: 12
-        };
-        
-        const response = await serviceProfileService.getAllServiceProfiles(filters);
-        
-        console.log('Service profiles response:', response.serviceProfiles);
-        if (response.serviceProfiles && response.serviceProfiles.length > 0) {
-          console.log('First service profile artisan data:', response.serviceProfiles[0].artisanId);
         }
-        
-        setServiceProfiles(response.serviceProfiles || []);
-        setPagination(response.pagination || {
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: 0,
-          hasNext: false,
-          hasPrev: false
-        });
-      } catch (err) {
-        console.error('Error fetching service profiles:', err);
-        setError('Failed to load service profiles. Please try again later.');
-        setServiceProfiles([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+      });
+      
+      console.log('Artisans response:', response.data);
+      console.log('Artisans count:', response.data.artisans?.length || 0);
+      setArtisans(response.data.artisans || []);
+      setPagination(response.data.pagination || {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        hasNext: false,
+        hasPrev: false
+      });
+    } catch (err) {
+      console.error('Error fetching artisans:', err);
+      console.error('Error details:', err.response?.data || err.message);
+      setError('Failed to load artisans. Please try again later.');
+      setArtisans([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchServiceProfiles();
-  }, [debouncedSearchTerm, selectedCategory, selectedLocation, sortBy, pagination.currentPage]);
+  // Fetch service profiles from API
+  const fetchServiceProfiles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Build query parameters
+      const filters = {
+        search: debouncedSearchTerm || undefined,
+        category: selectedCategory && selectedCategory !== 'All Categories' ? selectedCategory : undefined,
+        location: selectedLocation && selectedLocation !== 'All Locations' ? selectedLocation : undefined,
+        sortBy: sortBy,
+        page: pagination.currentPage,
+        limit: 12
+      };
+      
+      const response = await serviceProfileService.getAllServiceProfiles(filters);
+      
+      console.log('Service profiles response:', response.serviceProfiles);
+      if (response.serviceProfiles && response.serviceProfiles.length > 0) {
+        console.log('First service profile artisan data:', response.serviceProfiles[0].artisanId);
+      }
+      
+      setServiceProfiles(response.serviceProfiles || []);
+      setPagination(response.pagination || {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        hasNext: false,
+        hasPrev: false
+      });
+    } catch (err) {
+      console.error('Error fetching service profiles:', err);
+      setError('Failed to load service profiles. Please try again later.');
+      setServiceProfiles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch data based on view mode
+  useEffect(() => {
+    if (viewMode === 'services') {
+      fetchServiceProfiles();
+    } else {
+      fetchArtisans();
+    }
+  }, [debouncedSearchTerm, selectedCategory, selectedLocation, sortBy, pagination.currentPage, viewMode]);
 
   // Comprehensive list of Nigerian states
   const nigerianStates = [
@@ -445,29 +565,75 @@ const AllArtisans = () => {
     'tutoring', 'fitness', 'beauty', 'massage', 'other'
   ];
 
-  // Get unique categories and locations from the data, but use our comprehensive lists as primary
-  const categories = [...new Set([...serviceCategories, ...serviceProfiles.map(profile => profile.category).filter(Boolean)])];
-  const locations = [...new Set([...nigerianStates, ...serviceProfiles.map(profile => profile.artisanId?.address || profile.artisanId?.state).filter(Boolean)])];
-
-  // The filtering is now handled by the backend API, so we just use the service profiles as returned
-  const filteredServiceProfiles = serviceProfiles;
-
-  const sortedServiceProfiles = [...filteredServiceProfiles].sort((a, b) => {
-    switch (sortBy) {
-      case 'rating':
-        return (b.rating || 0) - (a.rating || 0);
-      case 'price_low':
-        return (a.hourlyRate || 0) - (b.hourlyRate || 0);
-      case 'price_high':
-        return (b.hourlyRate || 0) - (a.hourlyRate || 0);
-      case 'newest':
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      case 'popular':
-        return (b.bookingCount || 0) - (a.bookingCount || 0);
-      default:
-        return 0;
+  // Get unique categories and locations from the data based on view mode
+  const getCategories = () => {
+    if (viewMode === 'services') {
+      return [...new Set([...serviceCategories, ...serviceProfiles.map(profile => profile.category).filter(Boolean)])];
+    } else {
+      return [...new Set([...serviceCategories, ...artisans.map(artisan => artisan.artisanProfile?.service).filter(Boolean)])];
     }
-  });
+  };
+
+  const getLocations = () => {
+    if (viewMode === 'services') {
+      return [...new Set([...nigerianStates, ...serviceProfiles.map(profile => profile.artisanId?.address || profile.artisanId?.state).filter(Boolean)])];
+    } else {
+      return [...new Set([...nigerianStates, ...artisans.map(artisan => artisan.address || artisan.state).filter(Boolean)])];
+    }
+  };
+
+  const categories = getCategories();
+  const locations = getLocations();
+
+  // Get current data based on view mode
+  const getCurrentData = () => {
+    if (viewMode === 'services') {
+      return serviceProfiles;
+    } else {
+      return artisans;
+    }
+  };
+
+  const currentData = getCurrentData();
+
+  // Sort data based on view mode
+  const getSortedData = () => {
+    const data = [...currentData];
+    return data.sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          if (viewMode === 'services') {
+            return (b.rating || 0) - (a.rating || 0);
+          } else {
+            return (b.artisanProfile?.rating || 0) - (a.artisanProfile?.rating || 0);
+          }
+        case 'price_low':
+          if (viewMode === 'services') {
+            return (a.hourlyRate || 0) - (b.hourlyRate || 0);
+          } else {
+            return (a.artisanProfile?.hourlyRate || 0) - (b.artisanProfile?.hourlyRate || 0);
+          }
+        case 'price_high':
+          if (viewMode === 'services') {
+            return (b.hourlyRate || 0) - (a.hourlyRate || 0);
+          } else {
+            return (b.artisanProfile?.hourlyRate || 0) - (a.artisanProfile?.hourlyRate || 0);
+          }
+        case 'newest':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'popular':
+          if (viewMode === 'services') {
+            return (b.bookingCount || 0) - (a.bookingCount || 0);
+          } else {
+            return (b.artisanProfile?.totalJobs || 0) - (a.artisanProfile?.totalJobs || 0);
+          }
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const sortedData = getSortedData();
 
   if (loading) {
     return (
@@ -479,7 +645,9 @@ const AllArtisans = () => {
               <div className="w-8 h-8 bg-[#F59E0B] rounded-full animate-pulse"></div>
             </div>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Loading Service Profiles</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Loading {viewMode === 'services' ? 'Service Profiles' : 'Available Artisans'}
+          </h3>
           <p className="text-gray-600">Finding the best professionals for you...</p>
         </div>
       </div>
@@ -534,21 +702,51 @@ const AllArtisans = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
-        {/* Search and Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 border border-[#F59E0B]/20">
-          <div className="mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-[#151E3D] mb-2">Search & Filter</h2>
-            <p className="text-sm sm:text-base text-[#151E3D]/70">Find the perfect artisan for your needs</p>
+      <div className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
+        {/* View Toggle */}
+        <div className="bg-white rounded-lg shadow-md p-3 mb-4 border border-[#F59E0B]/20">
+          <div className="flex items-center justify-center">
+            <div className="flex items-center bg-gray-100 rounded-md p-0.5">
+              <button
+                onClick={() => setViewMode('artisans')}
+                className={`flex items-center px-3 py-1.5 rounded-sm transition-all duration-200 text-sm ${
+                  viewMode === 'artisans'
+                    ? 'bg-white text-[#151E3D] shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Users className="w-3 h-3 mr-1.5" />
+                <span className="font-medium">Artisans</span>
+              </button>
+              <button
+                onClick={() => setViewMode('services')}
+                className={`flex items-center px-3 py-1.5 rounded-sm transition-all duration-200 text-sm ${
+                  viewMode === 'services'
+                    ? 'bg-white text-[#151E3D] shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Wrench className="w-3 h-3 mr-1.5" />
+                <span className="font-medium">Services</span>
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 mb-4 sm:mb-6 border border-[#F59E0B]/20">
+          <div className="mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-[#151E3D] mb-1">Search & Filter</h2>
+            <p className="text-sm text-[#151E3D]/70">Find the perfect artisan for your needs</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#F59E0B] w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search artisans, skills, or services..."
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm sm:text-base text-[#151E3D] placeholder-[#151E3D]/50"
+                className="w-full pl-10 pr-3 py-2.5 border-2 border-[#151E3D]/20 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm text-[#151E3D] placeholder-[#151E3D]/50"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -558,7 +756,7 @@ const AllArtisans = () => {
             <div className="relative">
               <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#F59E0B] w-5 h-5" />
               <select
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm sm:text-base text-[#151E3D] bg-white appearance-none cursor-pointer"
+                className="w-full pl-10 pr-3 py-2.5 border-2 border-[#151E3D]/20 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm text-[#151E3D] bg-white appearance-none cursor-pointer"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -574,7 +772,7 @@ const AllArtisans = () => {
             <div className="relative">
               <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#F59E0B] w-5 h-5" />
               <select
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm sm:text-base text-[#151E3D] bg-white appearance-none cursor-pointer"
+                className="w-full pl-10 pr-3 py-2.5 border-2 border-[#151E3D]/20 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm text-[#151E3D] bg-white appearance-none cursor-pointer"
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
               >
@@ -590,7 +788,7 @@ const AllArtisans = () => {
             <div className="relative">
               <Clock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#F59E0B] w-5 h-5" />
               <select
-                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#151E3D]/20 rounded-xl focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm sm:text-base text-[#151E3D] bg-white appearance-none cursor-pointer"
+                className="w-full pl-10 pr-3 py-2.5 border-2 border-[#151E3D]/20 rounded-lg focus:ring-2 focus:ring-[#F59E0B] focus:border-[#F59E0B] transition-all duration-300 text-sm text-[#151E3D] bg-white appearance-none cursor-pointer"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
@@ -604,11 +802,11 @@ const AllArtisans = () => {
         </div>
 
         {/* Results Count */}
-        <div className="mb-6 sm:mb-8">
-          <div className="bg-gradient-to-r from-[#151E3D]/10 to-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-xl p-4 sm:p-6">
+        <div className="mb-4 sm:mb-6">
+          <div className="bg-gradient-to-r from-[#151E3D]/10 to-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-lg p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <p className="text-[#151E3D] font-semibold text-base sm:text-lg">
-                <span className="font-bold text-[#F59E0B]">{sortedServiceProfiles.length}</span> service profile{sortedServiceProfiles.length !== 1 ? 's' : ''} found
+                <span className="font-bold text-[#F59E0B]">{sortedData.length}</span> {viewMode === 'services' ? 'service profile' : 'artisan'}{sortedData.length !== 1 ? 's' : ''} found
               </p>
               {(debouncedSearchTerm || selectedCategory || selectedLocation) && (
                 <button
@@ -626,16 +824,18 @@ const AllArtisans = () => {
           </div>
         </div>
 
-        {/* Service Profiles Grid */}
-        {sortedServiceProfiles.length === 0 ? (
+        {/* Data Grid */}
+        {sortedData.length === 0 ? (
           <div className="text-center py-12">
             <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 max-w-md mx-auto">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#151E3D] mb-3">No Service Profiles Found</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-[#151E3D] mb-3">
+                No {viewMode === 'services' ? 'Service Profiles' : 'Artisans'} Found
+              </h3>
               <p className="text-gray-600 mb-6">
                 {debouncedSearchTerm || selectedCategory || selectedLocation 
-                  ? "Try adjusting your search criteria or filters to find more service profiles."
-                  : "No service profiles are currently available. Please check back later."
+                  ? `Try adjusting your search criteria or filters to find more ${viewMode === 'services' ? 'service profiles' : 'artisans'}.`
+                  : `No ${viewMode === 'services' ? 'service profiles' : 'artisans'} are currently available. Please check back later.`
                 }
               </p>
               {(debouncedSearchTerm || selectedCategory || selectedLocation) && (
@@ -653,37 +853,39 @@ const AllArtisans = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            {sortedServiceProfiles.map(serviceProfile => (
-            <div key={serviceProfile._id} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-[#F59E0B]/20 group hover:-translate-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+            {sortedData.map(item => (
+              viewMode === 'services' ? (
+                // Service Profile Card
+                <div key={item._id} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-[#F59E0B]/20 group hover:-translate-y-1">
               {/* Service Profile Header */}
-              <div className="relative h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-[#151E3D] to-[#1E2A4A]">
+              <div className="relative h-32 sm:h-36 overflow-hidden bg-gradient-to-br from-[#151E3D] to-[#1E2A4A]">
                 <div className="absolute inset-0 bg-gradient-to-t from-[#151E3D]/40 to-transparent"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-white">
-                    {/* Artisan Profile Image */}
-                    <div className="relative mb-3">
-                      {serviceProfile.artisanId?.profileImageUrl ? (
-                        <img
-                          src={serviceProfile.artisanId.profileImageUrl}
-                          alt={serviceProfile.artisanId.name || 'Artisan'}
-                          className="w-20 h-20 rounded-full mx-auto border-4 border-white/30 shadow-lg object-cover"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 rounded-full mx-auto border-4 border-white/30 shadow-lg bg-white/20 flex items-center justify-center">
-                          <span className="text-2xl font-bold text-white">
-                            {serviceProfile.artisanId?.name?.charAt(0)?.toUpperCase() || 'A'}
-                          </span>
+                        {/* Artisan Profile Image */}
+                        <div className="relative mb-2">
+                          {item.artisanId?.profileImageUrl ? (
+                            <img
+                              src={item.artisanId.profileImageUrl}
+                              alt={item.artisanId.name || 'Artisan'}
+                              className="w-14 h-14 rounded-full mx-auto border-3 border-white/30 shadow-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-14 h-14 rounded-full mx-auto border-3 border-white/30 shadow-lg bg-white/20 flex items-center justify-center">
+                              <span className="text-lg font-bold text-white">
+                                {item.artisanId?.name?.charAt(0)?.toUpperCase() || 'A'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <h3 className="text-xl font-bold">{serviceProfile.title}</h3>
-                    <p className="text-sm opacity-90 capitalize">{serviceProfile.category.replace('_', ' ')}</p>
-                    <p className="text-xs opacity-75 mt-1">by {serviceProfile.artisanId?.name || 'Unknown Artisan'}</p>
+                        <h3 className="text-lg font-bold">{item.title}</h3>
+                        <p className="text-xs opacity-90 capitalize">{item.category.replace('_', ' ')}</p>
+                        <p className="text-xs opacity-75 mt-1">by {item.artisanId?.name || 'Unknown Artisan'}</p>
                   </div>
                 </div>
-                {serviceProfile.artisanId?.isKYCVerified && (
-                  <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center">
+                {item.artisanId?.kycVerified && (
+                  <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center z-10">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
@@ -691,101 +893,199 @@ const AllArtisans = () => {
                     <span className="sm:hidden">KYC</span>
                   </div>
                 )}
-                {serviceProfile.artisanId?.subscriptionStatus === 'premium' && (
-                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center">
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="hidden sm:inline">Premium</span>
-                    <span className="sm:hidden">Pro</span>
+                {item.artisanId?.subscriptionStatus === 'premium' && (
+                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-10">
+                    <PremiumBadge />
                   </div>
                 )}
                 <div className={`absolute bottom-2 sm:bottom-4 left-2 sm:left-4 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-lg ${
-                  serviceProfile.isActive 
+                  item.isActive 
                     ? 'bg-green-500 text-white' 
                     : 'bg-gray-500 text-white'
                 }`}>
-                  {serviceProfile.isActive ? 'Available' : 'Unavailable'}
+                  {item.isActive ? 'Available' : 'Unavailable'}
                 </div>
               </div>
 
               {/* Service Profile Info */}
-              <div className="p-4 sm:p-6">
-                <div className="mb-3 sm:mb-4">
-                  <h3 className="text-lg sm:text-xl font-bold text-[#151E3D] mb-2">{serviceProfile.artisanId?.name || 'Unknown Artisan'}</h3>
-                  <div className="flex items-center mb-2 sm:mb-3">
+              <div className="p-3 sm:p-4">
+                <div className="mb-2 sm:mb-3">
+                  <h3 className="text-base sm:text-lg font-bold text-[#151E3D] mb-1">{item.artisanId?.name || 'Unknown Artisan'}</h3>
+                  <div className="flex items-center mb-2">
                     <span className="bg-gradient-to-r from-[#F59E0B]/10 to-[#151E3D]/10 text-[#F59E0B] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold border border-[#F59E0B]/20">
-                      {serviceProfile.category.replace('_', ' ')}
+                      {item.category.replace('_', ' ')}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <div className="flex items-center">
                     <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1 sm:mr-2" />
-                    <span className="text-[#151E3D]/70 text-xs sm:text-sm truncate">{serviceProfile.artisanId?.address || serviceProfile.artisanId?.state || 'Location not specified'}</span>
+                    <span className="text-[#151E3D]/70 text-xs sm:text-sm truncate">{item.artisanId?.address || item.artisanId?.state || 'Location not specified'}</span>
                   </div>
                   <div className="flex items-center">
                     <Star className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1" />
-                    <span className="text-xs sm:text-sm font-bold text-[#151E3D]">{(serviceProfile.rating || 0).toFixed(1)}</span>
-                    <span className="text-xs sm:text-sm text-[#151E3D]/60 ml-1">({serviceProfile.reviewCount || 0})</span>
+                    <span className="text-xs sm:text-sm font-bold text-[#151E3D]">{(item.rating || 0).toFixed(1)}</span>
+                    <span className="text-xs sm:text-sm text-[#151E3D]/60 ml-1">({item.reviewCount || 0})</span>
                   </div>
                 </div>
 
                 {/* Pricing Information */}
-                <div className="mb-4 p-3 bg-gradient-to-r from-[#F59E0B]/5 to-[#151E3D]/5 rounded-lg border border-[#F59E0B]/20">
+                <div className="mb-3 p-2 bg-gradient-to-r from-[#F59E0B]/5 to-[#151E3D]/5 rounded-lg border border-[#F59E0B]/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <DollarSign className="w-4 h-4 text-[#F59E0B] mr-2" />
                       <span className="text-sm text-[#151E3D]/70">Hourly Rate:</span>
                     </div>
-                    <span className="text-lg font-bold text-[#151E3D]">₦{serviceProfile.hourlyRate?.toLocaleString() || '0'}</span>
-                  </div>
-                  {serviceProfile.minimumHours && serviceProfile.maximumHours && (
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 text-[#F59E0B] mr-2" />
-                        <span className="text-sm text-[#151E3D]/70">Duration:</span>
+                        <span className="text-lg font-bold text-[#151E3D]">₦{item.hourlyRate?.toLocaleString() || '0'}</span>
                       </div>
-                      <span className="text-sm font-medium text-[#151E3D]">
-                        {serviceProfile.minimumHours}-{serviceProfile.maximumHours} hours
-                      </span>
-                    </div>
-                  )}
+                      {item.minimumHours && item.maximumHours && (
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center">
+                            <Clock className="w-4 h-4 text-[#F59E0B] mr-2" />
+                            <span className="text-sm text-[#151E3D]/70">Duration:</span>
+                          </div>
+                          <span className="text-sm font-medium text-[#151E3D]">
+                            {item.minimumHours}-{item.maximumHours} hours
+                          </span>
+                        </div>
+                      )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
-                    onClick={() => handleViewProfile(serviceProfile)}
-                    className="flex-1 bg-[#F59E0B] hover:bg-[#D97706] text-white text-center py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm sm:text-base"
+                    onClick={() => handleViewProfile(item)}
+                    className="flex-1 bg-[#F59E0B] hover:bg-[#D97706] text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm"
                   >
-                    <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <Eye className="w-3 h-3 mr-1" />
                     <span className="hidden sm:inline">View Profile</span>
                     <span className="sm:hidden">View</span>
                   </button>
                   <button
-                    onClick={() => handleChatClick(serviceProfile)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm sm:text-base"
+                    onClick={() => handleChatClick(item)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm"
                   >
-                    <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <MessageCircle className="w-3 h-3 mr-1" />
                     <span className="hidden sm:inline">Chat</span>
                     <span className="sm:hidden">Chat</span>
                   </button>
                   <button
-                    onClick={() => handleBookClick(serviceProfile)}
-                    disabled={!serviceProfile.isActive}
-                    className={`flex-1 text-center py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base ${
-                      serviceProfile.isActive
+                    onClick={() => handleBookClick(item)}
+                    disabled={!item.isActive}
+                    className={`flex-1 text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm ${
+                      item.isActive
                         ? 'border-2 border-[#151E3D] text-[#151E3D] hover:bg-[#151E3D] hover:text-white hover:shadow-lg'
                         : 'border-2 border-gray-300 text-gray-400 cursor-not-allowed bg-gray-50'
                     }`}
                   >
-                    {serviceProfile.isActive ? 'Book Now' : 'Unavailable'}
+                    {item.isActive ? 'Book Now' : 'Unavailable'}
                   </button>
                 </div>
               </div>
             </div>
-          ))}
+              ) : (
+                // Artisan Card
+                <div key={item._id} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-[#F59E0B]/20 group hover:-translate-y-1">
+                  {/* Artisan Header */}
+                  <div className="relative h-32 sm:h-36 overflow-hidden bg-gradient-to-br from-[#151E3D] to-[#1E2A4A]">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#151E3D]/40 to-transparent"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        {/* Artisan Profile Image */}
+                        <div className="relative mb-2">
+                          {item.profileImageUrl ? (
+                            <img
+                              src={item.profileImageUrl}
+                              alt={item.name || 'Artisan'}
+                              className="w-14 h-14 rounded-full mx-auto border-3 border-white/30 shadow-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-14 h-14 rounded-full mx-auto border-3 border-white/30 shadow-lg bg-white/20 flex items-center justify-center">
+                              <span className="text-lg font-bold text-white">
+                                {item.name?.charAt(0)?.toUpperCase() || 'A'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-bold">{item.name}</h3>
+                        <p className="text-xs opacity-90 capitalize">{item.artisanProfile?.service?.replace('_', ' ') || 'General Service'}</p>
+                        <p className="text-xs opacity-75 mt-1">Professional Artisan</p>
+                      </div>
+                    </div>
+                    {item.kycVerified && (
+                      <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center z-10">
+                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span className="hidden sm:inline">KYC Verified</span>
+                        <span className="sm:hidden">KYC</span>
+                      </div>
+                    )}
+                    {item.subscriptionStatus === 'premium' && (
+                      <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-10">
+                        <PremiumBadge />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-lg bg-green-500 text-white">
+                      Available
+                    </div>
+                  </div>
+
+                  {/* Artisan Info */}
+                  <div className="p-3 sm:p-4">
+                    <div className="mb-2 sm:mb-3">
+                      <h3 className="text-base sm:text-lg font-bold text-[#151E3D] mb-1">{item.name}</h3>
+                      <div className="flex items-center mb-2">
+                        <span className="bg-gradient-to-r from-[#F59E0B]/10 to-[#151E3D]/10 text-[#F59E0B] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold border border-[#F59E0B]/20">
+                          {item.artisanProfile?.service?.replace('_', ' ') || 'General Service'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="flex items-center">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1 sm:mr-2" />
+                        <span className="text-[#151E3D]/70 text-xs sm:text-sm truncate">{item.address || item.state || 'Location not specified'}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Star className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1" />
+                        <span className="text-xs sm:text-sm font-bold text-[#151E3D]">{(item.artisanProfile?.rating || 0).toFixed(1)}</span>
+                        <span className="text-xs sm:text-sm text-[#151E3D]/60 ml-1">({item.artisanProfile?.totalJobs || 0})</span>
+                      </div>
+                    </div>
+
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => handleViewArtisanProfile(item)}
+                        className="flex-1 bg-[#F59E0B] hover:bg-[#D97706] text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm"
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        <span className="hidden sm:inline">View Profile</span>
+                        <span className="sm:hidden">View</span>
+                      </button>
+                      <button
+                        onClick={() => handleArtisanChatClick(item)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm"
+                      >
+                        <MessageCircle className="w-3 h-3 mr-1" />
+                        <span className="hidden sm:inline">Chat</span>
+                        <span className="sm:hidden">Chat</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedArtisan(item);
+                          openBookingModal();
+                        }}
+                        className="flex-1 border-2 border-[#151E3D] text-[#151E3D] hover:bg-[#151E3D] hover:text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg text-sm"
+                      >
+                        Book Now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            ))}
           </div>
         )}
 
@@ -859,6 +1159,9 @@ const AllArtisans = () => {
                         <span className="text-sm font-medium">
                           {selectedServiceProfile.artisanId?.name || 'Unknown Artisan'}
                         </span>
+                        {selectedServiceProfile.artisanId?.subscriptionStatus === 'premium' && (
+                          <PremiumBadge />
+                        )}
                       </div>
                       
                       {/* Location */}
@@ -1417,6 +1720,211 @@ const AllArtisans = () => {
           onClose={closeServiceBookingModal}
           serviceProfile={selectedServiceProfileForBooking}
         />
+
+        {/* Artisan Profile Modal */}
+        {showArtisanProfileModal && selectedArtisanProfile && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-5 py-3 rounded-t-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-[#151E3D]">Artisan Profile</h2>
+                      <p className="text-xs text-gray-500">Professional information</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={closeArtisanProfileModal}
+                    className="p-1.5 hover:bg-gray-100 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+                  >
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-5">
+                {/* Profile Header Section */}
+                <div className="bg-gradient-to-r from-[#F8FAFC] to-[#F1F5F9] rounded-xl p-5 mb-6">
+                  <div className="flex flex-col md:flex-row items-center md:items-start space-y-3 md:space-y-0 md:space-x-5">
+                    {/* Profile Image */}
+                    <div className="relative">
+                      {selectedArtisanProfile.profileImageUrl ? (
+                        <img
+                          src={selectedArtisanProfile.profileImageUrl}
+                          alt={selectedArtisanProfile.name}
+                          className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#F59E0B] to-[#D97706] flex items-center justify-center border-4 border-white shadow-lg">
+                          <span className="text-3xl font-bold text-[#151E3D]">
+                            {selectedArtisanProfile.name?.charAt(0)?.toUpperCase() || 'A'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Profile Info */}
+                    <div className="flex-1 text-center md:text-left">
+                      <div className="flex items-center justify-center md:justify-start space-x-2 mb-2">
+                        <h1 className="text-2xl font-bold text-[#151E3D]">{selectedArtisanProfile.name}</h1>
+                        {selectedArtisanProfile.kycVerified && (
+                          <div className="flex items-center space-x-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <span>Verified</span>
+                          </div>
+                        )}
+                        {selectedArtisanProfile.subscriptionStatus === 'premium' && (
+                          <PremiumBadge />
+                        )}
+                      </div>
+                      
+                      <p className="text-[#151E3D]/70 mb-3">{selectedArtisanProfile.artisanProfile?.service || 'Professional Service'}</p>
+                      
+                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm">
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 text-[#F59E0B]" />
+                          <span className="font-medium text-[#151E3D]">{(selectedArtisanProfile.artisanProfile?.rating || 0).toFixed(1)}</span>
+                          <span className="text-[#151E3D]/60">({selectedArtisanProfile.artisanProfile?.totalJobs || 0} jobs)</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="w-4 h-4 text-[#F59E0B]" />
+                          <span className="text-[#151E3D]/70">{selectedArtisanProfile.state}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Professional Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-white border border-gray-200 rounded-xl p-4">
+                    <h3 className="text-lg font-semibold text-[#151E3D] mb-3 flex items-center">
+                      <Briefcase className="w-5 h-5 text-[#F59E0B] mr-2" />
+                      Professional Details
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-[#151E3D]/70">Service:</span>
+                        <span className="font-medium text-[#151E3D]">{selectedArtisanProfile.artisanProfile?.service || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#151E3D]/70">Experience:</span>
+                        <span className="font-medium text-[#151E3D]">{selectedArtisanProfile.artisanProfile?.experience || 0} years</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#151E3D]/70">Hourly Rate:</span>
+                        <span className="font-medium text-[#151E3D]">₦{selectedArtisanProfile.artisanProfile?.hourlyRate?.toLocaleString() || '0'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#151E3D]/70">Total Jobs:</span>
+                        <span className="font-medium text-[#151E3D]">{selectedArtisanProfile.artisanProfile?.totalJobs || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-xl p-4">
+                    <h3 className="text-lg font-semibold text-[#151E3D] mb-3 flex items-center">
+                      <MapPin className="w-5 h-5 text-[#F59E0B] mr-2" />
+                      Location Details
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-[#151E3D]/70">State:</span>
+                        <span className="font-medium text-[#151E3D]">{selectedArtisanProfile.state}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#151E3D]/70">Address:</span>
+                        <span className="font-medium text-[#151E3D]">{selectedArtisanProfile.address}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reviews Section */}
+                <div className="bg-white border border-gray-200 rounded-xl p-4">
+                  <h3 className="text-lg font-semibold text-[#151E3D] mb-3 flex items-center">
+                    <Star className="w-5 h-5 text-[#F59E0B] mr-2" />
+                    Customer Reviews
+                  </h3>
+                  
+                  {artisanReviewsLoading ? (
+                    <div className="text-center py-4">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-[#F59E0B]"></div>
+                      <p className="text-[#151E3D]/70 mt-2">Loading reviews...</p>
+                    </div>
+                  ) : artisanReviews.length > 0 ? (
+                    <div className="space-y-3">
+                      {artisanReviews.slice(0, 3).map((review, index) => (
+                        <div key={index} className="border-l-4 border-[#F59E0B] pl-4 py-2">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <div className="flex items-center">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${
+                                    i < review.rating ? 'text-[#F59E0B] fill-current' : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm font-medium text-[#151E3D]">{review.rating}/5</span>
+                          </div>
+                          <p className="text-[#151E3D]/80 text-sm">{review.comment}</p>
+                          <p className="text-[#151E3D]/60 text-xs mt-1">- {review.customer?.name || 'Anonymous'}</p>
+                        </div>
+                      ))}
+                      {artisanReviews.length > 3 && (
+                        <p className="text-[#151E3D]/60 text-sm text-center">
+                          +{artisanReviews.length - 3} more reviews
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-[#151E3D]/60 text-center py-4">No reviews yet</p>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      closeArtisanProfileModal();
+                      handleArtisanChatClick(selectedArtisanProfile);
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Start Chat
+                  </button>
+                  <button
+                    onClick={() => {
+                      closeArtisanProfileModal();
+                      setSelectedArtisan(selectedArtisanProfile);
+                      openBookingModal();
+                    }}
+                    className="flex-1 bg-[#151E3D] hover:bg-[#0F172A] text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Book Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Artisan Booking Modal */}
+        <BookingModal />
       </div>
     </div>
   );

@@ -1,8 +1,141 @@
-import React from 'react';
-import { X, Calendar, Clock, MapPin, User, Phone, MessageSquare, Star, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Calendar, Clock, MapPin, User, Phone, MessageSquare, Star, DollarSign, CheckCircle, XCircle, Send } from 'lucide-react';
 import { useMessage } from '../context/MessageContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { messageService } from '../services/messageService';
+
+// Chat Interface Component
+const ChatInterface = ({ customer, onClose, messages, loading, onSendMessage, onRefresh }) => {
+  const { user } = useAuth();
+  const [newMessage, setNewMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || sending) return;
+
+    const messageText = newMessage.trim();
+    setNewMessage('');
+    setSending(true);
+
+    try {
+      await onSendMessage(messageText);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-6 min-h-[300px] max-h-[400px] bg-gray-50">
+        {loading ? (
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#151E3D]"></div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <MessageSquare className="w-12 h-12 mb-3 text-gray-300" />
+            <p className="text-center font-medium">No messages yet</p>
+            <p className="text-center text-sm text-gray-400">Start the conversation with {customer.name || 'this customer'}!</p>
+            <button
+              onClick={onRefresh}
+              className="mt-3 px-4 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.filter(message => message && message.content).map((message) => {
+            // Use the same logic as the main message page
+            const isOwnMessage = message?.sender?._id === user?._id;
+            const messageTime = message?.timestamp || message?.createdAt;
+            
+            return (
+            <div
+              key={message._id + (message.timestamp || message.createdAt)}
+              className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`flex items-end space-x-3 max-w-[70%] ${isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                {/* Avatar for received messages only */}
+                {!isOwnMessage && (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm">
+                    {message?.sender?.name?.charAt(0)?.toUpperCase() || 'C'}
+                  </div>
+                )}
+                
+                {/* Message bubble */}
+                <div className={`relative group ${isOwnMessage ? 'ml-12' : 'mr-12'}`}>
+                  <div className={`px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
+                    isOwnMessage 
+                      ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white rounded-br-md' 
+                      : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
+                  } ${message.isOptimistic ? 'opacity-70' : ''}`}>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message?.content || ''}</p>
+                    
+                    {/* Message time */}
+                    <div className={`text-xs mt-2 ${
+                      isOwnMessage ? 'text-white/70' : 'text-gray-500'
+                    }`}>
+                      {messageTime ? new Date(messageTime).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      }) : 'Just now'}
+                      {message.isOptimistic && ' (Sending...)'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </div>
+
+      {/* Message Input */}
+      <div className="border-t border-gray-200 p-4 bg-white">
+        <form onSubmit={sendMessage} className="flex items-center space-x-3">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder={`Message ${customer.name || 'customer'}...`}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+            disabled={sending}
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim() || sending}
+            className="p-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {sending ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const BookingPreviewModal = ({ 
   isOpen, 
@@ -17,38 +150,68 @@ const BookingPreviewModal = ({
   const { user } = useAuth();
   const { selectRecipient } = useMessage();
   const navigate = useNavigate();
+  
+  // Chat modal state
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatLoading, setChatLoading] = useState(false);
 
 
-  const handleChatWithCustomer = () => {
+  const handleChatWithCustomer = async () => {
     if (booking?.customer) {
       console.log('Chat with customer clicked:', booking.customer);
-      
-      // Store recipient data in sessionStorage for the messages page to pick up
-      const recipientData = {
-        _id: booking.customer._id,
-        name: booking.customer.name || 'Customer'
-      };
-      
-      // Try to set recipient in context if available
-      selectRecipient(recipientData);
-      
-      // Also store in sessionStorage as backup
-      sessionStorage.setItem('selectedRecipient', JSON.stringify(recipientData));
-      
-      console.log('Selected recipient set:', recipientData);
-      
-      // Close the modal
-      onClose();
-      
-      // Navigate to messages page
-      if (user?.role === 'artisan') {
-        console.log('Navigating to artisan-messages');
-        navigate('/artisan-messages');
-      } else {
-        console.log('Navigating to messages');
-        navigate('/messages');
-      }
+      setShowChatModal(true);
+      await loadChatConversation(booking.customer._id);
     }
+  };
+
+  // Load chat conversation
+  const loadChatConversation = async (customerId) => {
+    try {
+      setChatLoading(true);
+      const messages = await messageService.getConversation(customerId);
+      setChatMessages(messages);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      setChatMessages([]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  // Send message
+  const handleSendMessage = async (messageText) => {
+    if (!messageText.trim() || !booking?.customer) return;
+
+    try {
+      // Create optimistic message with correct structure
+      const tempMessage = {
+        _id: Date.now().toString(),
+        content: messageText,
+        sender: { _id: user._id, name: user.name },
+        recipient: booking.customer._id,
+        timestamp: new Date().toISOString(),
+        isOptimistic: true
+      };
+
+      // Optimistically add message to UI
+      setChatMessages(prev => [...prev, tempMessage]);
+
+      // Send message to server
+      await messageService.sendMessage(booking.customer._id, messageText);
+      
+      // Refresh conversation
+      await loadChatConversation(booking.customer._id);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message');
+    }
+  };
+
+  // Close chat modal
+  const closeChatModal = () => {
+    setShowChatModal(false);
+    setChatMessages([]);
   };
 
   if (!isOpen || !booking) return null;
@@ -311,6 +474,48 @@ const BookingPreviewModal = ({
           </div>
         )}
       </div>
+
+      {/* Chat Modal */}
+      {showChatModal && booking?.customer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md h-[500px] flex flex-col">
+            {/* Chat Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-xl">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-full flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#151E3D]">Chat with Customer</h2>
+                  <p className="text-sm text-gray-500">{booking.customer.name}</p>
+                </div>
+              </div>
+              <button
+                onClick={closeChatModal}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Chat Modal Content */}
+            <div className="flex-1 flex flex-col">
+              <ChatInterface 
+                customer={booking.customer}
+                onClose={closeChatModal}
+                messages={chatMessages}
+                loading={chatLoading}
+                onSendMessage={handleSendMessage}
+                onRefresh={() => {
+                  if (booking?.customer?._id) {
+                    loadChatConversation(booking.customer._id);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

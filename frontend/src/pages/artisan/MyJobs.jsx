@@ -1,5 +1,5 @@
-import React, { useState, useContext, useEffect } from "react"; // Added useContext and useEffect
-import { CalendarCheck, CheckCircle, Clock, RefreshCw, Eye, MapPin, Phone, Calendar, Clock as ClockIcon, FileText, MessageCircle, X, Check } from "lucide-react";
+import React, { useState, useContext, useEffect, useRef } from "react"; // Added useContext, useEffect, and useRef
+import { CalendarCheck, CheckCircle, Clock, RefreshCw, Eye, MapPin, Phone, Calendar, Clock as ClockIcon, FileText, MessageCircle, X, Check, Send, Smile } from "lucide-react";
 import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
 import { BookingContext } from "../../context/BookingContext"; // Import BookingContext instead of ArtisanContext
 import useAuth from "../../hooks/useAuth"; // Import useAuth to potentially refresh data
@@ -10,12 +10,150 @@ import { useNotification } from "../../context/NotificationContext"; // Import n
 import { useMessage } from "../../context/MessageContext"; // Import MessageContext for chat functionality
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
+// Chat Interface Component
+const ChatInterface = ({ customer, onClose, messages, loading, onSendMessage, onRefresh }) => {
+  const { user } = useAuth();
+  const [newMessage, setNewMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || sending) return;
+
+    const messageText = newMessage.trim();
+    setNewMessage('');
+    setSending(true);
+
+    try {
+      await onSendMessage(messageText);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-6 min-h-[300px] max-h-[400px] bg-gray-50">
+        {loading ? (
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#151E3D]"></div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <MessageCircle className="w-12 h-12 mb-3 text-gray-300" />
+            <p className="text-center font-medium">No messages yet</p>
+            <p className="text-center text-sm text-gray-400">Start the conversation with {customer.name || 'this customer'}!</p>
+            <button
+              onClick={onRefresh}
+              className="mt-3 px-4 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.filter(message => message && message.content).map((message) => {
+            // Use the same logic as the main message page
+            const isOwnMessage = message?.sender?._id === user?._id;
+            const messageTime = message?.timestamp || message?.createdAt;
+            
+            return (
+            <div
+              key={message._id + (message.timestamp || message.createdAt)}
+              className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`flex items-end space-x-3 max-w-[70%] ${isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                {/* Avatar for received messages only */}
+                {!isOwnMessage && (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0 shadow-sm">
+                    {message?.sender?.name?.charAt(0)?.toUpperCase() || 'C'}
+                  </div>
+                )}
+                
+                {/* Message bubble */}
+                <div className={`relative group ${isOwnMessage ? 'ml-12' : 'mr-12'}`}>
+                  <div className={`px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
+                    isOwnMessage 
+                      ? 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white rounded-br-md' 
+                      : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
+                  } ${message.isOptimistic ? 'opacity-70' : ''}`}>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message?.content || ''}</p>
+                    
+                    {/* Message time */}
+                    <div className={`text-xs mt-2 ${
+                      isOwnMessage ? 'text-white/70' : 'text-gray-500'
+                    }`}>
+                      {messageTime ? new Date(messageTime).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      }) : 'Just now'}
+                      {message.isOptimistic && ' (Sending...)'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </div>
+
+      {/* Message Input */}
+      <div className="border-t border-gray-200 p-4 bg-white">
+        <form onSubmit={sendMessage} className="flex items-center space-x-3">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder={`Message ${customer.name || 'customer'}...`}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#151E3D] focus:border-transparent"
+            disabled={sending}
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim() || sending}
+            className="p-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {sending ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const MyJobs = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [updatingJob, setUpdatingJob] = useState(null); // Track which job is being updated
   const [successMessage, setSuccessMessage] = useState(""); // Success message state
   const [selectedBooking, setSelectedBooking] = useState(null); // Selected booking for modal
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
+  const [showChatModal, setShowChatModal] = useState(false); // Chat modal visibility
+  const [selectedCustomerForChat, setSelectedCustomerForChat] = useState(null); // Selected customer for chat
+  const [chatMessages, setChatMessages] = useState([]); // Chat messages
+  const [chatLoading, setChatLoading] = useState(false); // Chat loading state
+  const [currentPage, setCurrentPage] = useState(1); // Pagination state
+  const itemsPerPage = 5; // Items per page
   const { user } = useAuth(); // Use useAuth to get user info
   const { 
     artisanBookings, 
@@ -44,25 +182,64 @@ const MyJobs = () => {
   }, [user, fetchArtisanBookings, fetchServiceProfileBookings]);
 
   // Function to handle chat with customer
-  const handleChatWithCustomer = (booking) => {
+  const handleChatWithCustomer = async (booking) => {
     if (booking.customer && booking.customer._id) {
-      // Store recipient data in sessionStorage for the messages page to pick up
-      const recipientData = {
-        _id: booking.customer._id,
-        name: booking.customer.name || 'Customer'
-      };
-      
-      // Try to set recipient in context if available
-      selectRecipient(recipientData);
-      
-      // Also store in sessionStorage as backup
-      sessionStorage.setItem('selectedRecipient', JSON.stringify(recipientData));
-      
-      closeModal(); // Close the modal
-      navigate('/artisan-messages'); // Navigate to artisan messages page
+      setSelectedCustomerForChat(booking.customer);
+      setShowChatModal(true);
+      await loadChatConversation(booking.customer._id);
     } else {
       showNotification('error', 'Customer information not available for chat');
     }
+  };
+
+  // Load chat conversation
+  const loadChatConversation = async (customerId) => {
+    try {
+      setChatLoading(true);
+      const messages = await messageService.getConversation(customerId);
+      setChatMessages(messages);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      setChatMessages([]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  // Send message
+  const handleSendMessage = async (messageText) => {
+    if (!messageText.trim() || !selectedCustomerForChat) return;
+
+    try {
+      // Create optimistic message with correct structure
+      const tempMessage = {
+        _id: Date.now().toString(),
+        content: messageText,
+        sender: { _id: user._id, name: user.name },
+        recipient: selectedCustomerForChat._id,
+        timestamp: new Date().toISOString(),
+        isOptimistic: true
+      };
+
+      // Optimistically add message to UI
+      setChatMessages(prev => [...prev, tempMessage]);
+
+      // Send message to server
+      await messageService.sendMessage(selectedCustomerForChat._id, messageText);
+      
+      // Refresh conversation
+      await loadChatConversation(selectedCustomerForChat._id);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showNotification('error', 'Failed to send message');
+    }
+  };
+
+  // Close chat modal
+  const closeChatModal = () => {
+    setShowChatModal(false);
+    setSelectedCustomerForChat(null);
+    setChatMessages([]);
   };
 
   // Function to request customer confirmation for job completion
@@ -240,10 +417,39 @@ const MyJobs = () => {
     ...(serviceProfileBookings || []).map(booking => ({ ...booking, type: 'serviceProfile' }))
   ];
 
-  const filteredBookings =
-    filterStatus === "all"
-      ? allBookings
-      : allBookings.filter((b) => b.status === filterStatus);
+  const filteredBookings = (filterStatus === "all"
+    ? allBookings
+    : allBookings.filter((b) => b.status === filterStatus))
+    ?.sort((a, b) => {
+      // Sort by date (most recent first)
+      const dateA = new Date(a.date || a.createdAt);
+      const dateB = new Date(b.date || b.createdAt);
+      return dateB - dateA;
+    });
+
+  // Pagination logic
+  const totalPages = Math.ceil((filteredBookings?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedBookings = filteredBookings?.slice(startIndex, endIndex) || [];
+
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus]);
+
+  // Pagination handlers
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const completedJobs = allBookings?.filter((b) => b.status === "Completed").length || 0;
   const pendingJobs = allBookings?.filter((b) => b.status === "Pending").length || 0;
@@ -382,7 +588,7 @@ const MyJobs = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((booking) => (
+                  {paginatedBookings.map((booking) => (
                     <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-gray-600">{booking._id}</td>
                       <td className="p-3 text-gray-600">{booking.customer?.name || "N/A"}</td>
@@ -439,6 +645,42 @@ const MyJobs = () => {
                   ))}
                 </tbody>
               </table>
+            )}
+
+            {/* Pagination Controls */}
+            {filteredBookings && filteredBookings.length > itemsPerPage && (
+              <div className="flex items-center justify-between mt-6 px-4">
+                <div className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredBookings.length)} of {filteredBookings.length} jobs
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-[#151E3D] border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-2 text-sm text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-[#151E3D] border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -674,6 +916,48 @@ const MyJobs = () => {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Modal */}
+      {showChatModal && selectedCustomerForChat && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md h-[500px] flex flex-col">
+            {/* Chat Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-xl">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-[#151E3D] to-[#1E2A4A] rounded-full flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#151E3D]">Chat with Customer</h2>
+                  <p className="text-sm text-gray-500">{selectedCustomerForChat.name}</p>
+                </div>
+              </div>
+              <button
+                onClick={closeChatModal}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Chat Modal Content */}
+            <div className="flex-1 flex flex-col">
+              <ChatInterface 
+                customer={selectedCustomerForChat}
+                onClose={closeChatModal}
+                messages={chatMessages}
+                loading={chatLoading}
+                onSendMessage={handleSendMessage}
+                onRefresh={() => {
+                  if (selectedCustomerForChat?._id) {
+                    loadChatConversation(selectedCustomerForChat._id);
+                  }
+                }}
+              />
             </div>
           </div>
         </div>

@@ -61,6 +61,7 @@ const RoutesComponent = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/find-artisans" element={<AllArtisans />} />
+      <Route path="/all-artisans" element={<AllArtisans />} /> {/* New: Add /all-artisans route */}
       <Route path="/artisans" element={<FindArtisans />} /> {/* New: Add /artisans route for compatibility */}
       <Route path="/artisan/:id" element={<ArtisanDetail />} />
       <Route path="/services" element={<Services />} /> {/* New: Services page */}

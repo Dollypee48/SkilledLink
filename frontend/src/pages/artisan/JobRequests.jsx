@@ -11,6 +11,8 @@ const ArtisanRequests = () => {
   const [successMessage, setSuccessMessage] = useState(""); // Track success messages
   const [selectedBooking, setSelectedBooking] = useState(null); // For booking preview
   const [showBookingModal, setShowBookingModal] = useState(false); // For booking preview modal
+  const [currentPage, setCurrentPage] = useState(1); // Pagination state
+  const itemsPerPage = 5; // Items per page
   const { user } = useAuth(); // Get user to check role
   const {
     artisanBookings: requests, // Renamed for clarity, assuming BookingContext provides artisanBookings
@@ -73,8 +75,37 @@ const ArtisanRequests = () => {
   const declinedRequests = allBookings?.filter((r) => normalizeStatus(r.status) === "Declined").length || 0;
   const totalRequests = allBookings?.length || 0;
 
-  const filteredRequests =
-    filterStatus === "all" ? allBookings : allBookings?.filter((r) => normalizeStatus(r.status) === filterStatus);
+  const filteredRequests = (filterStatus === "all" ? allBookings : allBookings?.filter((r) => normalizeStatus(r.status) === filterStatus))
+    ?.sort((a, b) => {
+      // Sort by date (most recent first)
+      const dateA = new Date(a.date || a.createdAt);
+      const dateB = new Date(b.date || b.createdAt);
+      return dateB - dateA;
+    });
+
+  // Pagination logic
+  const totalPages = Math.ceil((filteredRequests?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRequests = filteredRequests?.slice(startIndex, endIndex) || [];
+
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus]);
+
+  // Pagination handlers
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   // Debug logging removed for production
 
@@ -327,7 +358,7 @@ const ArtisanRequests = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRequests?.map((request) => (
+                  {paginatedRequests?.map((request) => (
                     <tr key={request._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-gray-600">{request._id}</td>
                       <td className="p-3 text-gray-600">{request.customer?.name || `Customer ${request._id}`}</td>
@@ -388,6 +419,42 @@ const ArtisanRequests = () => {
                   ))}
                 </tbody>
               </table>
+            )}
+
+            {/* Pagination Controls */}
+            {filteredRequests && filteredRequests.length > itemsPerPage && (
+              <div className="flex items-center justify-between mt-6 px-4">
+                <div className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredRequests.length)} of {filteredRequests.length} requests
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-[#151E3D] border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-2 text-sm text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-[#151E3D] border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}

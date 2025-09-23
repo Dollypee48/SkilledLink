@@ -50,7 +50,7 @@ export default function CustomerDashboard() {
   
   // Pagination state for recent bookings
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
+  const [itemsPerPage] = useState(4);
 
   useEffect(() => {
     if (!hasFetched && user && accessToken) {
@@ -76,11 +76,16 @@ export default function CustomerDashboard() {
   }, [getBookings, fetchCustomerServiceProfileBookings, loadSuggestions, hasFetched, user, accessToken]); // Keep dependencies updated
 
 
-  // Combine regular bookings and service profile bookings
+  // Combine regular bookings and service profile bookings, sorted by date (most recent first)
   const allBookings = [
     ...(customerBookings || []).map(booking => ({ ...booking, type: 'regular' })),
     ...(customerServiceProfileBookings || []).map(booking => ({ ...booking, type: 'serviceProfile' }))
-  ];
+  ].sort((a, b) => {
+    // Sort by booking date in descending order (most recent first)
+    const dateA = new Date(a.date || a.createdAt);
+    const dateB = new Date(b.date || b.createdAt);
+    return dateB - dateA;
+  });
 
   // Get bookings in progress (Accepted or Pending Confirmation)
   const bookingsInProgress = allBookings?.filter((b) => 
@@ -132,8 +137,16 @@ export default function CustomerDashboard() {
     }
   };
 
-  const handleViewAll = () => {
-    navigate('/customer/bookings');
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
 
@@ -257,13 +270,24 @@ export default function CustomerDashboard() {
                         <RefreshCw className={`w-4 h-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
                         Refresh
                       </button>
-                      <button 
-                        onClick={handleViewAll}
-                        className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center"
-                      >
-                        View all
-                        <ArrowRight className="w-4 h-4 ml-1" />
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          onClick={handlePrevious}
+                          disabled={currentPage === 1}
+                          className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ArrowLeft className="w-4 h-4 mr-1" />
+                          Previous
+                        </button>
+                        <button 
+                          onClick={handleNext}
+                          disabled={currentPage >= totalPages}
+                          className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                          <ArrowRight className="w-4 h-4 ml-1" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -18,7 +18,6 @@ const ArtisanSettingsPage = () => {
   
   // Service Profile state
   const [serviceProfiles, setServiceProfiles] = useState([]);
-  const [serviceProfileStats, setServiceProfileStats] = useState(null);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [editingServiceProfile, setEditingServiceProfile] = useState(null);
   const [serviceProfileLoading, setServiceProfileLoading] = useState(false);
@@ -510,27 +509,9 @@ const ArtisanSettingsPage = () => {
 
       console.log('Loading service profiles...');
       
-      // Load profiles and stats separately to handle errors independently
-      let profiles = [];
-      let stats = null;
-      
-      try {
-        profiles = await serviceProfileService.getArtisanServiceProfiles(token);
-        console.log('Service profiles loaded:', profiles);
-        setServiceProfiles(profiles);
-      } catch (profileError) {
-        console.error('Error loading service profiles:', profileError);
-        toast.error('Failed to load service profiles');
-      }
-      
-      try {
-        stats = await serviceProfileService.getServiceProfileStats(token);
-        console.log('Service profile stats loaded:', stats);
-        setServiceProfileStats(stats);
-      } catch (statsError) {
-        console.error('Error loading service profile stats:', statsError);
-        // Don't show error for stats as it's not critical
-      }
+      const profiles = await serviceProfileService.getArtisanServiceProfiles(token);
+      console.log('Service profiles loaded:', profiles);
+      setServiceProfiles(profiles);
     } catch (error) {
       console.error('Error loading service profiles:', error);
       console.error('Error details:', error.message, error.stack);
@@ -1764,48 +1745,6 @@ const ArtisanSettingsPage = () => {
                         <span>Create New Profile</span>
                       </button>
         </div>
-
-                    {/* Stats Cards */}
-                    {serviceProfileStats && (
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-blue-600 text-sm font-medium">Total Profiles</p>
-                              <p className="text-2xl font-bold text-blue-800">{serviceProfileStats.totalProfiles}</p>
-      </div>
-                            <Briefcase className="w-8 h-8 text-blue-500" />
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-green-600 text-sm font-medium">Active Profiles</p>
-                              <p className="text-2xl font-bold text-green-800">{serviceProfileStats.activeProfiles}</p>
-                            </div>
-                            <CheckCircle className="w-8 h-8 text-green-500" />
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-6">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-purple-600 text-sm font-medium">Total Bookings</p>
-                              <p className="text-2xl font-bold text-purple-800">{serviceProfileStats.totalBookings}</p>
-                            </div>
-                            <User className="w-8 h-8 text-purple-500" />
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-yellow-600 text-sm font-medium">Total Earnings</p>
-                              <p className="text-2xl font-bold text-yellow-800">₦{serviceProfileStats.totalEarnings?.toLocaleString()}</p>
-                            </div>
-                            <Star className="w-8 h-8 text-yellow-500" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Service Profiles List */}
                     {serviceProfileLoading ? (

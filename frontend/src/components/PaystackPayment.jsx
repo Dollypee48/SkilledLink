@@ -27,6 +27,9 @@ const PaystackPayment = ({
     }
   };
 
+  // Debug logging
+  console.log('Paystack config:', config);
+
 
   const initializePayment = usePaystackPayment(config);
 
@@ -77,9 +80,23 @@ const PaystackPayment = ({
       setError('Invalid payment amount. Please try again.');
       return;
     }
-    setIsProcessing(true);
-    setPaymentStatus('processing');
-    initializePayment(onSuccessCallback, onCloseCallback, onErrorCallback);
+
+    // Validate config object
+    if (!config || !config.publicKey || !config.reference) {
+      setError('Payment configuration error. Please try again.');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      setPaymentStatus('processing');
+      initializePayment(onSuccessCallback, onCloseCallback, onErrorCallback);
+    } catch (error) {
+      console.error('Payment initialization error:', error);
+      setError('Failed to initialize payment. Please try again.');
+      setIsProcessing(false);
+      setPaymentStatus(null);
+    }
   };
 
   useEffect(() => {
@@ -90,6 +107,13 @@ const PaystackPayment = ({
       return () => clearTimeout(timer);
     }
   }, [paymentStatus]);
+
+  // Validate config on mount
+  useEffect(() => {
+    if (!config || !config.publicKey || !config.reference || !config.email || !config.amount) {
+      setError('Invalid payment configuration. Please refresh the page and try again.');
+    }
+  }, [config]);
 
   if (paymentStatus === 'success') {
     return (

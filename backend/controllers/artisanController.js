@@ -228,7 +228,16 @@ exports.getArtisans = async (req, res) => {
         return b.reviewCount - a.reviewCount;
       });
 
-      return res.json(sortedResult);
+      return res.json({
+        artisans: sortedResult,
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: sortedResult.length,
+          hasNext: false,
+          hasPrev: false
+        }
+      });
     }
     
     const artisans = await ArtisanProfile.find(query)
@@ -321,7 +330,16 @@ exports.getArtisans = async (req, res) => {
       return b.reviewCount - a.reviewCount;
     });
 
-    res.json(sortedResult);
+    res.json({
+      artisans: sortedResult,
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: sortedResult.length,
+        hasNext: false,
+        hasPrev: false
+      }
+    });
   } catch (err) {
     console.error("Get artisans error:", err);
     res.status(500).json({ message: "Server error" });

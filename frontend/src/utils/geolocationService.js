@@ -3,10 +3,11 @@ class GeolocationService {
   constructor() {
     this.isSupported = 'geolocation' in navigator;
     this.watchId = null;
+    this.addressCache = new Map(); // Cache for address lookups
     this.defaultOptions = {
       enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 300000 // 5 minutes
+      timeout: 15000, // Increased timeout for better accuracy
+      maximumAge: 0 // Always get fresh location data
     };
   }
 
@@ -15,7 +16,7 @@ class GeolocationService {
     return this.isSupported;
   }
 
-  // Get current position with error handling
+  // Get current position with error handling and improved accuracy
   async getCurrentPosition(options = {}) {
     if (!this.isSupported) {
       throw new Error('Geolocation is not supported by this browser');
@@ -26,12 +27,22 @@ class GeolocationService {
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          resolve({
+          const result = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy,
             timestamp: position.timestamp
-          });
+          };
+          
+          // Log accuracy for debugging
+          console.log('📍 Location accuracy:', result.accuracy, 'meters');
+          
+          // If accuracy is too low, warn but still proceed
+          if (result.accuracy > 100) {
+            console.warn('⚠️ Low location accuracy detected:', result.accuracy, 'meters');
+          }
+          
+          resolve(result);
         },
         (error) => {
           const errorMessage = this.getErrorMessage(error.code);
@@ -40,6 +51,17 @@ class GeolocationService {
         mergedOptions
       );
     });
+  }
+
+  // Clear address cache
+  clearCache() {
+    this.addressCache.clear();
+    console.log('🗑️ Address cache cleared');
+  }
+
+  // Get cache size for debugging
+  getCacheSize() {
+    return this.addressCache.size;
   }
 
   // Get error message based on error code
@@ -59,9 +81,20 @@ class GeolocationService {
   // Reverse geocoding to get address from coordinates
   async getAddressFromCoordinates(latitude, longitude) {
     try {
-      // Using a free reverse geocoding service (you can replace with your preferred service)
+      // Create cache key with rounded coordinates for better caching
+      const cacheKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+      
+      // Check cache first
+      if (this.addressCache.has(cacheKey)) {
+        console.log('📍 Using cached address for coordinates:', cacheKey);
+        return this.addressCache.get(cacheKey);
+      }
+
+      console.log('🌍 Fetching address for coordinates:', latitude, longitude);
+      
+      // Using a free reverse geocoding service with better parameters
       const response = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en&key=`
       );
       
       if (!response.ok) {
@@ -74,28 +107,68 @@ class GeolocationService {
         throw new Error('No address found for this location');
       }
 
-      return {
-        address: data.localityInfo?.administrative?.[0]?.name || data.locality || 'Unknown',
-        city: data.city || data.locality || 'Unknown',
-        state: data.principalSubdivision || data.administrativeArea || 'Unknown',
-        country: data.countryName || 'Unknown',
-        countryCode: data.countryCode || 'Unknown',
+      // More robust address parsing
+      const addressData = {
+        address: this.extractAddress(data),
+        city: this.extractCity(data),
+        state: this.extractState(data),
+        country: data.countryName || 'Nigeria',
+        countryCode: data.countryCode || 'NG',
         formattedAddress: this.formatAddress(data),
+        coordinates: { latitude, longitude },
         raw: data
       };
+
+      // Cache the result
+      this.addressCache.set(cacheKey, addressData);
+      console.log('✅ Address cached for coordinates:', cacheKey);
+
+      return addressData;
     } catch (error) {
       console.error('Reverse geocoding error:', error);
       throw new Error('Unable to get address information. Please enter your address manually.');
     }
   }
 
-  // Format address from geocoding data
+  // Extract address with better fallback logic
+  extractAddress(data) {
+    // Try multiple sources for address
+    return data.localityInfo?.administrative?.[0]?.name || 
+           data.locality || 
+           data.city || 
+           data.principalSubdivision || 
+           'Unknown';
+  }
+
+  // Extract city with better fallback logic
+  extractCity(data) {
+    return data.city || 
+           data.locality || 
+           data.localityInfo?.administrative?.[1]?.name ||
+           'Unknown';
+  }
+
+  // Extract state with better fallback logic
+  extractState(data) {
+    return data.principalSubdivision || 
+           data.administrativeArea || 
+           data.localityInfo?.administrative?.[2]?.name ||
+           'Unknown';
+  }
+
+  // Format address from geocoding data with consistent structure
   formatAddress(data) {
     const parts = [];
     
-    if (data.locality) parts.push(data.locality);
-    if (data.principalSubdivision) parts.push(data.principalSubdivision);
-    if (data.countryName) parts.push(data.countryName);
+    // Use the extracted methods for consistency
+    const city = this.extractCity(data);
+    const state = this.extractState(data);
+    const country = data.countryName || 'Nigeria';
+    
+    // Build address in consistent order: City, State, Country
+    if (city && city !== 'Unknown') parts.push(city);
+    if (state && state !== 'Unknown' && state !== city) parts.push(state);
+    if (country && country !== 'Unknown') parts.push(country);
     
     return parts.join(', ');
   }

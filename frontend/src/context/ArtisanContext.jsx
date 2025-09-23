@@ -64,7 +64,9 @@ export const ArtisanProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       const data = await artisanService.getArtisans(filters);
-      setArtisans(data);
+      // Handle new response format with artisans array and pagination
+      const artisansArray = data.artisans || data;
+      setArtisans(artisansArray);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || "Failed to search artisans");

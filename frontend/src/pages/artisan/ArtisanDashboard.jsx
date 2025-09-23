@@ -59,7 +59,7 @@ const ArtisanDashboard = () => {
   
   // Pagination state for recent bookings
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
+  const [itemsPerPage] = useState(4);
 
   // Fetch artisan profile and bookings on mount
   useEffect(() => {
@@ -72,11 +72,16 @@ const ArtisanDashboard = () => {
     }
   }, [user, fetchCurrentProfile, fetchArtisanBookings, fetchServiceProfileBookings, navigate]);
 
-  // Combine regular and service profile bookings
+  // Combine regular and service profile bookings, sorted by date (most recent first)
   const allBookings = [
     ...(artisanBookings || []).map(booking => ({ ...booking, type: 'regular' })),
     ...(serviceProfileBookings || []).map(booking => ({ ...booking, type: 'serviceProfile' }))
-  ];
+  ].sort((a, b) => {
+    // Sort by booking date in descending order (most recent first)
+    const dateA = new Date(a.date || a.createdAt);
+    const dateB = new Date(b.date || b.createdAt);
+    return dateB - dateA;
+  });
 
   // Calculate summary stats from all bookings
   const pendingBookings = allBookings?.filter((booking) => booking.status === 'Pending').length || 0;
@@ -158,8 +163,16 @@ const ArtisanDashboard = () => {
     }
   };
 
-  const handleViewAll = () => {
-    navigate('/artisan/my-jobs');
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   return (
@@ -342,13 +355,24 @@ const ArtisanDashboard = () => {
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-gray-900">Recent Bookings</h2>
-                    <button 
-                      onClick={handleViewAll}
-                      className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center"
-                    >
-                      View all
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={handlePrevious}
+                        disabled={currentPage === 1}
+                        className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-1" />
+                        Previous
+                      </button>
+                      <button 
+                        onClick={handleNext}
+                        disabled={currentPage >= totalPages}
+                        className="text-sm text-[#151E3D] hover:text-[#1E2A4A] font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="p-6">

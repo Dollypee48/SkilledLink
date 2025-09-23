@@ -188,7 +188,7 @@ const FindArtisans = () => {
             <h2 className="text-xl font-semibold">Available Artisans</h2>
             {!loading && !error && (
               <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                {artisans.length} {artisans.length === 1 ? 'artisan' : 'artisans'} found
+                {(artisans || []).length} {(artisans || []).length === 1 ? 'artisan' : 'artisans'} found
               </span>
             )}
           </div>
@@ -209,7 +209,7 @@ const FindArtisans = () => {
                 Try Again
               </button>
             </div>
-          ) : artisans.length === 0 ? (
+          ) : (artisans || []).length === 0 ? (
             <div className="text-center py-8">
               <div className="text-gray-400 text-6xl mb-4">🔍</div>
               <p className="text-gray-600 mb-4">No artisans found matching your criteria.</p>
@@ -217,7 +217,7 @@ const FindArtisans = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {artisans.filter(artisan => artisan && artisan._id).map((artisan) => (
+              {(artisans || []).filter(artisan => artisan && artisan._id).map((artisan) => (
                 <div key={artisan._id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:border-[#151E3D]/30 group">
                   
                   {/* Header with Profile Image & Basic Info */}
