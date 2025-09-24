@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocation } from 'react-router-dom';
 import { 
   User, CheckCircle, XCircle, Clock, Star, Mail, Crown, 
-  MapPin, Phone, Calendar, DollarSign, Briefcase, Award,
+  MapPin, Phone, Calendar, Briefcase, Award,
   Edit3, Shield, Camera, RefreshCw, TrendingUp, Users, 
   Target, Zap, Globe, FileText, CheckCircle2, Wrench
 } from 'lucide-react';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Clock, Filter, Search, Eye, ArrowLeft, Briefcase, DollarSign, User, Calendar, XCircle, MessageCircle, Users, Wrench } from 'lucide-react';
+import { Star, MapPin, Clock, Filter, Search, Eye, ArrowLeft, Briefcase, User, Calendar, XCircle, MessageCircle, Users, Wrench } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { ReviewService } from '../services/reviewService';
@@ -942,7 +942,7 @@ const AllArtisans = () => {
                 <div className="mb-3 p-2 bg-gradient-to-r from-[#F59E0B]/5 to-[#151E3D]/5 rounded-lg border border-[#F59E0B]/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <DollarSign className="w-4 h-4 text-[#F59E0B] mr-2" />
+                      <span className="text-lg font-bold text-[#F59E0B] mr-2">₦</span>
                       <span className="text-sm text-[#151E3D]/70">Hourly Rate:</span>
                     </div>
                         <span className="text-lg font-bold text-[#151E3D]">₦{item.hourlyRate?.toLocaleString() || '0'}</span>

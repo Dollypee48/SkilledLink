@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Calendar, Clock, MapPin, User, Phone, MessageSquare, Star, DollarSign, CheckCircle, XCircle, Send } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, User, Phone, MessageSquare, Star, CheckCircle, XCircle, Send } from 'lucide-react';
 import { useMessage } from '../context/MessageContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -262,7 +262,7 @@ const BookingPreviewModal = ({
                     <div>
                       <p className="text-sm text-blue-700 font-medium">Amount</p>
                       <p className="text-blue-900 text-lg font-semibold flex items-center">
-                        <DollarSign className="w-5 h-5 mr-1" />
+                        <span className="text-lg font-bold text-green-600 mr-1">₦</span>
                         ₦{(booking.totalAmount || booking.budget || 0).toLocaleString()}
                       </p>
                     </div>
@@ -271,7 +271,7 @@ const BookingPreviewModal = ({
                     <div>
                       <p className="text-sm text-blue-700 font-medium">Hourly Rate</p>
                       <p className="text-blue-900 text-lg font-semibold flex items-center">
-                        <DollarSign className="w-5 h-5 mr-1" />
+                        <span className="text-lg font-bold text-green-600 mr-1">₦</span>
                         ₦{booking.hourlyRate.toLocaleString()}/hour
                       </p>
                     </div>

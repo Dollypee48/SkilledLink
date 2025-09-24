@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Clock, DollarSign, MapPin, Calendar } from 'lucide-react';
+import { X, Plus, Trash2, Clock, MapPin, Calendar } from 'lucide-react';
 import serviceProfileService from '../services/serviceProfileService';
 import { toast } from 'react-toastify';
 

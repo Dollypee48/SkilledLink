@@ -234,19 +234,21 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            {/* Favorite Artisans */}
+            {/* Services Used */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
               <div className="flex items-center justify-between">
             <div>
-                  <p className="text-sm font-medium text-gray-600">Saved Artisans</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">0</p>
-                  <p className="text-xs text-pink-600 mt-1 flex items-center">
-                    <Heart className="w-3 h-3 mr-1" />
-                    Favorites
+                  <p className="text-sm font-medium text-gray-600">Services Used</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {new Set(allBookings?.map(booking => booking.service || booking.serviceName).filter(Boolean)).size || 0}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1 flex items-center">
+                    <Wrench className="w-3 h-3 mr-1" />
+                    Different types
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-pink-600" />
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Wrench className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
           </div>

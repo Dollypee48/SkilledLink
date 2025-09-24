@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/common/Layouts/AdminLayout';
 import { adminService } from '../../services/adminService';
 import { useAuth } from '../../context/AuthContext';
-import { Loader2, Eye, X, Calendar, Clock, MapPin, Phone, Mail, User, Wrench, DollarSign, CheckCircle, XCircle, AlertCircle, Star } from 'lucide-react';
+import { Loader2, Eye, X, Calendar, Clock, MapPin, Phone, Mail, User, Wrench, CheckCircle, XCircle, AlertCircle, Star } from 'lucide-react';
 
 const ManageBookings = () => {
   const { accessToken } = useAuth();
@@ -235,7 +235,7 @@ const ManageBookings = () => {
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                      <DollarSign className="w-5 h-5 mr-2" />
+                      <span className="text-lg font-bold text-green-600 mr-2">₦</span>
                       Payment Information
                     </h3>
                     <div className="space-y-3">

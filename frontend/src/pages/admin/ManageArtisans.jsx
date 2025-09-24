@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/common/Layouts/AdminLayout';
 import { adminService } from '../../services/adminService';
 import { useAuth } from '../../context/AuthContext';
-import { Loader2, Eye, X, Star, MapPin, Phone, Mail, Calendar, Shield, Award, Clock, User, CheckCircle, XCircle, Wrench, DollarSign, TrendingUp, FileText, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Eye, X, Star, MapPin, Phone, Mail, Calendar, Shield, Award, Clock, User, CheckCircle, XCircle, Wrench, TrendingUp, FileText, Image as ImageIcon } from 'lucide-react';
 
 const ManageArtisans = () => {
   const { accessToken } = useAuth();
@@ -270,7 +270,7 @@ const ManageArtisans = () => {
                           </span>
                         </div>
                         <div className="flex items-center">
-                          <DollarSign className="w-4 h-4 text-gray-400 mr-3" />
+                          <span className="text-sm font-bold text-green-600 mr-3">₦</span>
                           <span className="text-sm text-gray-600">Hourly Rate:</span>
                           <span className="ml-2 text-sm font-medium">
                             ₦{selectedArtisan.artisanProfile.hourlyRate || '0'}/hour
@@ -310,7 +310,7 @@ const ManageArtisans = () => {
                           </span>
                         </div>
                         <div className="flex items-center">
-                          <DollarSign className="w-4 h-4 text-gray-400 mr-3" />
+                          <span className="text-sm font-bold text-green-600 mr-3">₦</span>
                           <span className="text-sm text-gray-600">Total Earnings:</span>
                           <span className="ml-2 text-sm font-medium">
                             ₦{selectedArtisan.artisanProfile.totalEarnings || '0'}
