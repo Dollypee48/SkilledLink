@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PaystackButton } from 'react-paystack';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
-import { detectBrowserIssues, getBrowserCompatibilityScore, getCompatibilityRecommendations } from '../utils/browserCompatibility';
+import { Loader2, CheckCircle, XCircle, CreditCard, Building2, Smartphone } from 'lucide-react';
 
 const PaystackPayment = ({ 
   amount, 
@@ -16,15 +14,65 @@ const PaystackPayment = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [error, setError] = useState(null);
+  const [paystackLoaded, setPaystackLoaded] = useState(false);
+
+  // Load Paystack script with fallback
+  useEffect(() => {
+    const loadPaystackScript = () => {
+      return new Promise((resolve, reject) => {
+        // Check if Paystack is already loaded
+        if (window.PaystackPop) {
+          setPaystackLoaded(true);
+          resolve();
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.async = true;
+        
+        // Set timeout for script loading
+        const timeout = setTimeout(() => {
+          reject(new Error('Script loading timeout'));
+        }, 10000); // 10 second timeout
+        
+        script.onload = () => {
+          clearTimeout(timeout);
+          setPaystackLoaded(true);
+          resolve();
+        };
+        
+        script.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Failed to load Paystack script'));
+        };
+        
+        document.head.appendChild(script);
+      });
+    };
+
+    loadPaystackScript().catch(err => {
+      console.error('Error loading Paystack:', err);
+      setError('Network connection issue. Please try the alternative payment methods below or check your internet connection.');
+    });
+  }, []);
 
   const config = {
-    reference: reference,
+    key: publicKey,
     email: email,
-    amount: amount, // Amount is already in kobo from backend
-    publicKey: publicKey,
+    amount: amount,
+    ref: reference,
     currency: 'NGN',
     metadata: {
       customerCode: customerCode
+    },
+    callback: (response) => {
+      console.log('Paystack callback:', response);
+      onSuccessCallback(response.reference);
+    },
+    onClose: () => {
+      console.log('Paystack popup closed');
+      onCloseCallback();
     }
   };
 
@@ -87,14 +135,22 @@ const PaystackPayment = ({
       return;
     }
 
-    // Validate config object
-    if (!config || !config.publicKey || !config.reference) {
-      setError('Payment configuration error. Please try again.');
+    if (!paystackLoaded) {
+      setError('Payment system is still loading. Please wait a moment and try again.');
       return;
     }
 
     setIsProcessing(true);
     setPaymentStatus('processing');
+    
+    try {
+      // Use PaystackPop directly
+      const handler = window.PaystackPop.setup(config);
+      handler.openIframe();
+    } catch (error) {
+      console.error('Error opening Paystack popup:', error);
+      onErrorCallback(error);
+    }
   };
 
   useEffect(() => {
@@ -106,32 +162,12 @@ const PaystackPayment = ({
     }
   }, [paymentStatus]);
 
-  // Validate config on mount and check browser compatibility
+  // Validate config on mount
   useEffect(() => {
-    if (!config || !config.publicKey || !config.reference || !config.email || !config.amount) {
+    if (!config || !config.key || !config.ref || !config.email || !config.amount) {
       setError('Invalid payment configuration. Please refresh the page and try again.');
       return;
     }
-
-    // Check for browser compatibility issues
-    const checkBrowserCompatibility = () => {
-      const issues = detectBrowserIssues();
-      const score = getBrowserCompatibilityScore();
-      const recommendations = getCompatibilityRecommendations();
-      
-      if (issues.length > 0) {
-        console.warn('Browser compatibility issues detected:', issues);
-        console.warn('Compatibility score:', score);
-        console.warn('Recommendations:', recommendations);
-      }
-      
-      // If compatibility score is low, show warning
-      if (score < 70) {
-        setError('Browser compatibility issues detected. Please check the recommendations below.');
-      }
-    };
-
-    checkBrowserCompatibility();
   }, [config]);
 
   if (paymentStatus === 'success') {
@@ -168,46 +204,73 @@ const PaystackPayment = ({
   }
 
   if (error) {
-    const isBrowserBlockingError = error.includes('fingerprinting') || error.includes('blocking');
-    
     return (
       <div className="text-center py-8">
         <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-red-800 mb-2">Payment Error</h3>
+        <h3 className="text-xl font-semibold text-red-800 mb-2">Payment System Issue</h3>
         <p className="text-gray-600 mb-4">{error}</p>
         
-        {isBrowserBlockingError && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
-            <h4 className="font-semibold text-yellow-800 mb-2">Quick Fix:</h4>
-            <ol className="text-sm text-yellow-700 space-y-1">
-              <li>1. Copy this URL: <code className="bg-yellow-100 px-1 rounded">{window.location.href}</code></li>
-              <li>2. Open an incognito/private window</li>
-              <li>3. Paste the URL and try again</li>
-            </ol>
+        {/* Alternative Payment Methods */}
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
+          <h4 className="font-semibold text-yellow-800 mb-3">Alternative Payment Options</h4>
+          <div className="space-y-3">
+            <div className="p-3 bg-white border border-yellow-200 rounded-lg">
+              <h5 className="font-medium text-gray-800 mb-2">Option 1: Direct Bank Transfer</h5>
+              <p className="text-sm text-gray-600 mb-2">Transfer directly to our account:</p>
+              <div className="text-sm font-mono bg-gray-100 p-2 rounded">
+                <div>Bank: Access Bank</div>
+                <div>Account: 1234567890</div>
+                <div>Name: SkilledLink Limited</div>
+                <div>Amount: ₦{(amount / 100).toLocaleString()}</div>
+                <div>Reference: {reference}</div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Send proof of payment to: payments@skilledlink.com
+              </p>
+            </div>
+            
+            <div className="p-3 bg-white border border-yellow-200 rounded-lg">
+              <h5 className="font-medium text-gray-800 mb-2">Option 2: Mobile Money</h5>
+              <p className="text-sm text-gray-600 mb-2">Send via mobile money:</p>
+              <div className="text-sm font-mono bg-gray-100 p-2 rounded">
+                <div>Provider: MTN Mobile Money</div>
+                <div>Number: 08012345678</div>
+                <div>Amount: ₦{(amount / 100).toLocaleString()}</div>
+                <div>Reference: {reference}</div>
+              </div>
+            </div>
+            
+            <div className="p-3 bg-white border border-yellow-200 rounded-lg">
+              <h5 className="font-medium text-gray-800 mb-2">Option 3: Contact Support</h5>
+              <p className="text-sm text-gray-600 mb-2">Get help with payment:</p>
+              <div className="text-sm">
+                <div>Email: support@skilledlink.com</div>
+                <div>Phone: +234 801 234 5678</div>
+                <div>WhatsApp: +234 801 234 5678</div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
         
         <div className="space-x-3">
-        <button
-          onClick={() => setError(null)}
-          className="px-6 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors"
-        >
-          Try Again
-        </button>
+          <button
+            onClick={() => setError(null)}
+            className="px-6 py-2 bg-[#151E3D] text-white rounded-lg hover:bg-[#1E2A4A] transition-colors"
+          >
+            Try Again
+          </button>
           
-          {isBrowserBlockingError && (
-            <button
-              onClick={() => {
-                const newWindow = window.open(window.location.href, '_blank');
-                if (newWindow) {
-                  newWindow.focus();
-                }
-              }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Open in New Window
-            </button>
-          )}
+          <button
+            onClick={() => {
+              const newWindow = window.open(window.location.href, '_blank');
+              if (newWindow) {
+                newWindow.focus();
+              }
+            }}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Open in New Window
+          </button>
         </div>
       </div>
     );
@@ -220,7 +283,29 @@ const PaystackPayment = ({
         <p className="text-gray-600">Amount: ₦{(amount / 100).toLocaleString()}</p>
       </div>
 
-      {/* Pre-payment Browser Check */}
+      {/* Payment Methods Info */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h4 className="font-semibold text-blue-800 mb-3">Available Payment Methods</h4>
+        <div className="grid grid-cols-3 gap-3 text-sm">
+          <div className="flex items-center space-x-2">
+            <CreditCard className="w-4 h-4 text-blue-600" />
+            <span className="text-blue-700">Card</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Building2 className="w-4 h-4 text-blue-600" />
+            <span className="text-blue-700">Bank Transfer</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Smartphone className="w-4 h-4 text-blue-600" />
+            <span className="text-blue-700">USSD</span>
+          </div>
+        </div>
+        <p className="text-xs text-blue-600 mt-2">
+          Choose your preferred payment method in the Paystack popup
+        </p>
+      </div>
+
+      {/* Payment Status */}
       <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-left">
         <div className="flex items-start space-x-2">
           <div className="w-4 h-4 bg-green-500 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
@@ -229,69 +314,55 @@ const PaystackPayment = ({
             </svg>
           </div>
           <div className="text-sm text-green-800">
-            <p className="font-medium">Payment Ready</p>
+            <p className="font-medium">
+              {paystackLoaded ? 'Payment System Ready' : 'Loading Payment System...'}
+            </p>
             <p className="text-xs text-green-600 mt-1">
-              Your browser is compatible with our secure payment system. Click below to proceed.
+              {paystackLoaded 
+                ? 'Click below to open Paystack payment options'
+                : 'Please wait while we load the secure payment system'
+              }
             </p>
           </div>
         </div>
       </div>
 
-      <PaystackButton
-        {...config}
-        text={isProcessing ? "Processing..." : "Pay with Paystack"}
-        onSuccess={onSuccessCallback}
-        onClose={onCloseCallback}
-        onError={onErrorCallback}
-        className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${
-          isProcessing
+      {/* Pay Button */}
+      <button
+        onClick={handlePaymentClick}
+        disabled={isProcessing || !paystackLoaded}
+        className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 mb-3 ${
+          isProcessing || !paystackLoaded
             ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
             : 'bg-[#151E3D] hover:bg-[#1E2A4A] text-white hover:shadow-lg transform hover:-translate-y-0.5'
         }`}
-        disabled={isProcessing}
-      />
+      >
+        {isProcessing ? (
+          <div className="flex items-center justify-center">
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            Processing...
+          </div>
+        ) : !paystackLoaded ? (
+          <div className="flex items-center justify-center">
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            Loading...
+          </div>
+        ) : (
+          'Pay with Paystack'
+        )}
+      </button>
+
+      {/* Manual Payment Option */}
+      <button
+        onClick={() => setError('Network connection issue. Please try the alternative payment methods below or check your internet connection.')}
+        className="w-full py-2 px-4 rounded-lg font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+      >
+        Having Issues? Try Alternative Payment
+      </button>
 
       <p className="text-xs text-gray-500 mt-4">
         Secure payment powered by Paystack
       </p>
-      
-      {/* Dynamic Browser Protection Notice */}
-      {(() => {
-        const recommendations = getCompatibilityRecommendations();
-        const hasIssues = recommendations.some(rec => rec.type !== 'success');
-        
-        if (!hasIssues) return null;
-        
-        return (
-          <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <div className="w-5 h-5 bg-blue-500 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="text-sm text-blue-800">
-                <p className="font-semibold mb-2">Payment Security Notice</p>
-                <p className="mb-2">We detected some browser settings that may interfere with payment processing:</p>
-                <div className="space-y-2">
-                  {recommendations.filter(rec => rec.type !== 'success').map((rec, index) => (
-                    <div key={index} className="p-2 bg-blue-100 rounded">
-                      <p className="font-medium text-blue-900">{rec.message}</p>
-                      {rec.steps && (
-                        <ol className="text-xs text-blue-700 mt-1 space-y-1">
-                          {rec.steps.map((step, stepIndex) => (
-                            <li key={stepIndex}>{stepIndex + 1}. {step}</li>
-                          ))}
-                        </ol>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 };

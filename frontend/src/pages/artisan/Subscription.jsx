@@ -4,6 +4,7 @@ import ArtisanLayout from '../../components/common/Layouts/ArtisanLayout';
 import { useAuth } from '../../context/AuthContext';
 import { subscriptionService } from '../../services/subscriptionService';
 import PaystackPayment from '../../components/PaystackPayment';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import PAYSTACK_CONFIG from '../../config/paystack';
 import { 
   Crown, 
@@ -27,6 +28,8 @@ const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const PAYSTACK_PUBLIC_KEY = PAYSTACK_CONFIG.publicKey;
 
@@ -133,17 +136,22 @@ const Subscription = () => {
     setSelectedPlan(null);
   };
 
-  const handleCancelSubscription = async () => {
-    if (window.confirm('Are you sure you want to cancel your subscription?')) {
-      try {
-        setLoading(true);
-        await subscriptionService.cancelSubscription(accessToken);
-        await fetchData(); // Refresh data
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+  const handleCancelSubscription = () => {
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelSubscription = async () => {
+    try {
+      setIsCancelling(true);
+      await subscriptionService.cancelSubscription(accessToken);
+      await fetchData(); // Refresh data
+      setShowCancelModal(false);
+      // Show success message
+      alert('✅ Subscription cancelled successfully. You will retain access until the end of your current billing period.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -494,6 +502,19 @@ const Subscription = () => {
             </div>
           </div>
         )}
+
+        {/* Cancel Subscription Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          onConfirm={confirmCancelSubscription}
+          title="Cancel Subscription"
+          message="Are you sure you want to cancel your premium subscription? You will lose access to premium features at the end of your current billing period. This action cannot be undone."
+          confirmText="Yes, Cancel Subscription"
+          cancelText="Keep Subscription"
+          type="danger"
+          isLoading={isCancelling}
+        />
         </div>
       </div>
     </ArtisanLayout>
