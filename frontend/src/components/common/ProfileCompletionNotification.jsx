@@ -19,7 +19,15 @@ const ProfileCompletionNotification = ({ profileCompletion, onDismiss }) => {
 
   useEffect(() => {
     if (profileCompletion && profileCompletion.message && profileCompletion.message.showNotification) {
-      setIsVisible(true);
+      // Only show notification if profile is not 100% complete
+      const currentCompletionPercentage = profileCompletion.completionPercentage || 0;
+      if (currentCompletionPercentage < 100) {
+        setIsVisible(true);
+      } else {
+        // Profile is 100% complete, hide notification
+        setIsVisible(false);
+        setIsDismissed(true);
+      }
     }
   }, [profileCompletion]);
 
@@ -31,7 +39,9 @@ const ProfileCompletionNotification = ({ profileCompletion, onDismiss }) => {
     }
   };
 
-  if (!isVisible || isDismissed || !profileCompletion?.message) {
+  // Don't show notification if profile is 100% complete
+  const currentCompletionPercentage = profileCompletion?.completionPercentage || 0;
+  if (!isVisible || isDismissed || !profileCompletion?.message || currentCompletionPercentage >= 100) {
     return null;
   }
 

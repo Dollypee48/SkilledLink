@@ -11,7 +11,8 @@ const AutoLocationDetector = ({
   showStatus = true,
   autoDetect = true,
   autoSave = true,
-  delay = 1000 // Delay before auto-detection starts
+  delay = 1000, // Delay before auto-detection starts
+  allowOfflineMode = true // Allow proceeding without network
 }) => {
   const { 
     detectLocation, 
@@ -27,6 +28,8 @@ const AutoLocationDetector = ({
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
   const [permissionsChecked, setPermissionsChecked] = useState(false);
   const [permissionsStatus, setPermissionsStatus] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [offlineMode, setOfflineMode] = useState(false);
 
   // Auto-detect location on mount
   useEffect(() => {
@@ -73,6 +76,7 @@ const AutoLocationDetector = ({
       if (result.success) {
         console.log('✅ Location auto-detected successfully:', result);
         setHasDetected(true);
+        setRetryCount(0); // Reset retry count on success
         
         const locationData = {
           address: result.data.address.formattedAddress,
@@ -97,18 +101,32 @@ const AutoLocationDetector = ({
         }
       } else {
         console.log('❌ Auto-detection failed:', result.error);
+        setRetryCount(prev => prev + 1);
         if (onError) {
           onError(result.error);
         }
       }
     } catch (err) {
       console.error('❌ Auto-detection error:', err);
+      setRetryCount(prev => prev + 1);
       if (onError) {
         onError(err.message);
       }
     } finally {
       setIsAutoDetecting(false);
     }
+  };
+
+  const handleRetry = () => {
+    setHasDetected(false);
+    clearError();
+    handleAutoDetect();
+  };
+
+  const handleSkipLocationDetection = () => {
+    setOfflineMode(true);
+    setHasDetected(true); // Mark as detected to hide the component
+    clearError();
   };
 
   const getStatusMessage = () => {
@@ -135,11 +153,23 @@ const AutoLocationDetector = ({
     }
 
     if (error || lastResult?.error) {
+      const errorMsg = error || lastResult?.error || 'Location detection failed';
+      let message = errorMsg;
+      
+      if (errorMsg.includes('No internet connection') || errorMsg.includes('Network connectivity issue')) {
+        message = allowOfflineMode 
+          ? 'No internet connection detected. You can still enter your address manually.'
+          : 'No internet connection. Please check your network and try again.';
+      } else if (errorMsg.includes('Unable to get address information')) {
+        message = 'Location detected but address lookup failed. Please enter your address manually.';
+      }
+      
       return {
         type: 'error',
         icon: XCircle,
-        message: error || lastResult?.error || 'Location detection failed',
-        color: 'text-red-600'
+        message: retryCount < 2 ? `${message} (Retry ${retryCount}/2)` : message,
+        color: 'text-red-600',
+        showRetry: retryCount < 2
       };
     }
 
@@ -191,6 +221,28 @@ const AutoLocationDetector = ({
         <span className={status.color}>
           {status.message}
         </span>
+        {status.showRetry && (
+          <button
+            onClick={handleRetry}
+            disabled={isAutoDetecting || isDetecting}
+            className="ml-2 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Retry
+          </button>
+        )}
+        {status.message.includes('No internet connection') && allowOfflineMode && (
+          <button
+            onClick={handleSkipLocationDetection}
+            className="ml-2 px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700"
+          >
+            Skip
+          </button>
+        )}
+        {status.message.includes('No internet connection') && (
+          <div className="mt-1 text-xs text-gray-500">
+            💡 Tip: Check your WiFi/mobile data connection or enter address manually
+          </div>
+        )}
       </div>
     </div>
   );

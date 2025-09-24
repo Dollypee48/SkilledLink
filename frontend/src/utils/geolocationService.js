@@ -16,6 +16,49 @@ class GeolocationService {
     return this.isSupported;
   }
 
+  // Check network connectivity with multiple fallbacks
+  async checkNetworkConnectivity() {
+    try {
+      // Try multiple connectivity checks with shorter timeouts
+      const connectivityChecks = [
+        // Check 1: Simple HEAD request to Google
+        fetch('https://www.google.com/favicon.ico', { 
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-cache',
+          signal: AbortSignal.timeout(3000) // 3 second timeout
+        }),
+        // Check 2: Try a different endpoint
+        fetch('https://httpbin.org/get', { 
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-cache',
+          signal: AbortSignal.timeout(3000)
+        })
+      ];
+
+      // Try the first check, if it fails try the second
+      try {
+        await connectivityChecks[0];
+        console.log('✅ Network connectivity confirmed');
+        return true;
+      } catch (firstError) {
+        console.warn('First connectivity check failed, trying second...');
+        try {
+          await connectivityChecks[1];
+          console.log('✅ Network connectivity confirmed via fallback');
+          return true;
+        } catch (secondError) {
+          console.warn('All connectivity checks failed:', secondError);
+          return false;
+        }
+      }
+    } catch (error) {
+      console.warn('Network connectivity check failed:', error);
+      return false;
+    }
+  }
+
   // Get current position with error handling and improved accuracy
   async getCurrentPosition(options = {}) {
     if (!this.isSupported) {
@@ -98,13 +141,17 @@ class GeolocationService {
       );
       
       if (!response.ok) {
-        throw new Error('Failed to fetch address information');
+        console.warn('BigDataCloud API failed, trying fallback...');
+        // Try fallback with OpenStreetMap Nominatim
+        return await this.getAddressFromCoordinatesFallback(latitude, longitude);
       }
 
       const data = await response.json();
       
       if (data.status === 'ZERO_RESULTS') {
-        throw new Error('No address found for this location');
+        console.warn('BigDataCloud returned zero results, trying fallback...');
+        // Try fallback with OpenStreetMap Nominatim
+        return await this.getAddressFromCoordinatesFallback(latitude, longitude);
       }
 
       // More robust address parsing
@@ -126,7 +173,75 @@ class GeolocationService {
       return addressData;
     } catch (error) {
       console.error('Reverse geocoding error:', error);
-      throw new Error('Unable to get address information. Please enter your address manually.');
+      
+      // Check if it's a network connectivity issue
+      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_TUNNEL_CONNECTION_FAILED')) {
+        throw new Error('Network connectivity issue. Please check your internet connection and try again.');
+      }
+      
+      // Try fallback method before giving up
+      try {
+        console.log('🔄 Trying fallback geocoding service...');
+        return await this.getAddressFromCoordinatesFallback(latitude, longitude);
+      } catch (fallbackError) {
+        console.error('Fallback geocoding also failed:', fallbackError);
+        
+        // Check if fallback also failed due to network issues
+        if (fallbackError.message.includes('Network connectivity issue')) {
+          throw fallbackError;
+        }
+        
+        throw new Error('Unable to get address information. Please enter your address manually.');
+      }
+    }
+  }
+
+  // Fallback method using OpenStreetMap Nominatim
+  async getAddressFromCoordinatesFallback(latitude, longitude) {
+    try {
+      console.log('🌍 Using fallback geocoding service (Nominatim)...');
+      
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Fallback geocoding service unavailable');
+      }
+
+      const data = await response.json();
+      
+      if (!data || !data.address) {
+        throw new Error('No address data from fallback service');
+      }
+
+      // Parse Nominatim address format
+      const addressData = {
+        address: data.address.road || data.address.house_number || data.address.suburb || 'Unknown',
+        city: data.address.city || data.address.town || data.address.village || data.address.county || 'Unknown',
+        state: data.address.state || data.address.region || 'Unknown',
+        country: data.address.country || 'Nigeria',
+        countryCode: data.address.country_code?.toUpperCase() || 'NG',
+        formattedAddress: data.display_name || `${data.address.city || 'Unknown'}, ${data.address.state || 'Unknown'}, Nigeria`,
+        coordinates: { latitude, longitude },
+        raw: data
+      };
+
+      // Cache the result
+      const cacheKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+      this.addressCache.set(cacheKey, addressData);
+      console.log('✅ Fallback address cached for coordinates:', cacheKey);
+
+      return addressData;
+    } catch (error) {
+      console.error('Fallback geocoding error:', error);
+      
+      // Check if it's a network connectivity issue
+      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_TUNNEL_CONNECTION_FAILED')) {
+        throw new Error('Network connectivity issue. Please check your internet connection and try again.');
+      }
+      
+      throw error;
     }
   }
 
@@ -178,6 +293,13 @@ class GeolocationService {
     try {
       console.log('🌍 Getting user location...');
       
+      // Check network connectivity (but don't fail if it's uncertain)
+      const isOnline = await this.checkNetworkConnectivity();
+      if (!isOnline) {
+        console.warn('⚠️ Network connectivity uncertain, proceeding anyway...');
+        // Don't throw error, just warn and continue
+      }
+      
       // Get current position
       const position = await this.getCurrentPosition(options);
       console.log('📍 Position obtained:', position);
@@ -197,6 +319,16 @@ class GeolocationService {
       };
     } catch (error) {
       console.error('❌ Location detection failed:', error);
+      
+      // Check if it's a network-related error
+      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_TUNNEL_CONNECTION_FAILED')) {
+        return {
+          success: false,
+          error: 'Network connectivity issue. Please check your internet connection and try again.',
+          message: 'Network connectivity issue. Please check your internet connection and try again.'
+        };
+      }
+      
       return {
         success: false,
         error: error.message,
