@@ -205,6 +205,13 @@ const AllArtisans = () => {
       return;
     }
 
+    // Check if artisan is premium (only for service profiles)
+    const artisan = serviceProfile.artisanId;
+    if (!artisan.isPremium && artisan.subscriptionStatus !== 'premium') {
+      alert('This artisan is not a premium member. Only premium artisans can accept service bookings.');
+      return;
+    }
+
     // Check if service profile is active
     if (!serviceProfile.isActive) {
       alert('This service is currently unavailable for booking.');
@@ -270,6 +277,13 @@ const AllArtisans = () => {
     
     if (user.role !== 'customer') {
       alert('Only customers can chat with artisans. Please log in as a customer.');
+      return;
+    }
+
+    // Check if artisan is premium (only for service profiles)
+    const artisan = serviceProfile.artisanId;
+    if (!artisan.isPremium && artisan.subscriptionStatus !== 'premium') {
+      alert('This artisan is not a premium member. Only premium artisans can receive messages.');
       return;
     }
 
@@ -957,22 +971,30 @@ const AllArtisans = () => {
                   </button>
                   <button
                     onClick={() => handleChatClick(item)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center text-sm"
+                    disabled={!item.artisanId.isPremium && item.artisanId.subscriptionStatus !== 'premium'}
+                    className={`flex-1 text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm relative flex items-center justify-center ${
+                      (item.artisanId.isPremium || item.artisanId.subscriptionStatus === 'premium')
+                        ? 'bg-green-600 hover:bg-green-700 text-white hover:shadow-lg'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                   >
                     <MessageCircle className="w-3 h-3 mr-1" />
-                    <span className="hidden sm:inline">Chat</span>
-                    <span className="sm:hidden">Chat</span>
+                    <span className="hidden sm:inline">{(item.artisanId.isPremium || item.artisanId.subscriptionStatus === 'premium') ? 'Chat' : 'Premium Only'}</span>
+                    <span className="sm:hidden">{(item.artisanId.isPremium || item.artisanId.subscriptionStatus === 'premium') ? 'Chat' : 'Premium'}</span>
+                    {(item.artisanId.isPremium || item.artisanId.subscriptionStatus === 'premium') && <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs px-1 rounded-full font-bold">★</span>}
                   </button>
                   <button
                     onClick={() => handleBookClick(item)}
-                    disabled={!item.isActive}
-                    className={`flex-1 text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm ${
-                      item.isActive
+                    disabled={!item.isActive || (!item.artisanId.isPremium && item.artisanId.subscriptionStatus !== 'premium')}
+                    className={`flex-1 text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm relative ${
+                      item.isActive && (item.artisanId.isPremium || item.artisanId.subscriptionStatus === 'premium')
                         ? 'border-2 border-[#151E3D] text-[#151E3D] hover:bg-[#151E3D] hover:text-white hover:shadow-lg'
                         : 'border-2 border-gray-300 text-gray-400 cursor-not-allowed bg-gray-50'
                     }`}
                   >
-                    {item.isActive ? 'Book Now' : 'Unavailable'}
+                    {!item.isActive ? 'Unavailable' : 
+                     (!item.artisanId.isPremium && item.artisanId.subscriptionStatus !== 'premium') ? 'Premium Only' : 'Book Now'}
+                    {item.isActive && (item.artisanId.isPremium || item.artisanId.subscriptionStatus === 'premium') && <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs px-1 rounded-full font-bold">★</span>}
                   </button>
                 </div>
               </div>
@@ -1627,28 +1649,36 @@ const AllArtisans = () => {
                       closeProfileModal();
                       handleBookClick(selectedServiceProfile);
                     }}
-                    disabled={!selectedServiceProfile.isActive}
-                    className={`flex-1 py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                      selectedServiceProfile.isActive
+                    disabled={!selectedServiceProfile.isActive || (!selectedServiceProfile.artisanId.isPremium && selectedServiceProfile.artisanId.subscriptionStatus !== 'premium')}
+                    className={`flex-1 py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 relative ${
+                      selectedServiceProfile.isActive && (selectedServiceProfile.artisanId.isPremium || selectedServiceProfile.artisanId.subscriptionStatus === 'premium')
                         ? 'bg-[#151E3D] hover:bg-[#1E2A4A] text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:ring-[#151E3D]'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed focus:ring-gray-300'
                     }`}
                   >
-                    {selectedServiceProfile.isActive ? (
-                      <div className="flex items-center justify-center space-x-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>Book This Service</span>
-                      </div>
-                    ) : (
+                    {!selectedServiceProfile.isActive ? (
                       <div className="flex items-center justify-center space-x-2">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span>Service Currently Unavailable</span>
                       </div>
+                    ) : (!selectedServiceProfile.artisanId.isPremium && selectedServiceProfile.artisanId.subscriptionStatus !== 'premium') ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Premium Artisan Required</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center space-x-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Book This Service</span>
+                      </div>
                     )}
+                    {selectedServiceProfile.isActive && (selectedServiceProfile.artisanId.isPremium || selectedServiceProfile.artisanId.subscriptionStatus === 'premium') && <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs px-1 rounded-full font-bold">★</span>}
                   </button>
                   
                   <button

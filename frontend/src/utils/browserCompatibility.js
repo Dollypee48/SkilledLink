@@ -150,3 +150,4 @@ export const isPaymentLikelyToWork = () => {
   const score = getBrowserCompatibilityScore();
   return score >= 70; // 70% compatibility threshold
 };
+
