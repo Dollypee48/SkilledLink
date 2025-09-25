@@ -67,11 +67,18 @@ exports.createReview = async (req, res) => {
       });
     }
 
+    // Get serviceProfileId for service profile bookings
+    let serviceProfileId = null;
+    if (bookingTypeToUse === 'serviceProfile' && booking.serviceProfile) {
+      serviceProfileId = booking.serviceProfile;
+    }
+
     const review = await Review.create({
       customerId: req.user.id,
       artisanId,
       bookingId,
       bookingType: bookingTypeToUse,
+      serviceProfileId,
       rating,
       comment,
     });

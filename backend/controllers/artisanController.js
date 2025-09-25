@@ -268,10 +268,12 @@ exports.getArtisans = async (req, res) => {
       
       try {
         const reviews = await Review.find({ artisanId: ap.userId._id });
+        console.log(`Artisan ${ap.userId._id} has ${reviews.length} reviews:`, reviews.map(r => ({ rating: r.rating, bookingType: r.bookingType, serviceProfileId: r.serviceProfileId })));
         if (reviews.length > 0) {
           const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
           calculatedRating = totalRating / reviews.length;
           reviewCount = reviews.length;
+          console.log(`Calculated rating for artisan ${ap.userId._id}: ${calculatedRating} (${reviewCount} reviews)`);
         }
       } catch (error) {
         console.error('Error calculating rating for artisan:', ap.userId._id, error);

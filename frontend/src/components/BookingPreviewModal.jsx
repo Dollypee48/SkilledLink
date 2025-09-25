@@ -406,11 +406,11 @@ const BookingPreviewModal = ({
               <button
                 onClick={() => onDecline(booking._id)}
                 disabled={isDeclining || isAccepting}
-                className="px-8 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold shadow-md hover:shadow-lg"
+                className="px-8 py-3 bg-white text-[#151E3D] border-2 border-[#151E3D] rounded-xl hover:bg-[#151E3D] hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold shadow-md hover:shadow-lg"
               >
                 {isDeclining ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#151E3D] mr-2"></div>
                     Declining...
                   </>
                 ) : (
@@ -423,10 +423,10 @@ const BookingPreviewModal = ({
               <button
                 onClick={() => onAccept(booking._id)}
                 disabled={isAccepting || isDeclining || (!user?.kycVerified || user?.kycStatus !== 'approved')}
-                className={`px-8 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold shadow-md hover:shadow-lg ${
+                className={`px-8 py-3 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold shadow-md hover:shadow-lg ${
                   (!user?.kycVerified || user?.kycStatus !== 'approved') 
                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
-                    : 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-gradient-to-r from-[#151E3D] to-[#1E2A4A] text-white hover:from-[#1E2A4A] hover:to-[#151E3D]'
                 }`}
                 title={(!user?.kycVerified || user?.kycStatus !== 'approved') ? 'KYC verification required to accept jobs' : ''}
               >

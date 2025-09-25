@@ -1,7 +1,55 @@
 const mongoose = require("mongoose");
 const ServiceProfile = require("../models/ServiceProfile");
 const User = require("../models/User");
+const Review = require("../models/Review");
+const ServiceProfileBooking = require("../models/ServiceProfileBooking");
 const { uploadFile } = require("../utils/cloudinary");
+
+// Helper function to calculate service profile statistics
+const calculateServiceProfileStats = async (serviceProfileId) => {
+  try {
+    // Calculate rating and review count from reviews
+    const reviews = await Review.find({ 
+      serviceProfileId: serviceProfileId 
+    });
+    
+    console.log(`Service Profile ${serviceProfileId} has ${reviews.length} reviews:`, reviews.map(r => ({ rating: r.rating, bookingType: r.bookingType, artisanId: r.artisanId })));
+    
+    let rating = 0;
+    let reviewCount = reviews.length;
+    
+    if (reviewCount > 0) {
+      const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+      rating = totalRating / reviewCount;
+      console.log(`Calculated rating for service profile ${serviceProfileId}: ${rating} (${reviewCount} reviews)`);
+    }
+    
+    // Calculate booking count and total earnings from service profile bookings
+    const bookings = await ServiceProfileBooking.find({ 
+      serviceProfileId: serviceProfileId 
+    });
+    
+    const bookingCount = bookings.length;
+    const totalEarnings = bookings.reduce((sum, booking) => {
+      return sum + (booking.totalAmount || booking.amount || 0);
+    }, 0);
+    
+    return {
+      rating: Math.round(rating * 10) / 10, // Round to 1 decimal place
+      reviewCount,
+      bookingCount,
+      totalEarnings
+    };
+  } catch (error) {
+    console.error('Error calculating service profile stats:', error);
+    return {
+      rating: 0,
+      reviewCount: 0,
+      bookingCount: 0,
+      totalEarnings: 0
+    };
+  }
+};
 
 // Get all service profiles for an artisan
 exports.getArtisanServiceProfiles = async (req, res) => {
@@ -12,7 +60,22 @@ exports.getArtisanServiceProfiles = async (req, res) => {
       artisanId
     }).sort({ createdAt: -1 });
 
-    res.json(serviceProfiles);
+    // Calculate statistics for each service profile
+    const profilesWithStats = await Promise.all(
+      serviceProfiles.map(async (profile) => {
+        const stats = await calculateServiceProfileStats(profile._id);
+        
+        // Update the profile with calculated statistics
+        profile.rating = stats.rating;
+        profile.reviewCount = stats.reviewCount;
+        profile.bookingCount = stats.bookingCount;
+        profile.totalEarnings = stats.totalEarnings;
+        
+        return profile;
+      })
+    );
+
+    res.json(profilesWithStats);
   } catch (err) {
     console.error("Get service profiles error:", err);
     res.status(500).json({ message: "Server error" });
@@ -37,6 +100,15 @@ exports.getServiceProfile = async (req, res) => {
     if (!serviceProfile) {
       return res.status(404).json({ message: "Service profile not found" });
     }
+
+    // Calculate statistics for this service profile
+    const stats = await calculateServiceProfileStats(serviceProfile._id);
+    
+    // Update the profile with calculated statistics
+    serviceProfile.rating = stats.rating;
+    serviceProfile.reviewCount = stats.reviewCount;
+    serviceProfile.bookingCount = stats.bookingCount;
+    serviceProfile.totalEarnings = stats.totalEarnings;
 
     res.json(serviceProfile);
   } catch (err) {
@@ -296,15 +368,30 @@ exports.getAllServiceProfiles = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
+    // Calculate statistics for each service profile
+    const profilesWithStats = await Promise.all(
+      serviceProfiles.map(async (profile) => {
+        const stats = await calculateServiceProfileStats(profile._id);
+        
+        // Update the profile with calculated statistics
+        profile.rating = stats.rating;
+        profile.reviewCount = stats.reviewCount;
+        profile.bookingCount = stats.bookingCount;
+        profile.totalEarnings = stats.totalEarnings;
+        
+        return profile;
+      })
+    );
+
     const total = await ServiceProfile.countDocuments(query);
 
     res.json({
-      serviceProfiles,
+      serviceProfiles: profilesWithStats,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(total / parseInt(limit)),
         totalItems: total,
-        hasNext: skip + serviceProfiles.length < total,
+        hasNext: skip + profilesWithStats.length < total,
         hasPrev: parseInt(page) > 1
       }
     });

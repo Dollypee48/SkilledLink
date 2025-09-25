@@ -633,7 +633,7 @@ const AllArtisans = () => {
           if (viewMode === 'services') {
             return (b.bookingCount || 0) - (a.bookingCount || 0);
           } else {
-            return (b.artisanProfile?.totalJobs || 0) - (a.artisanProfile?.totalJobs || 0);
+            return (b.artisanProfile?.reviewCount || 0) - (a.artisanProfile?.reviewCount || 0);
           }
         default:
           return 0;
@@ -1066,7 +1066,7 @@ const AllArtisans = () => {
                       <div className="flex items-center">
                         <Star className="w-3 h-3 sm:w-4 sm:h-4 text-[#F59E0B] mr-1" />
                         <span className="text-xs sm:text-sm font-bold text-[#151E3D]">{(item.artisanProfile?.rating || 0).toFixed(1)}</span>
-                        <span className="text-xs sm:text-sm text-[#151E3D]/60 ml-1">({item.artisanProfile?.totalJobs || 0})</span>
+                        <span className="text-xs sm:text-sm text-[#151E3D]/60 ml-1">({item.artisanProfile?.reviewCount || 0})</span>
                       </div>
                     </div>
 
@@ -1818,7 +1818,7 @@ const AllArtisans = () => {
                         <div className="flex items-center space-x-1">
                           <Star className="w-4 h-4 text-[#F59E0B]" />
                           <span className="font-medium text-[#151E3D]">{(selectedArtisanProfile.artisanProfile?.rating || 0).toFixed(1)}</span>
-                          <span className="text-[#151E3D]/60">({selectedArtisanProfile.artisanProfile?.totalJobs || 0} jobs)</span>
+                          <span className="text-[#151E3D]/60">({selectedArtisanProfile.artisanProfile?.reviewCount || 0} reviews)</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <MapPin className="w-4 h-4 text-[#F59E0B]" />
@@ -1850,8 +1850,8 @@ const AllArtisans = () => {
                         <span className="font-medium text-[#151E3D]">₦{selectedArtisanProfile.artisanProfile?.hourlyRate?.toLocaleString() || '0'}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-[#151E3D]/70">Total Jobs:</span>
-                        <span className="font-medium text-[#151E3D]">{selectedArtisanProfile.artisanProfile?.totalJobs || 0}</span>
+                        <span className="text-[#151E3D]/70">Total Reviews:</span>
+                        <span className="font-medium text-[#151E3D]">{selectedArtisanProfile.artisanProfile?.reviewCount || 0}</span>
                       </div>
                     </div>
                   </div>
