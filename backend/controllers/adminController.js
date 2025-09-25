@@ -4,6 +4,8 @@ const Review = require("../models/Review");
 const Issue = require("../models/Issue");
 const ArtisanProfile = require("../models/ArtisanProfile"); // New: Import ArtisanProfile model
 const Report = require("../models/Report"); // New: Import Report model
+const ServiceProfileBooking = require("../models/ServiceProfileBooking"); // New: Import ServiceProfileBooking model
+const Message = require("../models/Message"); // New: Import Message model
 
 // @desc    Get Admin Dashboard Statistics
 // @route   GET /api/admin/dashboard-stats
@@ -18,9 +20,22 @@ exports.getAdminDashboardStats = async (req, res) => {
     const totalUsers = await User.countDocuments();
     const totalArtisans = await User.countDocuments({ role: "artisan" });
     const totalCustomers = await User.countDocuments({ role: "customer" });
-    const totalBookings = await Booking.countDocuments();
-    const pendingBookings = await Booking.countDocuments({ status: "Pending" });
-    const completedBookings = await Booking.countDocuments({ status: "Completed" });
+    
+    // Get regular bookings counts
+    const regularBookings = await Booking.countDocuments();
+    const pendingRegularBookings = await Booking.countDocuments({ status: "Pending" });
+    const completedRegularBookings = await Booking.countDocuments({ status: "Completed" });
+    
+    // Get service profile bookings counts
+    const serviceProfileBookings = await ServiceProfileBooking.countDocuments();
+    const pendingServiceBookings = await ServiceProfileBooking.countDocuments({ status: "Pending" });
+    const completedServiceBookings = await ServiceProfileBooking.countDocuments({ status: "Completed" });
+    
+    // Calculate combined totals
+    const totalBookings = regularBookings + serviceProfileBookings;
+    const pendingBookings = pendingRegularBookings + pendingServiceBookings;
+    const completedBookings = completedRegularBookings + completedServiceBookings;
+    
     const totalReviews = await Review.countDocuments();
     const totalIssues = await Issue.countDocuments();
     const pendingIssues = await Issue.countDocuments({ status: "Pending" });
@@ -35,6 +50,13 @@ exports.getAdminDashboardStats = async (req, res) => {
       totalReviews,
       totalIssues,
       pendingIssues,
+      // Additional breakdown for admin insights
+      regularBookings,
+      serviceProfileBookings,
+      pendingRegularBookings,
+      pendingServiceBookings,
+      completedRegularBookings,
+      completedServiceBookings,
     });
   } catch (error) {
     console.error("Error fetching admin dashboard stats:", error);
@@ -373,6 +395,112 @@ exports.getAllBookings = async (req, res) => {
     res.status(200).json(bookings);
   } catch (error) {
     console.error("Error fetching all bookings:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Get all service profile bookings
+// @route   GET /api/admin/service-profile-bookings
+// @access  Private (Admin only)
+exports.getAllServiceProfileBookings = async (req, res) => {
+  try {
+    const serviceProfileBookings = await ServiceProfileBooking.find()
+      .populate("customer", "name email phone")
+      .populate("artisan", "name email")
+      .populate("serviceProfile", "title category hourlyRate");
+    res.status(200).json(serviceProfileBookings);
+  } catch (error) {
+    console.error("Error fetching all service profile bookings:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Get all messages
+// @route   GET /api/admin/messages
+// @access  Private (Admin only)
+exports.getAllMessages = async (req, res) => {
+  try {
+    const { page = 1, limit = 50, conversationId } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    let query = {};
+    if (conversationId) {
+      query.conversationId = conversationId;
+    }
+
+    const messages = await Message.find(query)
+      .populate("sender", "name email role")
+      .populate("recipient", "name email role")
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Message.countDocuments(query);
+
+    res.status(200).json({
+      messages,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+        totalItems: total,
+        hasNext: skip + messages.length < total,
+        hasPrev: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching all messages:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Get all conversations
+// @route   GET /api/admin/conversations
+// @access  Private (Admin only)
+exports.getAllConversations = async (req, res) => {
+  try {
+    // Get unique conversation IDs
+    const conversations = await Message.aggregate([
+      {
+        $group: {
+          _id: "$conversationId",
+          lastMessage: { $last: "$$ROOT" },
+          messageCount: { $sum: 1 },
+          participants: { $addToSet: { sender: "$sender", recipient: "$recipient" } }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "lastMessage.sender",
+          foreignField: "_id",
+          as: "senderInfo"
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "lastMessage.recipient",
+          foreignField: "_id",
+          as: "recipientInfo"
+        }
+      },
+      {
+        $project: {
+          conversationId: "$_id",
+          lastMessage: 1,
+          messageCount: 1,
+          sender: { $arrayElemAt: ["$senderInfo", 0] },
+          recipient: { $arrayElemAt: ["$recipientInfo", 0] }
+        }
+      },
+      {
+        $sort: { "lastMessage.timestamp": -1 }
+      }
+    ]);
+
+    res.status(200).json(conversations);
+  } catch (error) {
+    console.error("Error fetching all conversations:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

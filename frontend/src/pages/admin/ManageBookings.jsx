@@ -8,10 +8,12 @@ import { Loader2, Eye, X, Calendar, Clock, MapPin, Phone, Mail, User, Wrench, Ch
 const ManageBookings = () => {
   const { accessToken } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const [serviceProfileBookings, setServiceProfileBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'regular', 'service-profile'
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -22,8 +24,16 @@ const ManageBookings = () => {
       }
       try {
         setLoading(true);
-        const data = await adminService.getAllBookings(accessToken);
-        setBookings(data);
+        setError(null);
+        
+        // Fetch both regular bookings and service profile bookings
+        const [regularBookingsData, serviceProfileBookingsData] = await Promise.all([
+          adminService.getAllBookings(accessToken),
+          adminService.getAllServiceProfileBookings(accessToken)
+        ]);
+        
+        setBookings(regularBookingsData);
+        setServiceProfileBookings(serviceProfileBookingsData);
       } catch (err) {
         setError(err.message || "Failed to fetch bookings");
       } finally {
@@ -38,6 +48,27 @@ const ManageBookings = () => {
     setSelectedBooking(booking);
     setShowViewModal(true);
   };
+
+  // Combine and filter bookings based on active tab
+  const getAllBookings = () => {
+    const regularBookings = (bookings || []).map(booking => ({ ...booking, type: 'regular' }));
+    const serviceBookings = (serviceProfileBookings || []).map(booking => ({ ...booking, type: 'service-profile' }));
+    
+    switch (activeTab) {
+      case 'regular':
+        return regularBookings;
+      case 'service-profile':
+        return serviceBookings;
+      default:
+        return [...regularBookings, ...serviceBookings].sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.date);
+          const dateB = new Date(b.createdAt || b.date);
+          return dateB - dateA; // Most recent first
+        });
+    }
+  };
+
+  const allBookings = getAllBookings();
 
   const formatCurrency = (amount) => {
     if (!amount) return '₦0.00';
@@ -124,13 +155,52 @@ const ManageBookings = () => {
       <div className="p-6 bg-white shadow-md rounded-lg">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Bookings</h1>
         
-        {bookings.length === 0 ? (
+        {/* Tabs */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'all'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                All Bookings ({allBookings.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('regular')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'regular'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Regular Bookings ({bookings.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('service-profile')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'service-profile'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Service Bookings ({serviceProfileBookings.length})
+              </button>
+            </nav>
+          </div>
+        </div>
+        
+        {allBookings.length === 0 ? (
           <p className="text-gray-600">No bookings found.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-200 rounded-lg">
               <thead>
                 <tr className="bg-gray-100 border-b border-gray-200">
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Type</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Booking ID</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Customer</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Artisan</th>
@@ -142,16 +212,30 @@ const ManageBookings = () => {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((booking) => (
+                {allBookings.map((booking) => (
                   <tr key={booking._id} className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
+                    <td className="py-3 px-4 text-sm text-gray-800">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        booking.type === 'service-profile' 
+                          ? 'bg-purple-100 text-purple-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {booking.type === 'service-profile' ? 'Service' : 'Regular'}
+                      </span>
+                    </td>
                     <td className="py-3 px-4 text-sm text-gray-800 font-mono">{booking._id.substring(0, 8)}...</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{booking.customer?.name || 'N/A'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{booking.artisan?.name || 'N/A'}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800 capitalize">{booking.serviceDetails?.name || booking.service || 'N/A'}</td>
+                    <td className="py-3 px-4 text-sm text-gray-800 capitalize">
+                      {booking.type === 'service-profile' 
+                        ? booking.serviceProfile?.title || booking.serviceName || 'N/A'
+                        : booking.serviceDetails?.name || booking.service || 'N/A'
+                      }
+                    </td>
                     <td className="py-3 px-4 text-sm text-gray-800">
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                        {formatDate(booking.serviceDate || booking.bookingDate)}
+                        {formatDate(booking.serviceDate || booking.bookingDate || booking.date)}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-800">
@@ -161,7 +245,7 @@ const ManageBookings = () => {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-800 font-semibold">
-                      {formatCurrency(booking.price || booking.amount)}
+                      {formatCurrency(booking.price || booking.amount || booking.totalAmount)}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-800">
                       <button 
@@ -242,7 +326,7 @@ const ManageBookings = () => {
                       <div className="flex items-center">
                         <span className="text-sm text-gray-600">Amount:</span>
                         <span className="ml-2 text-lg font-bold text-green-600">
-                          {formatCurrency(selectedBooking.price || selectedBooking.amount)}
+                          {formatCurrency(selectedBooking.price || selectedBooking.amount || selectedBooking.totalAmount)}
                         </span>
                       </div>
                       <div className="flex items-center">
@@ -367,18 +451,34 @@ const ManageBookings = () => {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3">
-                        <div className="flex items-center">
-                          <span className="text-sm text-gray-600">Service Type:</span>
-                          <span className="ml-2 text-sm font-medium capitalize">
-                            {selectedBooking.serviceDetails?.name || selectedBooking.service || 'N/A'}
-                          </span>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="text-sm text-gray-600">Description:</span>
-                          <span className="ml-2 text-sm font-medium">
-                            {selectedBooking.description || selectedBooking.serviceDetails?.description || 'No description provided'}
-                          </span>
-                        </div>
+                      <div className="flex items-center">
+                        <span className="text-sm text-gray-600">Booking Type:</span>
+                        <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          selectedBooking.type === 'service-profile' 
+                            ? 'bg-purple-100 text-purple-800' 
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {selectedBooking.type === 'service-profile' ? 'Service' : 'Regular'}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-sm text-gray-600">Service Type:</span>
+                        <span className="ml-2 text-sm font-medium capitalize">
+                          {selectedBooking.type === 'service-profile'
+                            ? selectedBooking.serviceProfile?.title || selectedBooking.serviceName || 'N/A'
+                            : selectedBooking.serviceDetails?.name || selectedBooking.service || 'N/A'
+                          }
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-sm text-gray-600">Description:</span>
+                        <span className="ml-2 text-sm font-medium">
+                          {selectedBooking.type === 'service-profile'
+                            ? selectedBooking.serviceProfile?.description || selectedBooking.description || 'No description provided'
+                            : selectedBooking.description || selectedBooking.serviceDetails?.description || 'No description provided'
+                          }
+                        </span>
+                      </div>
                       </div>
 
                       <div className="space-y-3">

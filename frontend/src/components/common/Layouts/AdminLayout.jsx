@@ -30,9 +30,9 @@ const AdminLayout = ({ children }) => {
     { name: "Manage Bookings", path: "/manage-bookings", icon: CalendarCheck }, // Updated path
     { name: "Manage Reviews", path: "/manage-reviews", icon: Star }, // Added
     { name: "Manage Reports", path: "/manage-reports", icon: AlertTriangle }, // Updated path
+    { name: "Manage Messages", path: "/manage-messages", icon: MessageSquare }, // New
     { name: "KYC Verification", path: "/admin/kyc-verification", icon: FileCheck }, // New
     // { name: "Settings", path: "/admin-settings", icon: Settings }, // Commented out, no route/component yet
-    // { name: "Messages", path: "/admin-messages", icon: MessageSquare }, // Commented out, no route/component yet
   ];
 
   const onLogout = () => {

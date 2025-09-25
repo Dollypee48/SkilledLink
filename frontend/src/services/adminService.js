@@ -47,6 +47,19 @@ export const adminService = {
     }
   },
 
+  getAllServiceProfileBookings: async (token) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const response = await axios.get(`${API_URL}/service-profile-bookings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      // console.error("Error fetching all service profile bookings:", error);
+      throw new Error(error.response?.data?.message || "Failed to fetch service profile bookings");
+    }
+  },
+
   getAllReports: async (token) => {
     if (!token) throw new Error("Authentication token is required");
     try {
@@ -212,6 +225,34 @@ export const adminService = {
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to reject KYC");
+    }
+  },
+
+  // Message Management
+  getAllMessages: async (token, page = 1, limit = 50, conversationId = null) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+      if (conversationId) params.append('conversationId', conversationId);
+      
+      const response = await axios.get(`${API_URL}/messages?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch messages");
+    }
+  },
+
+  getAllConversations: async (token) => {
+    if (!token) throw new Error("Authentication token is required");
+    try {
+      const response = await axios.get(`${API_URL}/conversations`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Failed to fetch conversations");
     }
   },
 };

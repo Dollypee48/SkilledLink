@@ -11,6 +11,7 @@ const {
   deleteUser,
   getAllArtisans, // New
   getAllBookings, // New
+  getAllServiceProfileBookings, // New
   getAllReports,  // New
   getAllReviews,  // New
   fixKYCStatus,   // New
@@ -18,7 +19,9 @@ const {
   updateIssueStatus, // New
   getIssueById,   // New
   approveKyc,     // New
-  rejectKyc       // New
+  rejectKyc,      // New
+  getAllMessages, // New
+  getAllConversations // New
 } = require('../controllers/adminController');
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
@@ -44,6 +47,7 @@ router.get("/dashboard-stats", auth, role(["admin"]), getAdminDashboardStats); /
 // New Admin Data Routes
 router.get("/artisans", auth, role(["admin"]), getAllArtisans);
 router.get("/bookings", auth, role(["admin"]), getAllBookings);
+router.get("/service-profile-bookings", auth, role(["admin"]), getAllServiceProfileBookings);
 router.get("/reports", auth, role(["admin"]), getAllReports);
 router.get("/reviews", auth, role(["admin"]), getAllReviews);
 
@@ -51,5 +55,9 @@ router.get("/reviews", auth, role(["admin"]), getAllReviews);
 router.get("/issues", auth, role(["admin"]), getAllIssues);
 router.get("/issues/:id", auth, role(["admin"]), getIssueById);
 router.put("/issues/:id/status", auth, role(["admin"]), updateIssueStatus);
+
+// Message Management Routes
+router.get("/messages", auth, role(["admin"]), getAllMessages);
+router.get("/conversations", auth, role(["admin"]), getAllConversations);
 
 module.exports = router;

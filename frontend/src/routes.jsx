@@ -43,6 +43,7 @@ import ManageUsers from './pages/admin/ManageUsers';
 import ManageBookings from './pages/admin/ManageBookings';
 import ManageReviews from './pages/admin/ManageReviews';
 import ManageReports from './pages/admin/ManageReports';
+import ManageMessages from './pages/admin/ManageMessages'; // New: Import ManageMessages
 import KYCVerification from './pages/admin/KYCVerification'; // New: Import KYCVerification
 import KYCVerificationPage from './pages/KYCVerificationPage'; // New: Import KYCVerificationPage
 
@@ -235,6 +236,14 @@ const RoutesComponent = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <ManageReports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manage-messages"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <ManageMessages />
           </ProtectedRoute>
         }
       />
