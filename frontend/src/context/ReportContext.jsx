@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import { ReportService } from "../services/reportService"; // Corrected import
+import { ReportService } from "../services/reportService.js"; // Corrected import
 import { useAuth } from "../context/AuthContext"; // Corrected import
 
 export const ReportContext = createContext();

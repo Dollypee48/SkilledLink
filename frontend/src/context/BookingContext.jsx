@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { BookingService } from "../services/bookingService";
+import { BookingService } from "../services/BookingService";
 import { ServiceProfileBookingService } from "../services/serviceProfileBookingService";
 import useAuth from "../hooks/useAuth";
 
