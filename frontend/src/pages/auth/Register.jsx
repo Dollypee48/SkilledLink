@@ -129,7 +129,7 @@ const Register = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-center">
           {/* Left Side - Branding & Info */}
-          <div className="text-center lg:text-left text-white space-y-4 lg:space-y-6 order-2 lg:order-1">
+          <div className="text-center lg:text-left text-white space-y-4 lg:space-y-6 order-1 lg:order-1">
             <div className="space-y-2 lg:space-y-3">
               <div className="flex items-center justify-center lg:justify-start">
                 <Logo variant="full" size="lg" textColor="white" />
@@ -143,7 +143,7 @@ const Register = () => {
             </div>
 
             {/* Features */}
-            <div className="space-y-3">
+            <div className="space-y-3 flex flex-col items-center lg:items-start">
               <div className="flex items-center space-x-3">
                 <Shield className="w-4 h-4 text-[#F59E0B]" />
                 <span className="text-white/90 text-sm">Secure & Verified Platform</span>
@@ -160,7 +160,7 @@ const Register = () => {
           </div>
 
           {/* Right Side - Register Form */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 border border-white/20 max-w-md mx-auto lg:mx-0 order-1 lg:order-2">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 border border-white/20 max-w-md mx-auto lg:mx-0 order-2 lg:order-2">
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold text-[#151E3D] mb-1">Create Account</h3>
               <p className="text-[#151E3D]/70 text-sm">Join SkilledLink and start your journey</p>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext"; // Corrected import path
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -8,6 +8,8 @@ import {
   CalendarCheck,
   User,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import NotificationDropdown from "../NotificationDropdown"; // Import NotificationDropdown
 import ProfileDropdown from "../ProfileDropdown"; // Import ProfileDropdown
@@ -17,6 +19,7 @@ const CustomerLayout = ({ children }) => {
   const { user, handleLogout } = useAuth(); // ✅ Corrected here
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Debug logging removed for production
 
@@ -57,16 +60,24 @@ const CustomerLayout = ({ children }) => {
               </div>
 
               {/* User Section */}
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4">
                 <NotificationDropdown />
                 <ProfileDropdown />
+                
+                {/* Mobile Menu Button */}
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-[#151E3D] hover:bg-gray-100 transition-colors duration-200"
+                >
+                  {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
               </div>
             </div>
           </div>
         </nav>
 
-        {/* Horizontal Navigation Tabs */}
-        <div className="bg-white border-b border-gray-200 shadow-sm">
+        {/* Desktop Navigation Tabs */}
+        <div className="hidden lg:block bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex space-x-8 overflow-x-auto">
               {navItems.map((item) => {
@@ -93,6 +104,38 @@ const CustomerLayout = ({ children }) => {
             </div>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden bg-white border-b border-gray-200 shadow-lg">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="py-4 space-y-2">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`group flex items-center space-x-3 py-3 px-4 rounded-lg transition-all duration-200 ${
+                        isActive
+                          ? "bg-[#151E3D] text-white"
+                          : "text-gray-600 hover:text-[#151E3D] hover:bg-gray-100"
+                      }`}
+                    >
+                      <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-[#151E3D]'}`} />
+                      <span className="text-sm font-medium">{item.name}</span>
+                      {isActive && (
+                        <div className="w-2 h-2 bg-white rounded-full ml-auto"></div>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Content Area */}
