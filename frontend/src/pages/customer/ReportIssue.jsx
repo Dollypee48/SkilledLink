@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
-import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
+import CustomerLayout from "../../components/common/Layouts/customerLayout";
 import { ReportContext } from "../../context/ReportContext";
 
 const ReportIssue = () => {

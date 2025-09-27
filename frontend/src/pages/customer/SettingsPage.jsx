@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CustomerLayout from '../../components/common/Layouts/CustomerLayout';
+import CustomerLayout from '../../components/common/Layouts/customerLayout';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { User, Lock, Eye, EyeOff, Camera, Bell, Shield, Trash2, LogOut, Settings, Mail, Smartphone, Globe, AlertTriangle, CheckCircle, XCircle, MapPin } from 'lucide-react';

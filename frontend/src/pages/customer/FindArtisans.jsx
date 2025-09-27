@@ -1,7 +1,7 @@
 // src/pages/customer/FindArtisans.jsx
 import React, { useState, useEffect } from "react";
 import { Search, Eye, Star, Crown } from "lucide-react";
-import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
+import CustomerLayout from "../../components/common/Layouts/customerLayout";
 import { ArtisanContext } from "../../context/ArtisanContext";
 import { useContext } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';

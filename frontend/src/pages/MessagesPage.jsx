@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ConversationList from '../components/messaging/ConversationList';
 import ChatWindow from '../components/messaging/ChatWindow';
-import CustomerLayout from '../components/common/Layouts/CustomerLayout';
+import CustomerLayout from '../components/common/Layouts/customerLayout';
 import ArtisanLayout from '../components/common/Layouts/ArtisanLayout';
 
 const MessagesPage = () => {

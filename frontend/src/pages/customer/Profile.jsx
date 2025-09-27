@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
+import CustomerLayout from "../../components/common/Layouts/customerLayout";
 import { useAuth } from '../../context/AuthContext'; // Import useAuth hook
 import { User, CheckCircle, Clock, RefreshCw, Calendar, Mail, Shield } from 'lucide-react'; // Import icons
 

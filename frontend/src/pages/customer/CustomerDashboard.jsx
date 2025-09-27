@@ -1,7 +1,7 @@
 // frontend/src/pages/customer/CustomerDashboard.jsx
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
+import CustomerLayout from "../../components/common/Layouts/customerLayout";
 import { 
   CalendarCheck, 
   Wallet, 

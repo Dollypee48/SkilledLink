@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CalendarCheck } from "lucide-react";
-import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
+import CustomerLayout from "../../components/common/Layouts/customerLayout";
 import { useBooking } from "../../context/BookingContext"; // use custom hook
 import { useAuth } from "../../context/AuthContext";
 import BookingDetailsModal from "../../components/customer/BookingDetailsModal"; // Import the new modal

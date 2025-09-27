@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Star, MessageSquare } from "lucide-react";
-import CustomerLayout from "../../components/common/Layouts/CustomerLayout";
+import CustomerLayout from "../../components/common/Layouts/customerLayout";
 import { useReview } from "../../context/ReviewContext";
 import { useBooking } from "../../context/BookingContext";
 import { useAuth } from "../../context/AuthContext"; 
