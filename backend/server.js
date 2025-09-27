@@ -10,6 +10,10 @@ const server = http.createServer(app);
 setupSocket(server); // Initialize Socket.IO
 const io = getIo(); // Get the initialized Socket.IO instance
 
+app.get("/", (req, res) => {
+  res.send("SkilledLink backend is running ✅");
+});
+
 connectDB()
   .then(() => {
     server.listen(port, () => {
