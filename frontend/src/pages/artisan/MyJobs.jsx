@@ -3,7 +3,7 @@ import { CalendarCheck, CheckCircle, Clock, RefreshCw, Eye, MapPin, Phone, Calen
 import ArtisanLayout from "../../components/common/Layouts/ArtisanLayout";
 import { BookingContext } from "../../context/BookingContext"; // Import BookingContext instead of ArtisanContext
 import useAuth from "../../hooks/useAuth"; // Import useAuth to potentially refresh data
-import { BookingService } from "../../services/bookingService"; // Import BookingService
+import { BookingService } from "../../services/BookingService"; // Import BookingService
 import { ServiceProfileBookingService } from "../../services/serviceProfileBookingService"; // Import ServiceProfileBookingService
 import { messageService } from "../../services/messageService"; // Import message service
 import { useNotification } from "../../context/NotificationContext"; // Import notification context
