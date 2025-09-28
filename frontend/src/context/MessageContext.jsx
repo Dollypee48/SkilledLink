@@ -14,7 +14,7 @@ const initializeSocket = (token) => {
     return globalSocketInstance;
   }
 
-  globalSocketInstance = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+  globalSocketInstance = io(import.meta.env.VITE_API_URL || 'https://skilledlink-1.onrender.com', {
     auth: {
       token: token
     },

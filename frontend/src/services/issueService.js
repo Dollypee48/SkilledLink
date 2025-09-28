@@ -1,7 +1,7 @@
 // frontend/src/services/issueService.js
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/issues";
+const API_URL = "https://skilledlink-1.onrender.com/api/issues";
 
 export const issueService = {
   // Submit a new issue

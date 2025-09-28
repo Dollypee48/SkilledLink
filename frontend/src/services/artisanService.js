@@ -1,7 +1,7 @@
 // artisanService.js
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/artisans"; // adjust to your backend URL
+const API_URL = "https://skilledlink-1.onrender.com/api/artisans"; // adjust to your backend URL
 
 // Get current artisan profile
 export const getProfile = async (token) => {

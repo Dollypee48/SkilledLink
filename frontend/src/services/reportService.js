@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/reports"; // adjust base URL
+const API_URL = "https://skilledlink-1.onrender.com/api/reports"; // adjust base URL
 
 export const ReportService = {
   // Create a new report

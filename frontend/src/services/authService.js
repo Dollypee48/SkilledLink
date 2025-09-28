@@ -1,7 +1,7 @@
 // authService.js
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth"; // adjust to your backend URL
+const API_URL = "https://skilledlink-1.onrender.com/api/auth"; // adjust to your backend URL
 
 // Register
 export const register = async (data) => {

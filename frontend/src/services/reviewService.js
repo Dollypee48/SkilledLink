@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/reviews";
+const API_URL = "https://skilledlink-1.onrender.com/api/reviews";
 
 export const ReviewService = {
   // Create a new review
