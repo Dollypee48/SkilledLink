@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const Booking = require("../models/Booking");
 const Review = require("../models/Review");
-const Issue = require("../models/Issue");
+const Issue = require("../models/issue");
 const ArtisanProfile = require("../models/ArtisanProfile"); // New: Import ArtisanProfile model
 const Report = require("../models/Report"); // New: Import Report model
 const ServiceProfileBooking = require("../models/ServiceProfileBooking"); // New: Import ServiceProfileBooking model

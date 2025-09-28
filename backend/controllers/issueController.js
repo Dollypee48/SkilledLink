@@ -1,4 +1,4 @@
-const Issue = require("../models/Issue");
+const Issue = require("../models/issue");
 const User = require("../models/User");
 
 // @desc    Create a new issue
