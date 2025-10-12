@@ -48,7 +48,7 @@ const KYCVerification = () => {
 
   const renderDocumentLink = (docPath, docName) => {
     if (!docPath) return 'N/A';
-    const fullPath = `http://localhost:5000/${docPath.replace(/\\/g, '/')}`;
+    const fullPath = `https://skilledlink-1.onrender.com/${docPath.replace(/\\/g, '/')}`;
     return (
       <a
         href={fullPath}

@@ -207,7 +207,7 @@ const ArtisanReport = () => {
                   </p>
                   {issue.imageUrl && (
                     <img
-                      src={`http://localhost:5000${issue.imageUrl}`}
+                      src={`https://skilledlink-1.onrender.com${issue.imageUrl}`}
                       alt="Evidence"
                       className="mt-2 max-w-xs h-auto rounded-md"
                     />

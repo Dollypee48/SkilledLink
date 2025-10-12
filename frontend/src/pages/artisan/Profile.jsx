@@ -113,7 +113,7 @@ const ArtisanProfile = () => {
   const resendVerificationEmail = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
+      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/resend-verification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

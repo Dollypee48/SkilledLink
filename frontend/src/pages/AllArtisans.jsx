@@ -190,7 +190,7 @@ const AllArtisans = () => {
     hasPrev: false
   });
 
-  const API_URL = "http://localhost:5000/api";
+  const API_URL = "https://skilledlink-1.onrender.com/api";
 
   // Handle booking click
   const handleBookClick = (serviceProfile) => {

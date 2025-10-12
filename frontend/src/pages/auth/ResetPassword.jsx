@@ -49,7 +49,7 @@ const ResetPassword = () => {
 
     try {
       // First, verify the code by making a request to check if it's valid
-      const response = await fetch('http://localhost:5000/api/auth/verify-reset-code', {
+      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/verify-reset-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

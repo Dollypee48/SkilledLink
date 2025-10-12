@@ -189,7 +189,7 @@ const ReportIssue = () => {
                     <p className="text-sm text-gray-600 mb-1">{report.description}</p>
                     {report.file && (
                       <a
-                        href={`http://localhost:5000/uploads/${report.file}`}
+                        href={`https://skilledlink-1.onrender.com/uploads/${report.file}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 text-sm hover:underline"

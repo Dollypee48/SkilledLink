@@ -67,7 +67,7 @@ const VerifyCode = () => {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-code', {
+      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/verify-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ const VerifyCode = () => {
     try {
       console.log('🔄 Attempting to resend verification code for:', email);
       
-      const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
+      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/resend-verification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

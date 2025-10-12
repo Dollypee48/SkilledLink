@@ -21,7 +21,7 @@ const VerifyEmail = () => {
 
   const verifyEmail = async (verificationToken) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/auth/verify/${verificationToken}`, {
+      const response = await fetch(`https://skilledlink-1.onrender.com/api/auth/verify/${verificationToken}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
