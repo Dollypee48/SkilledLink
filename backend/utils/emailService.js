@@ -89,9 +89,22 @@ const sendVerificationEmail = async (email, verificationCode, userName) => {
     console.error('❌ Error details:', {
       message: error.message,
       code: error.code,
-      response: error.response
+      response: error.response,
+      command: error.command,
+      responseCode: error.responseCode
     });
-    return { success: false, error: error.message };
+    
+    // Provide more specific error messages
+    let errorMessage = error.message;
+    if (error.code === 'EAUTH') {
+      errorMessage = 'Email authentication failed. Please check SMTP credentials.';
+    } else if (error.code === 'ECONNECTION') {
+      errorMessage = 'Unable to connect to email server. Please check network settings.';
+    } else if (error.code === 'ETIMEDOUT') {
+      errorMessage = 'Email server connection timed out.';
+    }
+    
+    return { success: false, error: errorMessage, details: error };
   }
 };
 

@@ -16,6 +16,7 @@ const notificationRoutes = require('./routes/notificationRoutes'); // Import not
 const subscriptionRoutes = require('./routes/subscriptionRoutes'); // Import subscription routes
 const settingsRoutes = require('./routes/settingsRoutes'); // Import settings routes
 const serviceProfileRoutes = require('./routes/serviceProfileRoutes'); // Import service profile routes
+const testRoutes = require('./routes/testRoutes'); // Import test routes
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/subscription', subscriptionRoutes); // Use subscription routes
 app.use('/api/settings', settingsRoutes); // Use settings routes
 app.use('/api/service-profiles', serviceProfileRoutes); // Use service profile routes
 app.use('/api/service-profile-bookings', require('./routes/serviceProfileBookingRoutes')); // Use service profile booking routes
+app.use('/api/test', testRoutes); // Use test routes
 
 // Error Handler
 app.use(errorHandler);

@@ -553,10 +553,12 @@ exports.resendVerificationEmail = async (req, res) => {
     
     if (!emailResult.success) {
       console.error('❌ Failed to send verification email:', emailResult.error);
-      return res.status(500).json({ 
-        message: "Failed to send verification email",
+      // Don't fail the request, but provide helpful error message
+      return res.status(503).json({ 
+        message: "Email service is temporarily unavailable. Please try again later or contact support.",
         success: false,
-        error: emailResult.error
+        error: "EMAIL_SERVICE_UNAVAILABLE",
+        code: verificationCode // Include code for manual verification if needed
       });
     }
 
@@ -663,9 +665,12 @@ exports.forgotPassword = async (req, res) => {
     
     if (!emailResult.success) {
       console.error('Failed to send password reset OTP:', emailResult.error);
-      return res.status(500).json({ 
-        message: "Failed to send reset code. Please try again later.",
-        success: false 
+      // Don't fail the request, but provide helpful error message
+      return res.status(503).json({ 
+        message: "Email service is temporarily unavailable. Please try again later or contact support.",
+        success: false,
+        error: "EMAIL_SERVICE_UNAVAILABLE",
+        code: resetCode // Include code for manual verification if needed
       });
     }
 
