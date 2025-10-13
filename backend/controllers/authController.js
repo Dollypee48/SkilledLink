@@ -3,7 +3,7 @@ const ArtisanProfile = require("../models/ArtisanProfile");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { uploadFile } = require("../utils/cloudinary"); // Import Cloudinary utility
-const { generateVerificationToken, generateOTP, sendVerificationEmail, sendPasswordResetOTP } = require("../utils/emailService");
+const { generateOTP, sendVerificationEmailAsync, sendPasswordResetOTPAsync } = require("../utils/asyncEmailService");
 const { checkProfileCompletion, getProfileCompletionMessage } = require("../utils/profileCompletion");
 
 const ROLES = ["customer", "artisan", "admin"];
@@ -109,13 +109,10 @@ exports.register = async (req, res) => {
       await user.save();
     }
 
-    // Send verification email
-    const emailResult = await sendVerificationEmail(email, verificationCode, name);
+    // Send verification email ASYNCHRONOUSLY (non-blocking)
+    const emailResult = sendVerificationEmailAsync(email, verificationCode, name);
     
-    if (!emailResult.success) {
-      console.error('Failed to send verification email:', emailResult.error);
-      // Don't fail registration if email fails, just log it
-    }
+    console.log(`📧 Verification email queued: ${emailResult.emailId}`);
 
     // Don't return tokens until email is verified
     const populatedUser = await getPopulatedUser(user._id);
@@ -130,7 +127,8 @@ exports.register = async (req, res) => {
     res.status(201).json({
       message: "Registration successful. Please check your email to verify your account.",
       user: safeUser,
-      emailSent: emailResult.success,
+      emailQueued: true,
+      emailId: emailResult.emailId,
       requiresVerification: true,
     });
   } catch (err) {
@@ -545,28 +543,17 @@ exports.resendVerificationEmail = async (req, res) => {
 
     console.log('💾 User updated with new verification code');
 
-    // Send verification email
-    console.log('📧 Attempting to send verification email...');
-    const emailResult = await sendVerificationEmail(email, verificationCode, user.name);
+    // Send verification email ASYNCHRONOUSLY
+    console.log('📧 Attempting to queue verification email...');
+    const emailResult = sendVerificationEmailAsync(email, verificationCode, user.name);
     
-    console.log('📧 Email result:', emailResult);
-    
-    if (!emailResult.success) {
-      console.error('❌ Failed to send verification email:', emailResult.error);
-      // Don't fail the request, but provide helpful error message
-      return res.status(503).json({ 
-        message: "Email service is temporarily unavailable. Please try again later or contact support.",
-        success: false,
-        error: "EMAIL_SERVICE_UNAVAILABLE",
-        code: verificationCode // Include code for manual verification if needed
-      });
-    }
+    console.log('📧 Email queued:', emailResult.emailId);
 
-    console.log('✅ Verification email sent successfully');
     res.json({
-      message: "Verification email sent successfully!",
+      message: "Verification email has been queued for sending!",
       success: true,
-      email: user.email
+      email: user.email,
+      emailId: emailResult.emailId
     });
 
   } catch (err) {
@@ -660,23 +647,15 @@ exports.forgotPassword = async (req, res) => {
     user.resetCodeExpiry = resetCodeExpiry;
     await user.save();
 
-    // Send OTP email
-    const emailResult = await sendPasswordResetOTP(email, resetCode, user.name);
+    // Send OTP email ASYNCHRONOUSLY
+    const emailResult = sendPasswordResetOTPAsync(email, resetCode, user.name);
     
-    if (!emailResult.success) {
-      console.error('Failed to send password reset OTP:', emailResult.error);
-      // Don't fail the request, but provide helpful error message
-      return res.status(503).json({ 
-        message: "Email service is temporarily unavailable. Please try again later or contact support.",
-        success: false,
-        error: "EMAIL_SERVICE_UNAVAILABLE",
-        code: resetCode // Include code for manual verification if needed
-      });
-    }
+    console.log(`📧 Password reset email queued: ${emailResult.emailId}`);
 
     res.json({ 
-      message: "Password reset code has been sent to your email.",
-      success: true 
+      message: "Password reset code has been queued for sending to your email.",
+      success: true,
+      emailId: emailResult.emailId
     });
 
   } catch (err) {
