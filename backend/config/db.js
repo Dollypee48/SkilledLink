@@ -6,11 +6,69 @@ const connectDB = async () => {
       throw new Error('MONGODB_URI environment variable is not defined');
     }
     
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB connected successfully');
+    // MongoDB connection options for production optimization
+    const options = {
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
+      connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
+      heartbeatFrequencyMS: 10000, // Send a ping every 10 seconds
+      retryWrites: true, // Retry failed writes
+      retryReads: true, // Retry failed reads
+    };
+
+    // Add SSL options for production
+    const nodeEnv = process.env.NODE_ENV || 'development';
+    if (nodeEnv === 'production') {
+      options.ssl = true;
+      options.sslValidate = true;
+    }
+
+    const startTime = Date.now();
+    await mongoose.connect(process.env.MONGODB_URI, options);
+    const connectionTime = Date.now() - startTime;
+    
+    console.log(`✅ MongoDB connected successfully in ${connectionTime}ms`);
+    
+    // Safely log connection pool info
+    try {
+      if (mongoose.connection.db && mongoose.connection.db.serverConfig) {
+        console.log(`📊 Connection pool size: ${mongoose.connection.db.serverConfig.s.pool.size}`);
+      } else {
+        console.log(`📊 MongoDB connected (pool info not available)`);
+      }
+    } catch (poolError) {
+      console.log(`📊 MongoDB connected (pool info unavailable)`);
+    }
+    
+    // Connection event handlers
+    mongoose.connection.on('error', (err) => {
+      console.error('❌ MongoDB connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.warn('⚠️  MongoDB disconnected');
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      console.log('🔄 MongoDB reconnected');
+    });
+    
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+      await mongoose.connection.close();
+      console.log('🔌 MongoDB connection closed through app termination');
+      process.exit(0);
+    });
+    
   } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    console.log('Make sure MongoDB is running on your system');
+    console.error('❌ MongoDB connection error:', err.message);
+    console.error('🔍 Connection details:', {
+      uri: process.env.MONGODB_URI.replace(/\/\/.*@/, '//***:***@'),
+      nodeEnv: process.env.NODE_ENV || 'development'
+    });
+    console.log('💡 Make sure MongoDB is running and accessible');
     process.exit(1);
   }
 };

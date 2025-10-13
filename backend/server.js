@@ -1,10 +1,15 @@
 require('dotenv').config(); // Load environment variables at the very beginning
 
 const http = require('http');
+const { validateEnvironment } = require('./utils/envValidator');
 const app = require('./app');
 const connectDB = require('./config/db');
 const { setupSocket, getIo } = require('./config/socket');
 const { port } = require('./config/keys');
+
+// Validate environment variables before starting server
+console.log('🔍 Validating environment variables...');
+validateEnvironment();
 
 const server = http.createServer(app);
 setupSocket(server); // Initialize Socket.IO
