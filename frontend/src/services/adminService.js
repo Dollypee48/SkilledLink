@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_URL = "https://skilledlink-1.onrender.com/api/admin"; // Adjust to your backend URL
+// const API_URL = "http://localhost:5000/api/admin"; // For local development
 
 export const adminService = {
   getDashboardStats: async (token) => {

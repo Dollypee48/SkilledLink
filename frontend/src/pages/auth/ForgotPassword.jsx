@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowRight, Sparkles, Shield, Zap, User, ArrowLeft, CheckCircle } from 'lucide-react';
 import Logo from '../../components/common/Logo';
+import { API_ENDPOINTS } from '../../config/api';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +19,7 @@ const ForgotPassword = () => {
     setRequiresVerification(false);
 
     try {
-      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/forgot-password', {
+      const response = await fetch(`${API_ENDPOINTS.auth}/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

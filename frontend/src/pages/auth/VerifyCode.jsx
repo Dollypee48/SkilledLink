@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, XCircle, Mail, ArrowLeft, Clock, RefreshCw, Shield, Sparkles, Zap } from 'lucide-react';
 import Logo from '../../components/common/Logo';
+import { API_ENDPOINTS } from '../../config/api';
 
 const VerifyCode = () => {
   const location = useLocation();
@@ -18,10 +19,15 @@ const VerifyCode = () => {
   useEffect(() => {
     // Get email from location state or localStorage
     const userEmail = location.state?.email || localStorage.getItem('pendingVerificationEmail');
+    console.log('🔍 VerifyCode - Email from state:', location.state?.email);
+    console.log('🔍 VerifyCode - Email from localStorage:', localStorage.getItem('pendingVerificationEmail'));
+    console.log('🔍 VerifyCode - Final email:', userEmail);
+    
     if (userEmail) {
       setEmail(userEmail);
       localStorage.setItem('pendingVerificationEmail', userEmail);
     } else {
+      console.log('❌ VerifyCode - No email found, redirecting to login');
       // If no email, redirect to login
       navigate('/login');
     }
@@ -67,7 +73,7 @@ const VerifyCode = () => {
     setMessage('');
 
     try {
-      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/verify-code', {
+      const response = await fetch(`${API_ENDPOINTS.auth}/verify-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +118,7 @@ const VerifyCode = () => {
     try {
       console.log('🔄 Attempting to resend verification code for:', email);
       
-      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/resend-verification', {
+      const response = await fetch(`${API_ENDPOINTS.auth}/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

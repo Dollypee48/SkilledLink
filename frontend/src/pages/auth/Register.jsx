@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, AlertCircle, User, Lock, ArrowRight, Sparkles, Shield, Zap, UserPlus, ArrowLeft } from 'lucide-react';
 import Logo from '../../components/common/Logo';
+import { API_ENDPOINTS } from '../../config/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -61,10 +62,11 @@ const Register = () => {
         name: formData.name,
         email: formData.email,
         role: formData.role,
-        passwordLength: formData.password.length
+        passwordLength: formData.password.length,
+        apiUrl: `${API_ENDPOINTS.auth}/register`
       });
 
-      const response = await fetch('https://skilledlink-1.onrender.com/api/auth/register', {
+      const response = await fetch(`${API_ENDPOINTS.auth}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -76,6 +78,8 @@ const Register = () => {
       });
       
       console.log('📡 Registration response status:', response.status);
+      console.log('📡 Registration response headers:', Object.fromEntries(response.headers.entries()));
+      
       const data = await response.json();
       console.log('📡 Registration response data:', data);
       
@@ -102,6 +106,11 @@ const Register = () => {
       }
     } catch (err) {
       console.error('❌ Registration error:', err);
+      console.error('❌ Error details:', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack
+      });
       setError('An error occurred. Please check your network or try again later.');
     }
   };
