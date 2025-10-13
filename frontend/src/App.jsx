@@ -41,6 +41,40 @@ const App = () => {
     setProfileCompletion(null);
   };
 
+  // Global error handler for unhandled promise rejections
+  React.useEffect(() => {
+    const handleUnhandledRejection = (event) => {
+      console.error('🚨 Unhandled Promise Rejection:', event.reason);
+      console.error('🚨 Promise:', event.promise);
+      
+      // Prevent the default browser behavior (which logs to console)
+      event.preventDefault();
+      
+      // You can add additional error reporting here if needed
+      // For example, send to error tracking service
+    };
+
+    const handleError = (event) => {
+      console.error('🚨 Global Error:', event.error);
+      console.error('🚨 Error details:', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+      });
+    };
+
+    // Add event listeners
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-[#F8FAFC]">

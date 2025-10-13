@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, AlertCircle, User, Lock, ArrowRight, Sparkles, Shield, Zap, UserPlus, ArrowLeft } from 'lucide-react';
 import Logo from '../../components/common/Logo';
+
+// Import API configuration with fallback
 import { API_ENDPOINTS } from '../../config/api';
 
 const Register = () => {
@@ -58,15 +60,19 @@ const Register = () => {
     }
 
     try {
+      // Ensure we have a valid API URL
+      const apiUrl = API_ENDPOINTS.auth || 'https://skilledlink-1.onrender.com/api/auth';
+      const registerUrl = `${apiUrl}/register`;
+      
       console.log('🚀 Attempting registration with:', {
         name: formData.name,
         email: formData.email,
         role: formData.role,
         passwordLength: formData.password.length,
-        apiUrl: `${API_ENDPOINTS.auth}/register`
+        apiUrl: registerUrl
       });
 
-      const response = await fetch(`${API_ENDPOINTS.auth}/register`, {
+      const response = await fetch(registerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -80,38 +86,68 @@ const Register = () => {
       console.log('📡 Registration response status:', response.status);
       console.log('📡 Registration response headers:', Object.fromEntries(response.headers.entries()));
       
-      const data = await response.json();
-      console.log('📡 Registration response data:', data);
-      
-      if (response.ok) {
-        console.log('✅ Registration successful, redirecting to verification...');
-        // Store email for verification page
-        localStorage.setItem('pendingVerificationEmail', formData.email);
-        // Clear any existing errors
-        setError('');
-        // Navigate to verification page
-        navigate('/verify-code', { 
-          state: { 
-            email: formData.email,
-            message: data.message 
-          } 
-        });
-      } else {
-        console.error('❌ Registration failed:', data);
-        if (data.message === 'Email already registered') {
+      // Check if response is ok before trying to parse JSON
+      if (!response.ok) {
+        // Try to get error message from response
+        let errorMessage = 'Registration failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error('❌ Registration failed with error data:', errorData);
+        } catch (parseError) {
+          console.error('❌ Failed to parse error response:', parseError);
+          errorMessage = `Server error (${response.status}): ${response.statusText}`;
+        }
+        
+        if (errorMessage === 'Email already registered') {
           setError('This email is already registered. Please try logging in instead or use a different email address.');
         } else {
-          setError(data.message || 'Registration failed');
+          setError(errorMessage);
         }
+        return;
       }
+      
+      // Parse successful response
+      let data;
+      try {
+        data = await response.json();
+        console.log('📡 Registration response data:', data);
+      } catch (parseError) {
+        console.error('❌ Failed to parse success response:', parseError);
+        setError('Registration successful but received invalid response from server.');
+        return;
+      }
+      
+      console.log('✅ Registration successful, redirecting to verification...');
+      // Store email for verification page
+      localStorage.setItem('pendingVerificationEmail', formData.email);
+      // Clear any existing errors
+      setError('');
+      // Navigate to verification page
+      navigate('/verify-code', { 
+        state: { 
+          email: formData.email,
+          message: data.message || 'Registration successful. Please check your email for verification code.'
+        } 
+      });
+      
     } catch (err) {
       console.error('❌ Registration error:', err);
       console.error('❌ Error details:', {
         name: err.name,
         message: err.message,
-        stack: err.stack
+        stack: err.stack,
+        cause: err.cause
       });
-      setError('An error occurred. Please check your network or try again later.');
+      
+      // Provide more specific error messages
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setError('Network error: Unable to connect to server. Please check your internet connection.');
+      } else if (err.name === 'AbortError') {
+        setError('Request was cancelled. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again later.');
+      }
     }
   };
 
