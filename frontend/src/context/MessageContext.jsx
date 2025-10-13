@@ -14,7 +14,9 @@ const initializeSocket = (token) => {
     return globalSocketInstance;
   }
 
-  globalSocketInstance = io(import.meta.env.VITE_API_URL || 'https://skilledlink-1.onrender.com', {
+  // Get the base URL without /api suffix for socket connection
+  const baseUrl = (import.meta.env.VITE_API_URL || 'https://skilledlink-1.onrender.com').replace('/api', '');
+  globalSocketInstance = io(baseUrl, {
     auth: {
       token: token
     },
@@ -142,7 +144,7 @@ export const MessageProvider = ({ children }) => {
   const fetchConversations = useCallback(async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      console.log('No access token found, skipping conversation fetch');
+      console.log('🔐 User not authenticated, skipping conversation fetch');
       return;
     }
 

@@ -1,9 +1,10 @@
 
 import axios from "axios";
 import * as authService from "../services/authService";
+import { API_BASE_URL } from "../config/api";
 
 const api = axios.create({
-  baseURL: "https://skilledlink-1.onrender.com/api", 
+  baseURL: API_BASE_URL, 
 });
 
 // Add request interceptor to include auth token
