@@ -152,6 +152,28 @@ const sendEmailAsync = async (emailData, retryCount = 0) => {
   
   try {
     const transporter = createTransporter();
+
+    // Verify SMTP connection before attempting to send
+    try {
+      console.log('📧 Verifying SMTP transporter connection...', {
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.SMTP_PORT || 587,
+        user: process.env.SMTP_USER,
+        hasPassword: !!process.env.SMTP_PASS,
+        nodeEnv: process.env.NODE_ENV
+      });
+      await transporter.verify();
+      console.log('✅ SMTP transporter verified');
+    } catch (verifyError) {
+      console.error('❌ SMTP transporter verification failed', {
+        message: verifyError.message,
+        code: verifyError.code,
+        command: verifyError.command,
+        response: verifyError.response,
+        responseCode: verifyError.responseCode
+      });
+      // Continue to attempt send; some providers may not support verify
+    }
     
     const mailOptions = {
       from: `"${process.env.APP_NAME || 'SkilledLink'}" <${process.env.SMTP_USER}>`,
@@ -170,6 +192,9 @@ const sendEmailAsync = async (emailData, retryCount = 0) => {
     console.error(`❌ Email send failed: ${emailData.id} (${emailData.type})`, {
       error: error.message,
       code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
       retryCount
     });
     
