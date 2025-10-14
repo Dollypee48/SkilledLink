@@ -18,11 +18,11 @@ const connectDB = async () => {
       retryReads: true, // Retry failed reads
     };
 
-    // Add SSL options for production
+    // Add TLS options for production (modern drivers use `tls` not `ssl`)
     const nodeEnv = process.env.NODE_ENV || 'development';
     if (nodeEnv === 'production') {
-      options.ssl = true;
-      options.sslValidate = true;
+      options.tls = true;
+      // Validation is enabled by default; avoid deprecated/unsupported `sslValidate`
     }
 
     const startTime = Date.now();
