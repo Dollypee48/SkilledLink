@@ -16,6 +16,7 @@ const connectDB = async () => {
       heartbeatFrequencyMS: 10000, // Send a ping every 10 seconds
       retryWrites: true, // Retry failed writes
       retryReads: true, // Retry failed reads
+      appName: process.env.MONGODB_APPNAME || 'SkilledLinkBackend',
     };
 
     // Add TLS options for production (modern drivers use `tls` not `ssl`)
@@ -23,6 +24,11 @@ const connectDB = async () => {
     if (nodeEnv === 'production') {
       options.tls = true;
       // Validation is enabled by default; avoid deprecated/unsupported `sslValidate`
+    }
+
+    // Optional direct connection mode to bypass SRV when having DNS issues
+    if (process.env.MONGODB_DIRECT === 'true') {
+      options.directConnection = true;
     }
 
     const startTime = Date.now();
@@ -66,9 +72,14 @@ const connectDB = async () => {
     console.error('❌ MongoDB connection error:', err.message);
     console.error('🔍 Connection details:', {
       uri: process.env.MONGODB_URI.replace(/\/\/.*@/, '//***:***@'),
-      nodeEnv: process.env.NODE_ENV || 'development'
+      nodeEnv: process.env.NODE_ENV || 'development',
+      directConnection: process.env.MONGODB_DIRECT === 'true' || false,
+      appName: process.env.MONGODB_APPNAME || 'SkilledLinkBackend'
     });
     console.log('💡 Make sure MongoDB is running and accessible');
+    if (/querySrv\s+ETIMEOUT/i.test(err.message || '')) {
+      console.log('💡 Tip: SRV DNS lookup timed out. On Windows networks this can be DNS/IPv6 related. Try setting MONGODB_DIRECT=true and use a non-SRV mongodb:// URI if available.');
+    }
     process.exit(1);
   }
 };

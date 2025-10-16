@@ -1,5 +1,15 @@
 require('dotenv').config(); // Load environment variables at the very beginning
 
+// Prefer IPv4 for DNS lookups to avoid SRV/IPv6 issues on some Windows networks
+try {
+  const dns = require('dns');
+  if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+  }
+} catch (_) {
+  // noop
+}
+
 const http = require('http');
 const { validateEnvironment } = require('./utils/envValidator');
 const app = require('./app');
