@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { BookingService } from "../services/BookingService";
 import { ServiceProfileBookingService } from "../services/serviceProfileBookingService";
 import useAuth from "../hooks/useAuth";
@@ -155,6 +155,55 @@ export const BookingProvider = ({ children }) => {
 
   const openBookingModal = useCallback(() => setIsBookingModalOpen(true), []);
   const closeBookingModal = useCallback(() => setIsBookingModalOpen(false), []);
+
+  // Listen for real-time booking status updates
+  useEffect(() => {
+    const handleBookingStatusUpdated = (event) => {
+      const data = event.detail;
+      console.log('BookingContext received booking status update:', data);
+      
+      // Update regular bookings
+      setBookings(prev => prev.map(booking => 
+        booking._id === data.bookingId 
+          ? { ...booking, status: data.status }
+          : booking
+      ));
+      
+      // Update customer bookings
+      setCustomerBookings(prev => prev.map(booking => 
+        booking._id === data.bookingId 
+          ? { ...booking, status: data.status }
+          : booking
+      ));
+    };
+
+    const handleServiceProfileBookingStatusUpdated = (event) => {
+      const data = event.detail;
+      console.log('BookingContext received service profile booking status update:', data);
+      
+      // Update service profile bookings
+      setServiceProfileBookings(prev => prev.map(booking => 
+        booking._id === data.bookingId 
+          ? { ...booking, status: data.status }
+          : booking
+      ));
+      
+      // Update customer service profile bookings
+      setCustomerServiceProfileBookings(prev => prev.map(booking => 
+        booking._id === data.bookingId 
+          ? { ...booking, status: data.status }
+          : booking
+      ));
+    };
+
+    window.addEventListener('bookingStatusUpdated', handleBookingStatusUpdated);
+    window.addEventListener('serviceProfileBookingStatusUpdated', handleServiceProfileBookingStatusUpdated);
+
+    return () => {
+      window.removeEventListener('bookingStatusUpdated', handleBookingStatusUpdated);
+      window.removeEventListener('serviceProfileBookingStatusUpdated', handleServiceProfileBookingStatusUpdated);
+    };
+  }, []);
 
   return (
     <BookingContext.Provider

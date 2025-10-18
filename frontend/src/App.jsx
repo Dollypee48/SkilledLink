@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import RoutesComponent from "./routes";  // ✅ fixed import
 import ProfileCompletionNotification from "./components/common/ProfileCompletionNotification"; // Import Profile Completion Notification
 import Navbar from './components/common/Navbar';
+import RealTimeStatus from './components/common/RealTimeStatus';
 import { useAuth } from './context/AuthContext'; // Import useAuth hook
 import { useLocation } from 'react-router-dom'; // Import useLocation hook
 import { ToastContainer } from 'react-toastify'; // Import ToastContainer
@@ -85,6 +86,7 @@ const App = () => {
         profileCompletion={profileCompletion} 
         onDismiss={handleDismissProfileNotification}
       /> {/* Profile completion notification */}
+      <RealTimeStatus /> {/* Real-time connection status */}
       <ToastContainer /> {/* Toast notifications container */}
     </ErrorBoundary>
   );

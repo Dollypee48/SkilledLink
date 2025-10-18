@@ -360,6 +360,33 @@ exports.updateServiceProfileBookingStatus = async (req, res) => {
       // Don't fail the status update if notifications fail
     }
 
+    // Emit real-time service profile booking status update via Socket.IO
+    try {
+      const { getIo } = require('../config/socket');
+      const io = getIo();
+      if (io) {
+        // Emit to both customer and artisan
+        io.to(booking.customer._id.toString()).emit('serviceProfileBookingStatusUpdated', {
+          bookingId: booking._id,
+          status: status,
+          updatedBy: userRole,
+          timestamp: new Date()
+        });
+        
+        io.to(booking.artisan._id.toString()).emit('serviceProfileBookingStatusUpdated', {
+          bookingId: booking._id,
+          status: status,
+          updatedBy: userRole,
+          timestamp: new Date()
+        });
+        
+        console.log(`Real-time service profile booking status update emitted for booking ${booking._id}`);
+      }
+    } catch (socketError) {
+      console.error('Error emitting service profile booking status update:', socketError);
+      // Don't fail the status update if socket emission fails
+    }
+
     res.json(booking);
   } catch (err) {
     console.error("Update service profile booking status error:", err.message);

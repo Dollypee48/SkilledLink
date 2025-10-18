@@ -325,6 +325,17 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [accessToken]); // Remove fetchNotifications from dependencies to prevent infinite loop
 
+  // Also fetch notifications when user changes (login/logout)
+  useEffect(() => {
+    if (user && accessToken) {
+      fetchNotifications();
+    } else if (!user) {
+      // Clear notifications when user logs out
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }, [user]);
+
   // Listen for Socket.IO notifications via custom events from MessageContext
   useEffect(() => {
     const handleNewNotification = (event) => {

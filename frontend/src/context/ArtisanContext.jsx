@@ -120,6 +120,38 @@ export const ArtisanProvider = ({ children }) => {
     }
   }, [user, token]); // Reduced dependencies to prevent excessive re-renders
 
+  // Listen for real-time artisan profile updates
+  useEffect(() => {
+    const handleArtisanProfileUpdated = (event) => {
+      const data = event.detail;
+      console.log('ArtisanContext received artisan profile update:', data);
+      
+      // Update artisans list if this artisan is in it
+      setArtisans(prev => prev.map(artisan => 
+        artisan._id === data.artisanId 
+          ? { ...artisan, ...data.updates }
+          : artisan
+      ));
+      
+      // Update current profile if it's the current user
+      if (user && user._id === data.artisanId) {
+        setProfile(prev => ({
+          ...prev,
+          artisanProfile: {
+            ...prev?.artisanProfile,
+            ...data.updates
+          }
+        }));
+      }
+    };
+
+    window.addEventListener('artisanProfileUpdated', handleArtisanProfileUpdated);
+
+    return () => {
+      window.removeEventListener('artisanProfileUpdated', handleArtisanProfileUpdated);
+    };
+  }, [user]);
+
   return (
     <ArtisanContext.Provider
       value={{

@@ -88,6 +88,27 @@ exports.createReview = async (req, res) => {
     // Update artisan rating
     await updateArtisanRating(artisanId);
 
+    // Emit real-time review update via Socket.IO
+    try {
+      const { getIo } = require('../config/socket');
+      const io = getIo();
+      if (io) {
+        // Emit to artisan
+        io.to(artisanId.toString()).emit('newReview', {
+          reviewId: review._id,
+          rating: review.rating,
+          comment: review.comment,
+          customerId: req.user.id,
+          timestamp: new Date()
+        });
+        
+        console.log(`Real-time review update emitted for artisan ${artisanId}`);
+      }
+    } catch (socketError) {
+      console.error('Error emitting review update:', socketError);
+      // Don't fail the review creation if socket emission fails
+    }
+
     res.status(201).json({ message: "Review submitted successfully", review });
   } catch (err) {
     console.error('Error creating review:', err);

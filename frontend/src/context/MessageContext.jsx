@@ -20,7 +20,12 @@ const initializeSocket = (token) => {
     auth: {
       token: token
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    autoConnect: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    timeout: 20000
   });
 
   return globalSocketInstance;
@@ -53,6 +58,34 @@ export const MessageProvider = ({ children }) => {
       setSocket(newSocket);
     }
   }, []);
+
+  // Reinitialize socket when user changes (login/logout)
+  useEffect(() => {
+    if (user && user._id) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        // Disconnect existing socket if any
+        if (globalSocketInstance) {
+          globalSocketInstance.disconnect();
+          globalSocketInstance = null;
+        }
+        
+        // Create new socket with current token
+        const newSocket = initializeSocket(token);
+        setSocket(newSocket);
+        console.log('Socket reinitialized for user:', user._id);
+      }
+    } else {
+      // User logged out - disconnect socket
+      if (globalSocketInstance) {
+        globalSocketInstance.disconnect();
+        globalSocketInstance = null;
+        setSocket(null);
+        setIsConnected(false);
+        console.log('Socket disconnected - user logged out');
+      }
+    }
+  }, [user]);
 
   // Socket event handlers
   useEffect(() => {
@@ -121,6 +154,41 @@ export const MessageProvider = ({ children }) => {
       window.dispatchEvent(new CustomEvent('newNotification', { detail: notification }));
     };
 
+    const handleBookingStatusUpdated = (data) => {
+      console.log('Booking status updated:', data);
+      window.dispatchEvent(new CustomEvent('bookingStatusUpdated', { detail: data }));
+    };
+
+    const handleServiceProfileBookingStatusUpdated = (data) => {
+      console.log('Service profile booking status updated:', data);
+      window.dispatchEvent(new CustomEvent('serviceProfileBookingStatusUpdated', { detail: data }));
+    };
+
+    const handleNewReview = (data) => {
+      console.log('New review received:', data);
+      window.dispatchEvent(new CustomEvent('newReview', { detail: data }));
+    };
+
+    const handleArtisanProfileUpdated = (data) => {
+      console.log('Artisan profile updated:', data);
+      window.dispatchEvent(new CustomEvent('artisanProfileUpdated', { detail: data }));
+    };
+
+    const handleUserOnline = (data) => {
+      console.log('User came online:', data);
+      window.dispatchEvent(new CustomEvent('userOnline', { detail: data }));
+    };
+
+    const handleUserOffline = (data) => {
+      console.log('User went offline:', data);
+      window.dispatchEvent(new CustomEvent('userOffline', { detail: data }));
+    };
+
+    const handleUserStatusChanged = (data) => {
+      console.log('User status changed:', data);
+      window.dispatchEvent(new CustomEvent('userStatusChanged', { detail: data }));
+    };
+
     // Add event listeners
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
@@ -128,6 +196,13 @@ export const MessageProvider = ({ children }) => {
     socket.on('messageDeleted', handleMessageDeleted);
     socket.on('conversationCleared', handleConversationCleared);
     socket.on('newNotification', handleNewNotification);
+    socket.on('bookingStatusUpdated', handleBookingStatusUpdated);
+    socket.on('serviceProfileBookingStatusUpdated', handleServiceProfileBookingStatusUpdated);
+    socket.on('newReview', handleNewReview);
+    socket.on('artisanProfileUpdated', handleArtisanProfileUpdated);
+    socket.on('userOnline', handleUserOnline);
+    socket.on('userOffline', handleUserOffline);
+    socket.on('userStatusChanged', handleUserStatusChanged);
 
     // Cleanup
     return () => {
@@ -137,6 +212,13 @@ export const MessageProvider = ({ children }) => {
       socket.off('messageDeleted', handleMessageDeleted);
       socket.off('conversationCleared', handleConversationCleared);
       socket.off('newNotification', handleNewNotification);
+      socket.off('bookingStatusUpdated', handleBookingStatusUpdated);
+      socket.off('serviceProfileBookingStatusUpdated', handleServiceProfileBookingStatusUpdated);
+      socket.off('newReview', handleNewReview);
+      socket.off('artisanProfileUpdated', handleArtisanProfileUpdated);
+      socket.off('userOnline', handleUserOnline);
+      socket.off('userOffline', handleUserOffline);
+      socket.off('userStatusChanged', handleUserStatusChanged);
     };
   }, [socket]);
 
@@ -275,6 +357,18 @@ export const MessageProvider = ({ children }) => {
       }
     }
   }, [fetchConversations, fetchConversation]);
+
+  // Fetch conversations when user changes (login/logout)
+  useEffect(() => {
+    if (user && user._id) {
+      fetchConversations();
+    } else if (!user) {
+      // Clear conversations when user logs out
+      setConversations([]);
+      setCurrentConversation([]);
+      setSelectedRecipient(null);
+    }
+  }, [user, fetchConversations]);
 
   const value = {
     // State

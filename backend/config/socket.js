@@ -57,13 +57,38 @@ const setupSocket = (httpServer) => {
 
     socket.join(socket.userId);
 
+    // Emit user online status to all connected users
+    socket.broadcast.emit('userOnline', {
+      userId: socket.userId,
+      userRole: socket.userRole,
+      timestamp: new Date()
+    });
+
     socket.on('disconnect', (reason) => {
       console.log('Socket.IO - User disconnected:', socket.userId, reason);
       connectedUsers.delete(socket.userId);
+      
+      // Emit user offline status to all connected users
+      socket.broadcast.emit('userOffline', {
+        userId: socket.userId,
+        userRole: socket.userRole,
+        timestamp: new Date()
+      });
     });
 
     socket.on('error', (error) => {
       console.error('Socket.IO - Socket error:', error);
+    });
+
+    // Handle user status updates (online/offline/away)
+    socket.on('updateUserStatus', (status) => {
+      console.log('Socket.IO - User status update:', socket.userId, status);
+      socket.broadcast.emit('userStatusChanged', {
+        userId: socket.userId,
+        userRole: socket.userRole,
+        status: status,
+        timestamp: new Date()
+      });
     });
 
     // Handle notification events

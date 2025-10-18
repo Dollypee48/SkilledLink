@@ -11,6 +11,7 @@ import { BookingProvider } from './context/BookingContext';
 import { ReviewProvider } from './context/ReviewContext';
 import { ReportProvider } from './context/ReportContext';
 import { IssueProvider } from './context/IssueContext';
+import { DashboardProvider } from './context/DashboardContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode> 
@@ -23,7 +24,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 <ReviewProvider>
                   <ReportProvider>
                     <IssueProvider>
-                      <App />
+                      <DashboardProvider>
+                        <App />
+                      </DashboardProvider>
                     </IssueProvider>
                   </ReportProvider>
                 </ReviewProvider>

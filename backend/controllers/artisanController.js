@@ -99,6 +99,25 @@ exports.updateArtisanProfile = async (req, res) => {
       return res.status(404).json({ message: "Artisan profile not found" });
     }
 
+    // Emit real-time artisan profile update via Socket.IO
+    try {
+      const { getIo } = require('../config/socket');
+      const io = getIo();
+      if (io) {
+        // Emit to all connected users (for artisan search/listing updates)
+        io.emit('artisanProfileUpdated', {
+          artisanId: req.user.id,
+          updates: { skills, service, location, availability, bio, experience },
+          timestamp: new Date()
+        });
+        
+        console.log(`Real-time artisan profile update emitted for artisan ${req.user.id}`);
+      }
+    } catch (socketError) {
+      console.error('Error emitting artisan profile update:', socketError);
+      // Don't fail the profile update if socket emission fails
+    }
+
     res.json({ message: "Artisan profile updated successfully", artisanProfile });
   } catch (err) {
     console.error("Update artisan profile error:", err);

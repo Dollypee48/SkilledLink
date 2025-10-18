@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { ReviewService } from "../services/reviewService";
 import useAuth from "../hooks/useAuth";
 
@@ -75,6 +75,36 @@ export const ReviewProvider = ({ children }) => {
     setReviews((prev) => prev.map((r) => (r._id === id ? updated : r)));
     return updated;
   }, [handleRequest]);
+
+  // Listen for real-time review updates
+  useEffect(() => {
+    const handleNewReview = (event) => {
+      const data = event.detail;
+      console.log('ReviewContext received new review:', data);
+      
+      // Add new review to the list
+      setReviews(prev => {
+        // Check if review already exists to avoid duplicates
+        const exists = prev.some(review => review._id === data.reviewId);
+        if (!exists) {
+          return [...prev, {
+            _id: data.reviewId,
+            rating: data.rating,
+            comment: data.comment,
+            customerId: data.customerId,
+            date: data.timestamp
+          }];
+        }
+        return prev;
+      });
+    };
+
+    window.addEventListener('newReview', handleNewReview);
+
+    return () => {
+      window.removeEventListener('newReview', handleNewReview);
+    };
+  }, []);
 
   return (
     <ReviewContext.Provider
