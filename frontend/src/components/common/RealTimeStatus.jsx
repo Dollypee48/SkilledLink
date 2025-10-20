@@ -27,13 +27,11 @@ const RealTimeStatus = () => {
         {isConnected ? (
           <>
             <Wifi className="w-4 h-4" />
-            <span className="text-sm font-medium">Real-time Connected</span>
             <Circle className="w-2 h-2 fill-green-500 animate-pulse" />
           </>
         ) : (
           <>
             <WifiOff className="w-4 h-4" />
-            <span className="text-sm font-medium">Connecting...</span>
             <Circle className="w-2 h-2 fill-red-500 animate-pulse" />
           </>
         )}
