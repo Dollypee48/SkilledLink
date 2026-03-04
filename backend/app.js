@@ -47,7 +47,7 @@ const authLimiter = rateLimit({
 
 const emailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 email requests per hour
+  max: 10, // Limit each IP to 3 email requests per hour
   message: {
     error: 'Too many email requests, please try again later.',
     retryAfter: '1 hour'
